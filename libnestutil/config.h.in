@@ -177,9 +177,6 @@
 /* Configuring for K */
 #cmakedefine IS_K 1
 
-/* Use PS array construction semantics */
-#cmakedefine PS_ARRAYS 1
-
 /* Is SIONlib available? */
 #cmakedefine HAVE_SIONLIB 1
 
