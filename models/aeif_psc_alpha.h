@@ -92,6 +92,12 @@ For implementation details see the
 
 See also [1]_.
 
+.. note:: 
+   Due to the exponential current, AdEx neurons are prone to numerical instability.
+   By setting `I_max`, the total current given by the right-hand side of the membrane-potential
+   equation can be limited. Setting `I_max` to :math:`10^6` pA or less appears to ensure 
+   numerical stability. 
+
 Parameters
 ++++++++++
 
@@ -109,16 +115,17 @@ The following parameters can be set in the status dictionary.
  g       pa      Spike-adaptation current
 ======== ======= =======================================
 
-======== ======= =======================================
+======== ======= =============================================
 **Membrane Parameters**
---------------------------------------------------------
+--------------------------------------------------------------
  C_m     pF      Capacity of the membrane
  t_ref   ms      Duration of refractory period
  V_reset mV      Reset value for V_m after a spike
  E_L     mV      Leak reversal potential
  g_L     nS      Leak conductance
  I_e     pA      Constant external input current
-======== ======= =======================================
+ I_max   pA      Upper bound for driving current (default: +∞)
+======== ======= =============================================
 
 ======== ======= ==================================
 **Spike adaptation parameters**
@@ -239,6 +246,7 @@ private:
     double tau_syn_ex; //!< Excitatory synaptic rise time
     double tau_syn_in; //!< Excitatory synaptic rise time
     double I_e;        //!< Intrinsic current in pA
+    double I_max;      //!< Maximum current in pA
 
     double gsl_error_tol; //!< Error bound for GSL integrator
 

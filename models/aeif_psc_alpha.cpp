@@ -100,7 +100,7 @@ nest::aeif_psc_alpha_dynamics( double, const double y[], double f[], void* pnode
   // dv/dt
   f[ S::V_M ] = is_refractory
     ? 0.
-    : ( -node.P_.g_L * ( V - node.P_.E_L ) + I_spike + I_syn_ex - I_syn_in - w + node.P_.I_e + node.B_.I_stim_ )
+    : std::min( node.P_.I_max, -node.P_.g_L * ( V - node.P_.E_L ) + I_spike + I_syn_ex - I_syn_in - w + node.P_.I_e + node.B_.I_stim_ )
       / node.P_.C_m;
 
   f[ S::DI_EXC ] = -dI_syn_ex / node.P_.tau_syn_ex;
@@ -136,6 +136,7 @@ nest::aeif_psc_alpha::Parameters_::Parameters_()
   , tau_syn_ex( 0.2 ) // ms
   , tau_syn_in( 2.0 ) // ms
   , I_e( 0.0 )        // pA
+  , I_max( std::numeric_limits< double >::max() ) // pA  
   , gsl_error_tol( 1e-6 )
 {
 }
@@ -190,6 +191,7 @@ nest::aeif_psc_alpha::Parameters_::get( DictionaryDatum& d ) const
   def< double >( d, names::Delta_T, Delta_T );
   def< double >( d, names::tau_w, tau_w );
   def< double >( d, names::I_e, I_e );
+  def< double >( d, names::I_max, I_max );
   def< double >( d, names::V_peak, V_peak_ );
   def< double >( d, names::gsl_error_tol, gsl_error_tol );
 }
@@ -215,6 +217,7 @@ nest::aeif_psc_alpha::Parameters_::set( const DictionaryDatum& d, Node* node )
   updateValueParam< double >( d, names::tau_w, tau_w, node );
 
   updateValueParam< double >( d, names::I_e, I_e, node );
+  updateValueParam< double >( d, names::I_max, I_max, node );
 
   updateValueParam< double >( d, names::gsl_error_tol, gsl_error_tol, node );
 
