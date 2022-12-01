@@ -100,6 +100,12 @@ For implementation details see the
 
 See also [1]_.
 
+.. note:: 
+   Due to the exponential current, AdEx neurons are prone to numerical instability.
+   By setting `I_max`, the total current given by the right-hand side of the membrane-potential
+   equation can be limited. Setting `I_max` to :math:`10^6` pA or less appears to ensure 
+   numerical stability. 
+
 Parameters
 ++++++++++
 
