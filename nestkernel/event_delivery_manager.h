@@ -252,6 +252,13 @@ public:
    * Set time measurements for internal profiling to zero (reg. sim. dyn.)
    */
   virtual void reset_timers_for_dynamics();
+  
+  /**
+   * Reduce send/recv buffer size if capacity was not needed in last round.
+   *
+   * @note Call only on master thread.
+   */
+  void shrink_send_recv_buffers();
 
 private:
   template < typename SpikeDataT >
@@ -272,7 +279,7 @@ private:
   void collocate_spike_data_buffers_( const size_t tid,
     const AssignedRanks& assigned_ranks,
     SendBufferPosition& send_buffer_position,
-    std::vector< std::vector< std::vector< TargetT > >* >& spike_register,
+    std::vector< std::vector< std::vector< std::vector< TargetT > > >* >& spike_register,
     std::vector< SpikeDataT >& send_buffer,
     std::vector< size_t >& num_spikes_per_rank );
 
@@ -406,12 +413,13 @@ private:
    * immediately sorted by the thread that will later move the spikes to the
    * MPI buffers.
    * - First dim: write threads (from node to register)
-   * - Second dim: read threads (from register to MPI buffer) --> REMOVE this dim in this test branch (for 1 MPI)  //
-   * TODO: Check if we should re-activate assinging to threads
+   * - Second dim: read threads (from register to MPI buffer)
    * - Third dim: lag
    * - Fourth dim: Target (will be converted in SpikeData)
+   *
+   * The outermost level contains a pointer, so that the inner dimensions can be fully placed on the writing thread.
    */
-  std::vector< std::vector< std::vector< Target > >* > emitted_spikes_register_;
+  std::vector< std::vector< std::vector< std::vector< Target > > >* > emitted_spikes_register_;
 
   /**
    * Register for node IDs of precise neurons that spiked. This is a 4-dim
@@ -419,12 +427,13 @@ private:
    * immediately sorted by the thread that will later move the spikes to the
    * MPI buffers.
    * - First dim: write threads (from node to register)
-   * - Second dim: read threads (from register to MPI buffer) --> REMOVE this dim in this test branch (for 1 MPI)  //
-   * TODO: Check if we should re-activate assinging to threads
+   * - Second dim: read threads (from register to MPI buffer)
    * - Third dim: lag
    * - Fourth dim: OffGridTarget (will be converted in OffGridSpikeData)
+   *
+   * The outermost level contains a pointer, so that the inner dimensions can be fully placed on the writing thread.
    */
-  std::vector< std::vector< std::vector< OffGridTarget > >* > off_grid_emitted_spike_register_;
+  std::vector< std::vector< std::vector< std::vector< OffGridTarget > > >* > off_grid_emitted_spikes_register_;
 
   /**
    * Buffer to collect the secondary events
@@ -449,7 +458,10 @@ private:
   //! whether size of MPI buffer for communication of connections was changed
   bool buffer_size_target_data_has_changed_;
 
-  //! largest number of spikes sent between any two ranks in most recent gather round
+  //! For each gathering thread the largest number of spikes in any "assigned rank" slot
+  std::vector< size_t > per_thread_max_spikes_per_rank_;
+  
+  //! Largest number of spikes sent in any "assigned rank" slot between any two ranks in most recent gather round
   size_t max_per_thread_max_spikes_per_rank_;
 
   double send_recv_buffer_shrink_limit_;  //!< shrink buffer only if below this limit
@@ -476,18 +488,20 @@ private:
 inline void
 EventDeliveryManager::reset_spike_register_( const size_t tid )
 {
-  for ( std::vector< std::vector< Target > >::iterator it = emitted_spikes_register_[ tid ]->begin();
-        it < emitted_spikes_register_[ tid ]->end();
-        ++it )
+  for ( auto& read_thread_register : *emitted_spikes_register_[ tid ] )
   {
-    ( *it ).clear();
+    for ( auto& per_lag_register : read_thread_register )
+    {
+      per_lag_register.clear();
+    }
   }
 
-  for ( std::vector< std::vector< OffGridTarget > >::iterator it = off_grid_emitted_spike_register_[ tid ]->begin();
-        it < off_grid_emitted_spike_register_[ tid ]->end();
-        ++it )
+  for ( auto& read_thread_register : *off_grid_emitted_spikes_register_[ tid ] )
   {
-    ( *it ).clear();
+    for ( auto& per_lag_register : read_thread_register )
+    {
+      per_lag_register.clear();
+    }
   }
 }
 
@@ -500,19 +514,22 @@ EventDeliveryManager::is_marked_for_removal_( const Target& target )
 inline void
 EventDeliveryManager::clean_spike_register_( const size_t tid )
 {
-  for ( std::vector< std::vector< Target > >::iterator it = emitted_spikes_register_[ tid ]->begin();
-        it < emitted_spikes_register_[ tid ]->end();
-        ++it )
+  for ( auto& read_thread_register : *emitted_spikes_register_[ tid ] )
   {
-    std::vector< Target >::iterator new_end = std::remove_if( it->begin(), it->end(), is_marked_for_removal_ );
-    it->erase( new_end, it->end() );
+    for ( auto& per_lag_register : read_thread_register )
+    {
+      std::vector< Target >::iterator new_end = std::remove_if( per_lag_register.begin(), per_lag_register.end(), is_marked_for_removal_ );
+      per_lag_register.erase( new_end, per_lag_register.end() );
+    }
   }
-  for ( std::vector< std::vector< OffGridTarget > >::iterator it = off_grid_emitted_spike_register_[ tid ]->begin();
-        it < off_grid_emitted_spike_register_[ tid ]->end();
-        ++it )
+  
+  for ( auto& read_thread_register : *off_grid_emitted_spikes_register_[ tid ] )
   {
-    std::vector< OffGridTarget >::iterator new_end = std::remove_if( it->begin(), it->end(), is_marked_for_removal_ );
-    it->erase( new_end, it->end() );
+    for ( auto& per_lag_register : read_thread_register )
+    {
+      std::vector< OffGridTarget >::iterator new_end = std::remove_if( per_lag_register.begin(), per_lag_register.end(), is_marked_for_removal_ );
+      per_lag_register.erase( new_end, per_lag_register.end() );
+    }
   }
 }
 

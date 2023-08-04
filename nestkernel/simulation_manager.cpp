@@ -1010,31 +1010,44 @@ nest::SimulationManager::update_()
           }
         }
 
-// parallel section ends, wait until all threads are done -> synchronize
+// The barrier above update ensures that all threads have completed event delivery before we ever get here.
+// Therefore, master can shrink the send/receive buffers here safely. Using master instead of single so that
+// memory location of buffers will be close to master thread.
+#pragma omp master
+        {
+          kernel().event_delivery_manager.shrink_send_recv_buffers();
+        }
 #pragma omp barrier
 
 #ifdef TIMER_DETAILED
         if ( tid == 0 )
         {
           sw_update_.stop();
+          sw_gather_spike_data_.start();
         }
 #endif
 
-        // the following block is executed by the master thread only
+        // gather and deliver only at end of slice, i.e., end of min_delay step
+        // TODO: For now, only gather normal spikes in parallel, work on secondary events later
+        if ( to_step_ == kernel().connection_manager.get_min_delay() )
+        {
+          if ( kernel().connection_manager.has_primary_connections() )
+          {
+            kernel().event_delivery_manager.gather_spike_data( tid );
+          }
+        }
+        
+// ensure all threads are done gathering
+#pragma omp barrier
+        
+// the following block is executed by the master thread only
 // the other threads are enforced to wait at the end of the block
 #pragma omp master
         {
-#ifdef TIMER_DETAILED
-          sw_gather_spike_data_.start();
-#endif
-
           // gather and deliver only at end of slice, i.e., end of min_delay step
+          // TODO: see if secondary events gathering can also be parallelized
           if ( to_step_ == kernel().connection_manager.get_min_delay() )
           {
-            if ( kernel().connection_manager.has_primary_connections() )
-            {
-              kernel().event_delivery_manager.gather_spike_data( tid );
-            }
             if ( kernel().connection_manager.secondary_connections_exist() )
             {
               {

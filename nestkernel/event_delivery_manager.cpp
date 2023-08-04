@@ -49,7 +49,7 @@ EventDeliveryManager::EventDeliveryManager()
   , moduli_()
   , slice_moduli_()
   , emitted_spikes_register_()
-  , off_grid_emitted_spike_register_()
+  , off_grid_emitted_spikes_register_()
   , send_buffer_secondary_events_()
   , recv_buffer_secondary_events_()
   , local_spike_counter_()
@@ -60,6 +60,7 @@ EventDeliveryManager::EventDeliveryManager()
   , send_buffer_target_data_()
   , recv_buffer_target_data_()
   , buffer_size_target_data_has_changed_( false )
+  , per_thread_max_spikes_per_rank_()
   , max_per_thread_max_spikes_per_rank_( 0 )
   , send_recv_buffer_shrink_limit_( 0.0 )
   , send_recv_buffer_shrink_factor_( 0.8 )
@@ -87,11 +88,12 @@ EventDeliveryManager::initialize()
   reset_timers_for_preparation();
   reset_timers_for_dynamics();
   emitted_spikes_register_.resize( num_threads );
-  off_grid_emitted_spike_register_.resize( num_threads );
+  off_grid_emitted_spikes_register_.resize( num_threads );
   gather_completed_checker_.initialize( num_threads, false );
   // Ensures that ResetKernel resets off_grid_spiking_
   off_grid_spiking_ = false;
   buffer_size_target_data_has_changed_ = false;
+  per_thread_max_spikes_per_rank_.resize( num_threads, 0 );
   send_recv_buffer_shrink_limit_ = 0.0;
   send_recv_buffer_shrink_factor_ = 0.8;
   send_recv_buffer_growth_extra_ = 0.05;
@@ -106,16 +108,19 @@ EventDeliveryManager::initialize()
 
     if ( not emitted_spikes_register_[ tid ] )
     {
-      emitted_spikes_register_[ tid ] = new std::vector< std::vector< Target > >();
+      emitted_spikes_register_[ tid ] = new std::vector< std::vector< std::vector< Target > > >();
     }
-    emitted_spikes_register_[ tid ]->resize( kernel().connection_manager.get_min_delay(), std::vector< Target >() );
+    emitted_spikes_register_[ tid ]->resize( num_threads,
+                                             std::vector< std::vector< Target > >(kernel().connection_manager.get_min_delay(),
+                                                                                  std::vector< Target >() ) );
 
-    if ( not off_grid_emitted_spike_register_[ tid ] )
+    if ( not off_grid_emitted_spikes_register_[ tid ] )
     {
-      off_grid_emitted_spike_register_[ tid ] = new std::vector< std::vector< OffGridTarget > >();
+      off_grid_emitted_spikes_register_[ tid ] = new std::vector< std::vector< std::vector< OffGridTarget > > >();
     }
-    off_grid_emitted_spike_register_[ tid ]->resize(
-      kernel().connection_manager.get_min_delay(), std::vector< OffGridTarget >() );
+    off_grid_emitted_spikes_register_[ tid ]->resize(num_threads,
+                                                     std::vector< std::vector< OffGridTarget > >(kernel().connection_manager.get_min_delay(),
+                                                                                                 std::vector< OffGridTarget >() ) );
   } // of omp parallel
 }
 
@@ -123,19 +128,19 @@ void
 EventDeliveryManager::finalize()
 {
   // clear the spike buffers
-  for ( auto it = emitted_spikes_register_.begin(); it < emitted_spikes_register_.end(); ++it )
+  for ( auto& write_thread_register : emitted_spikes_register_ )
   {
-    ( *it )->clear();
-    delete ( *it );
+    write_thread_register->clear();
+    delete write_thread_register;
   }
   emitted_spikes_register_.clear();
 
-  for ( auto it = off_grid_emitted_spike_register_.begin(); it < off_grid_emitted_spike_register_.end(); ++it )
+  for ( auto& write_thread_register : off_grid_emitted_spikes_register_ )
   {
-    ( *it )->clear();
-    delete ( *it );
+    write_thread_register->clear();
+    delete write_thread_register;
   }
-  off_grid_emitted_spike_register_.clear();
+  off_grid_emitted_spikes_register_.clear();
 
   send_buffer_secondary_events_.clear();
   recv_buffer_secondary_events_.clear();
@@ -397,40 +402,33 @@ EventDeliveryManager::gather_spike_data( const size_t tid )
   }
 }
 
+void
+EventDeliveryManager::shrink_send_recv_buffers()
+{
+  const size_t old_buff_size_per_rank = kernel().mpi_manager.get_send_recv_count_spike_data_per_rank();
+  
+  if ( max_per_thread_max_spikes_per_rank_ < send_recv_buffer_shrink_limit_ * old_buff_size_per_rank )
+  {
+    const size_t new_buff_size_per_rank =
+    std::max( 2UL, static_cast< size_t >( send_recv_buffer_shrink_factor_ * old_buff_size_per_rank ) );
+    kernel().mpi_manager.set_buffer_size_spike_data(
+                                                    kernel().mpi_manager.get_num_processes() * new_buff_size_per_rank );
+    resize_send_recv_buffers_spike_data_();
+    ++send_recv_buffer_shrink_count_;
+    send_recv_buffer_shrink_delta_ += old_buff_size_per_rank - new_buff_size_per_rank;
+  }
+}
+
 template < typename SpikeDataT >
 void
 EventDeliveryManager::gather_spike_data_( const size_t tid,
   std::vector< SpikeDataT >& send_buffer,
   std::vector< SpikeDataT >& recv_buffer )
 {
-  // TODO: For this branch, spike gathering is done in master only, which is assigned all ranks.
-  //       Since AssignedRanks are used deeply in send_buffer_position, we fix the rank assignment
-  //       manually here.
-  // const AssignedRanks assigned_ranks = kernel().vp_manager.get_assigned_ranks( tid );
-
   // NOTE: For meaning and logic of SpikeData flags for detecting complete transmission
   //       and information for shrink/grow, see comment in spike_data.h.
 
-  assert( tid == 0 );
-
-  AssignedRanks assigned_ranks;
-  assigned_ranks.begin = 0;
-  assigned_ranks.end = kernel().mpi_manager.get_num_processes();
-  assigned_ranks.size = assigned_ranks.end - assigned_ranks.begin;
-  assigned_ranks.max_size = assigned_ranks.size;
-
-  const size_t old_buff_size_per_rank = kernel().mpi_manager.get_send_recv_count_spike_data_per_rank();
-
-  if ( max_per_thread_max_spikes_per_rank_ < send_recv_buffer_shrink_limit_ * old_buff_size_per_rank )
-  {
-    const size_t new_buff_size_per_rank =
-      std::max( 2UL, static_cast< size_t >( send_recv_buffer_shrink_factor_ * old_buff_size_per_rank ) );
-    kernel().mpi_manager.set_buffer_size_spike_data(
-      kernel().mpi_manager.get_num_processes() * new_buff_size_per_rank );
-    resize_send_recv_buffers_spike_data_();
-    ++send_recv_buffer_shrink_count_;
-    send_recv_buffer_shrink_delta_ += old_buff_size_per_rank - new_buff_size_per_rank;
-  }
+  const AssignedRanks assigned_ranks = kernel().vp_manager.get_assigned_ranks( tid );
 
   /* The following do-while loop is executed
    * - once if all spikes fit into current send buffers on all ranks
@@ -460,21 +458,18 @@ EventDeliveryManager::gather_spike_data_( const size_t tid,
     if ( off_grid_spiking_ )
     {
       collocate_spike_data_buffers_(
-        tid, assigned_ranks, send_buffer_position, off_grid_emitted_spike_register_, send_buffer, num_spikes_per_rank );
+        tid, assigned_ranks, send_buffer_position, off_grid_emitted_spikes_register_, send_buffer, num_spikes_per_rank );
     }
 
     FULL_LOGGING_ONLY( for ( auto c
-                             : num_spikes_per_rank ) { kernel().write_to_dump( String::compose( "nspr %1", c ) ); } )
+                             : num_spikes_per_rank ) { kernel().write_to_dump( String::compose( "tid %1 nspr %2", c, tid ) ); } )
 
-    // Largest number of spikes sent from this rank to any other rank. This is *not* a global maximum, that is collected
-    // below.
-    const auto per_thread_max_spikes_per_rank =
-      *std::max_element( num_spikes_per_rank.begin(), num_spikes_per_rank.end() );
+    // Largest number of spikes sent from this rank to any other rank in any "assigned rank" slot.
+    // This is *not* a global maximum, that is collected below.
+    per_thread_max_spikes_per_rank_[tid] = *std::max_element( num_spikes_per_rank.begin(), num_spikes_per_rank.end() );
 
     // At this point, all send_buffer entries with spikes to be transmitted, as well
     // as all chunk-end entries, have marker DEFAULT.
-
-    set_end_marker_( assigned_ranks, send_buffer_position, send_buffer, per_thread_max_spikes_per_rank );
 
 #ifdef TIMER_DETAILED
     {
@@ -483,41 +478,51 @@ EventDeliveryManager::gather_spike_data_( const size_t tid,
     }
 #endif
 
-    // Given that we templatize by plain vs offgrid, this if should not be necessary, but ...
-    if ( off_grid_spiking_ )
+// Master now performs one round of exchange with other ranks including growth of buffers if needed.
+#pragma omp barrier
+#pragma omp master
     {
-      kernel().mpi_manager.communicate_off_grid_spike_data_Alltoall( send_buffer, recv_buffer );
-    }
-    else
-    {
-      kernel().mpi_manager.communicate_spike_data_Alltoall( send_buffer, recv_buffer );
-    }
+      // largest number of spikes in any per-assigned rank slot across all gathering ranks
+      const auto all_per_thread_max_spikes_per_rank = *std::max_element(per_thread_max_spikes_per_rank_.begin(),
+                                                                        per_thread_max_spikes_per_rank_.end() );
+      set_end_marker_( assigned_ranks, send_buffer_position, send_buffer, all_per_thread_max_spikes_per_rank );
 
+      if ( off_grid_spiking_ )
+      {
+        kernel().mpi_manager.communicate_off_grid_spike_data_Alltoall( send_buffer, recv_buffer );
+      }
+      else
+      {
+        kernel().mpi_manager.communicate_spike_data_Alltoall( send_buffer, recv_buffer );
+      }
+      
 #ifdef TIMER_DETAILED
-    {
-      sw_communicate_spike_data_.stop();
-    }
+      {
+        sw_communicate_spike_data_.stop();
+      }
 #endif
-
-    max_per_thread_max_spikes_per_rank_ =
+      
+      max_per_thread_max_spikes_per_rank_ =
       get_max_spike_data_per_thread_( assigned_ranks, send_buffer_position, recv_buffer );
-
-    all_spikes_transmitted =
+      
+      all_spikes_transmitted =
       max_per_thread_max_spikes_per_rank_ <= kernel().mpi_manager.get_send_recv_count_spike_data_per_rank();
-
-    if ( not all_spikes_transmitted )
-    {
-      const size_t new_size_per_rank =
+      
+      if ( not all_spikes_transmitted )
+      {
+        const size_t new_size_per_rank =
         static_cast< size_t >( ( 1 + send_recv_buffer_growth_extra_ ) * max_per_thread_max_spikes_per_rank_ );
-
-      ++send_recv_buffer_grow_count_;
-      send_recv_buffer_grow_delta_ +=
+        
+        ++send_recv_buffer_grow_count_;
+        send_recv_buffer_grow_delta_ +=
         new_size_per_rank - kernel().mpi_manager.get_send_recv_count_spike_data_per_rank();
-
-      kernel().mpi_manager.set_buffer_size_spike_data( kernel().mpi_manager.get_num_processes() * new_size_per_rank );
-      resize_send_recv_buffers_spike_data_();
+        
+        kernel().mpi_manager.set_buffer_size_spike_data( kernel().mpi_manager.get_num_processes() * new_size_per_rank );
+        resize_send_recv_buffers_spike_data_();
+      }
     }
-
+#pragma omp barrier
+    
   } while ( not all_spikes_transmitted );
 
   // We cannot shrink buffers here, because they first need to be read out by
@@ -534,22 +539,21 @@ void
 EventDeliveryManager::collocate_spike_data_buffers_( const size_t tid,
   const AssignedRanks& assigned_ranks,
   SendBufferPosition& send_buffer_position,
-  std::vector< std::vector< std::vector< TargetT > >* >& emitted_spikes_register,
+  std::vector< std::vector< std::vector< std::vector< TargetT > > >* >& emitted_spikes_register,
   std::vector< SpikeDataT >& send_buffer,
   std::vector< size_t >& num_spikes_per_rank )
 {
-  // TODO: Re-introduce assigned_ranks concept; assert mainly suppresses unused variable warnings
-  assert( tid == 0 and assigned_ranks.begin <= assigned_ranks.end );
-
   // First dimension: loop over writing thread
   for ( auto& emitted_spikes_per_thread : emitted_spikes_register )
   {
-
+    // Second dimension: pick register for this read-thread
+    auto& emitted_spikes_to_read = (*emitted_spikes_per_thread)[tid];
+    
     // Third dimension: loop over lags
-    for ( unsigned int lag = 0; lag < emitted_spikes_per_thread->size(); ++lag )
+    for ( unsigned int lag = 0; lag < emitted_spikes_to_read.size(); ++lag )
     {
       // Fourth dimension: loop over entries
-      for ( auto& emitted_spike : ( *emitted_spikes_per_thread )[ lag ] )
+      for ( auto& emitted_spike : emitted_spikes_to_read[ lag ] )
       {
         assert( not emitted_spike.is_processed() );
 
@@ -734,8 +738,8 @@ EventDeliveryManager::deliver_events_( const size_t tid, const std::vector< Spik
       }
     }
 
-    const unsigned int num_batches = num_valid_entries / BATCH_SIZE;
-    const unsigned int num_remaining_entries = num_valid_entries - num_batches * BATCH_SIZE;
+    const auto num_batches = num_valid_entries / BATCH_SIZE;
+    const auto num_remaining_entries = num_valid_entries - num_batches * BATCH_SIZE;
 
     size_t tid_batch[ BATCH_SIZE ];
     size_t syn_id_batch[ BATCH_SIZE ];
@@ -1206,9 +1210,15 @@ nest::EventDeliveryManager::distribute_target_data_buffers_( const size_t tid )
 void
 EventDeliveryManager::resize_spike_register_( const size_t tid )
 {
-  emitted_spikes_register_[ tid ]->resize( kernel().connection_manager.get_min_delay(), std::vector< Target >() );
-  off_grid_emitted_spike_register_[ tid ]->resize(
-    kernel().connection_manager.get_min_delay(), std::vector< OffGridTarget >() );
+  for ( auto& read_thread_register : *emitted_spikes_register_[tid]  )
+  {
+    read_thread_register.resize( kernel().connection_manager.get_min_delay(), std::vector< Target >() );
+  }
+
+  for ( auto& read_thread_register : *off_grid_emitted_spikes_register_[tid]  )
+  {
+    read_thread_register.resize( kernel().connection_manager.get_min_delay(), std::vector< OffGridTarget >() );
+  }
 }
 
 } // of namespace nest
