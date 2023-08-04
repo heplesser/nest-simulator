@@ -62,6 +62,7 @@ EventDeliveryManager::EventDeliveryManager()
   , buffer_size_target_data_has_changed_( false )
   , per_thread_max_spikes_per_rank_()
   , max_per_thread_max_spikes_per_rank_( 0 )
+  , all_spikes_transmitted_( false )
   , send_recv_buffer_shrink_limit_( 0.0 )
   , send_recv_buffer_shrink_factor_( 0.8 )
   , send_recv_buffer_growth_extra_( 0.05 )
@@ -94,6 +95,7 @@ EventDeliveryManager::initialize()
   off_grid_spiking_ = false;
   buffer_size_target_data_has_changed_ = false;
   per_thread_max_spikes_per_rank_.resize( num_threads, 0 );
+  all_spikes_transmitted_ = false;
   send_recv_buffer_shrink_limit_ = 0.0;
   send_recv_buffer_shrink_factor_ = 0.8;
   send_recv_buffer_growth_extra_ = 0.05;
@@ -403,8 +405,10 @@ EventDeliveryManager::gather_spike_data( const size_t tid )
 }
 
 void
-EventDeliveryManager::shrink_send_recv_buffers()
+EventDeliveryManager::prepare_gather_spike_data()
 {
+  all_spikes_transmitted_ = false;
+  
   const size_t old_buff_size_per_rank = kernel().mpi_manager.get_send_recv_count_spike_data_per_rank();
   
   if ( max_per_thread_max_spikes_per_rank_ < send_recv_buffer_shrink_limit_ * old_buff_size_per_rank )
@@ -434,7 +438,6 @@ EventDeliveryManager::gather_spike_data_( const size_t tid,
    * - once if all spikes fit into current send buffers on all ranks
    * - twice if send buffer size needs to be increased to fit in all spikes
    */
-  bool all_spikes_transmitted = false;
   do
   {
     // Need to get new positions in case buffer size has changed
@@ -462,7 +465,7 @@ EventDeliveryManager::gather_spike_data_( const size_t tid,
     }
 
     FULL_LOGGING_ONLY( for ( auto c
-                             : num_spikes_per_rank ) { kernel().write_to_dump( String::compose( "tid %1 nspr %2", c, tid ) ); } )
+                             : num_spikes_per_rank ) { kernel().write_to_dump( String::compose( "tid %1 nspr %2", tid, c ) ); } )
 
     // Largest number of spikes sent from this rank to any other rank in any "assigned rank" slot.
     // This is *not* a global maximum, that is collected below.
@@ -505,10 +508,10 @@ EventDeliveryManager::gather_spike_data_( const size_t tid,
       max_per_thread_max_spikes_per_rank_ =
       get_max_spike_data_per_thread_( assigned_ranks, send_buffer_position, recv_buffer );
       
-      all_spikes_transmitted =
+      all_spikes_transmitted_ =
       max_per_thread_max_spikes_per_rank_ <= kernel().mpi_manager.get_send_recv_count_spike_data_per_rank();
       
-      if ( not all_spikes_transmitted )
+      if ( not all_spikes_transmitted_ )
       {
         const size_t new_size_per_rank =
         static_cast< size_t >( ( 1 + send_recv_buffer_growth_extra_ ) * max_per_thread_max_spikes_per_rank_ );
@@ -523,7 +526,7 @@ EventDeliveryManager::gather_spike_data_( const size_t tid,
     }
 #pragma omp barrier
     
-  } while ( not all_spikes_transmitted );
+  } while ( not all_spikes_transmitted_ );
 
   // We cannot shrink buffers here, because they first need to be read out by
   // deliver events. Shrinking will happen at beginning of next gather.

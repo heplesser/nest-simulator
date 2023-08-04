@@ -1015,7 +1015,7 @@ nest::SimulationManager::update_()
 // memory location of buffers will be close to master thread.
 #pragma omp master
         {
-          kernel().event_delivery_manager.shrink_send_recv_buffers();
+          kernel().event_delivery_manager.prepare_gather_spike_data();
         }
 #pragma omp barrier
 

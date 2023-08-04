@@ -254,11 +254,14 @@ public:
   virtual void reset_timers_for_dynamics();
   
   /**
-   * Reduce send/recv buffer size if capacity was not needed in last round.
+   * Prepare for gathering spike data.
    *
-   * @note Call only on master thread.
+   * Reduce send/recv buffer size if capacity was not needed in last round.
+   * Reset all_spikes_transmitted flag.
+   *
+   * @note Call only on master thread. Not called from inside gather_spike_data to minimize synchronization points.
    */
-  void shrink_send_recv_buffers();
+  void prepare_gather_spike_data();
 
 private:
   template < typename SpikeDataT >
@@ -463,6 +466,14 @@ private:
   
   //! Largest number of spikes sent in any "assigned rank" slot between any two ranks in most recent gather round
   size_t max_per_thread_max_spikes_per_rank_;
+  
+  /**
+   * Flag indicating complete spike transmission.
+   *
+   * This flag is set by the master thread only but read by all threads. It is therefore a member variable,
+   * even though it logically is local to gather_spike_data_()
+   */
+  bool all_spikes_transmitted_;
 
   double send_recv_buffer_shrink_limit_;  //!< shrink buffer only if below this limit
   double send_recv_buffer_shrink_factor_; //!< shrink buffer by this factor
