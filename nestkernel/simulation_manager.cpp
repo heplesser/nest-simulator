@@ -1036,10 +1036,10 @@ nest::SimulationManager::update_()
             kernel().event_delivery_manager.gather_spike_data( tid );
           }
         }
-        
+
 // ensure all threads are done gathering
 #pragma omp barrier
-        
+
 // the following block is executed by the master thread only
 // the other threads are enforced to wait at the end of the block
 #pragma omp master

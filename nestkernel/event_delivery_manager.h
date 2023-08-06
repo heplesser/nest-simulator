@@ -252,7 +252,7 @@ public:
    * Set time measurements for internal profiling to zero (reg. sim. dyn.)
    */
   virtual void reset_timers_for_dynamics();
-  
+
   /**
    * Prepare for gathering spike data.
    *
@@ -310,9 +310,7 @@ private:
    * @returns maximum over required buffer sizes communicated by all ranks
    */
   template < typename SpikeDataT >
-  size_t get_max_spike_data_per_thread_( const AssignedRanks& assigned_ranks,
-    const SendBufferPosition& send_buffer_position,
-    std::vector< SpikeDataT >& recv_buffer ) const;
+  size_t get_max_spike_data_per_thread_( std::vector< SpikeDataT >& recv_buffer ) const;
 
 
   /**
@@ -463,10 +461,15 @@ private:
 
   //! For each gathering thread the largest number of spikes in any "assigned rank" slot
   std::vector< size_t > per_thread_max_spikes_per_rank_;
-  
-  //! Largest number of spikes sent in any "assigned rank" slot between any two ranks in most recent gather round
+
+  //! On a single rank, largest number of spikes sent in any "assigned rank" slot between any two ranks in most recent
+  //! gather round
+  size_t all_per_thread_max_spikes_per_rank_;
+
+  //! Across all ranks, largest number of spikes sent in any "assigned rank" slot between any two ranks in most recent
+  //! gather round
   size_t max_per_thread_max_spikes_per_rank_;
-  
+
   /**
    * Flag indicating complete spike transmission.
    *
@@ -529,16 +532,18 @@ EventDeliveryManager::clean_spike_register_( const size_t tid )
   {
     for ( auto& per_lag_register : read_thread_register )
     {
-      std::vector< Target >::iterator new_end = std::remove_if( per_lag_register.begin(), per_lag_register.end(), is_marked_for_removal_ );
+      std::vector< Target >::iterator new_end =
+        std::remove_if( per_lag_register.begin(), per_lag_register.end(), is_marked_for_removal_ );
       per_lag_register.erase( new_end, per_lag_register.end() );
     }
   }
-  
+
   for ( auto& read_thread_register : *off_grid_emitted_spikes_register_[ tid ] )
   {
     for ( auto& per_lag_register : read_thread_register )
     {
-      std::vector< OffGridTarget >::iterator new_end = std::remove_if( per_lag_register.begin(), per_lag_register.end(), is_marked_for_removal_ );
+      std::vector< OffGridTarget >::iterator new_end =
+        std::remove_if( per_lag_register.begin(), per_lag_register.end(), is_marked_for_removal_ );
       per_lag_register.erase( new_end, per_lag_register.end() );
     }
   }

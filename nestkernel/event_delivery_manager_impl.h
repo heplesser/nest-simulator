@@ -116,7 +116,7 @@ EventDeliveryManager::send_remote( size_t tid, SpikeEvent& e, const long lag )
   for ( std::vector< Target >::const_iterator it = targets.begin(); it != targets.end(); ++it )
   {
     const size_t assigned_tid = ( *it ).get_rank() / kernel().vp_manager.get_num_assigned_ranks_per_thread();
-    
+
     FULL_LOGGING_ONLY( kernel().write_to_dump( String::compose( "r%1 t%2 s%3 m%4 l%5 tr%6 ar%7",
       kernel().mpi_manager.get_rank(),
       kernel().vp_manager.get_thread_id(),
@@ -148,7 +148,8 @@ EventDeliveryManager::send_off_grid_remote( size_t tid, SpikeEvent& e, const lon
     // Unroll spike multiplicity as plastic synapses only handle individual spikes.
     for ( size_t i = 0; i < e.get_multiplicity(); ++i )
     {
-      ( *off_grid_emitted_spikes_register_[ tid ] )[ assigned_tid ][ lag ].push_back( OffGridTarget( *it, e.get_offset() ) );
+      ( *off_grid_emitted_spikes_register_[ tid ] )[ assigned_tid ][ lag ].push_back(
+        OffGridTarget( *it, e.get_offset() ) );
     }
   }
 }
