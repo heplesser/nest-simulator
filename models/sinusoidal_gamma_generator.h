@@ -77,7 +77,8 @@ The instantaneous rate of the process is given by
 By default, the generator sends a different spike train to each of its
 targets. If ``individual_spike_trains`` is set to ``False`` using either
 :py:func:`.SetDefaults` or :py:func:`.CopyModel` before a generator node
-is created, the generator will send the same spike train to all of its targets.
+is created, the generator will send the same spike train to all of its targets. In this case, the only a single
+generator instance is created (no replication across virtual processes).
 
 .. include:: ../models/stimulation_device.rst
 
