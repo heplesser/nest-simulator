@@ -49,7 +49,7 @@ nest::inhomogeneous_poisson_generator::Parameters_::Parameters_()
   : rate_times_()  // ms
   , rate_values_() // spikes/ms,
   , allow_offgrid_times_( false )
-
+  , individual_spike_trains_( true )
 {
 }
 
@@ -71,6 +71,7 @@ nest::inhomogeneous_poisson_generator::Parameters_::get( DictionaryDatum& d ) co
   ( *d )[ names::rate_times ] = DoubleVectorDatum( times_ms );
   ( *d )[ names::rate_values ] = DoubleVectorDatum( new std::vector< double >( rate_values_ ) );
   ( *d )[ names::allow_offgrid_times ] = BoolDatum( allow_offgrid_times_ );
+  ( *d )[ names::individual_spike_trains ] = individual_spike_trains_;
 }
 
 void
@@ -112,6 +113,8 @@ nest::inhomogeneous_poisson_generator::Parameters_::assert_valid_rate_time_and_i
 void
 nest::inhomogeneous_poisson_generator::Parameters_::set( const DictionaryDatum& d, Buffers_& b, Node* )
 {
+  updateValue< bool >( d, names::individual_spike_trains, individual_spike_trains_ );
+
   const bool times = d->known( names::rate_times );
   const bool rates = updateValue< std::vector< double > >( d, names::rate_values, rate_values_ );
 
@@ -240,6 +243,9 @@ nest::inhomogeneous_poisson_generator::update( Time const& origin, const long fr
 
   const long t0 = origin.get_steps();
 
+  // random number generator --- TODO: Could this go into Variables_?
+  RngPtr rng = get_vp_specific_rng( get_thread() );
+
   // Skip any times in the past. Since we must send events proactively,
   // idx_ must point to times in the future.
   const long first = t0 + from;
@@ -264,8 +270,24 @@ nest::inhomogeneous_poisson_generator::update( Time const& origin, const long fr
     // create spikes
     if ( B_.rate_ > 0 and StimulationDevice::is_active( Time::step( curr_time ) ) )
     {
-      DSSpikeEvent se;
-      kernel().event_delivery_manager.send( *this, se, offs );
+      if ( P_.individual_spike_trains_ )
+      {
+        DSSpikeEvent se;
+        kernel().event_delivery_manager.send( *this, se, offs );
+      }
+      else
+      {
+        // TODO: Could this go into Variables_?
+        poisson_distribution::param_type param( B_.rate_ * V_.h_ );
+        const long n_spikes = V_.poisson_dist_( rng, param );
+
+        if ( n_spikes > 0 ) // we must not send events with multiplicity 0
+        {
+          SpikeEvent se;
+          se.set_multiplicity( n_spikes );
+          kernel().event_delivery_manager.send( *this, se, offs );
+        }
+      }
     }
   }
 }
@@ -274,7 +296,7 @@ void
 nest::inhomogeneous_poisson_generator::event_hook( DSSpikeEvent& e )
 {
   poisson_distribution::param_type param( B_.rate_ * V_.h_ );
-  long n_spikes = V_.poisson_dist_( get_vp_specific_rng( get_thread() ), param );
+  const long n_spikes = V_.poisson_dist_( get_vp_specific_rng( get_thread() ), param );
 
   if ( n_spikes > 0 ) // we must not send events with multiplicity 0
   {
@@ -303,6 +325,8 @@ nest::inhomogeneous_poisson_generator::set_data_from_stimulation_backend( std::v
     std::vector< double > times_ms;
     std::vector< double > rate_values;
     const size_t n_spikes = P_.rate_times_.size();
+    // TODO: copy old values en bloc, consider dropping times in the past; add checks for new times as in
+    // Parameters::set()
     for ( size_t n = 0; n < n_spikes; ++n )
     {
       times_ms.push_back( P_.rate_times_[ n ].get_ms() );

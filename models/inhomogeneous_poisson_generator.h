@@ -32,7 +32,6 @@
 #include "event.h"
 #include "nest.h"
 #include "random_generators.h"
-#include "ring_buffer.h"
 #include "stimulation_device.h"
 
 namespace nest
@@ -51,8 +50,13 @@ Description
 The inhomogeneous Poisson generator provides Poisson spike trains at a
 piecewise constant rate to the connected node(s). The rate of the process
 is changed at the specified times. The unit of the instantaneous rate
-is spikes/s. By default, each target of the generator will receive
-a different spike train.
+is spikes/s.
+
+By default, the generator sends a different spike train to each of its
+targets. If ``individual_spike_trains`` is set to ``False`` using either
+:py:func:`.SetDefaults` or :py:func:`.CopyModel` before a generator node
+is created, the generator will send the same spike train to all of its targets. In this case, the only a single
+generator instance is created (no replication across virtual processes).
 
 .. include:: ../models/stimulation_device.rst
 
@@ -68,6 +72,10 @@ allow_offgrid_times
     error.  If true, spike times are rounded to the nearest step if
     within tic/2 from the step, otherwise they are rounded up to the
     *end* of the step. Default: false
+
+individual_spike_trains
+    See note above. Default: ``True``.
+
 
 Set parameters from a stimulation backend
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -122,8 +130,11 @@ public:
   void set_status( const DictionaryDatum& ) override;
 
   StimulationDevice::Type get_type() const override;
+
   void set_data_from_stimulation_backend( std::vector< double >& input_param ) override;
 
+  //! Model can be switched between proxies (single spike train) and not
+  bool has_proxies() const override;
 
 private:
   void init_state_() override;
@@ -145,6 +156,9 @@ private:
 
     //! Allow and round up rate times not on steps;
     bool allow_offgrid_times_;
+
+    /** Emit individual spike trains for each target, or same for all? */
+    bool individual_spike_trains_;
 
     Parameters_(); //!< Sets default parameter values
     Parameters_( const Parameters_&, Buffers_& );
@@ -231,6 +245,12 @@ inline StimulationDevice::Type
 inhomogeneous_poisson_generator::get_type() const
 {
   return StimulationDevice::Type::SPIKE_GENERATOR;
+}
+
+inline bool
+inhomogeneous_poisson_generator::has_proxies() const
+{
+  return not P_.individual_spike_trains_;
 }
 
 } // namespace
