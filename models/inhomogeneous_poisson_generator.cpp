@@ -243,7 +243,6 @@ nest::inhomogeneous_poisson_generator::update( Time const& origin, const long fr
 
   const long t0 = origin.get_steps();
 
-  // random number generator --- TODO: Could this go into Variables_?
   RngPtr rng = get_vp_specific_rng( get_thread() );
 
   // Skip any times in the past. Since we must send events proactively,
@@ -277,7 +276,6 @@ nest::inhomogeneous_poisson_generator::update( Time const& origin, const long fr
       }
       else
       {
-        // TODO: Could this go into Variables_?
         poisson_distribution::param_type param( B_.rate_ * V_.h_ );
         const long n_spikes = V_.poisson_dist_( rng, param );
 
