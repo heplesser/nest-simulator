@@ -189,8 +189,9 @@ public:
   virtual Type
   get_type() const
   {
-    throw KernelException( "WORNG TYPE" );
+    throw KernelException( "WRONG TYPE" );
   };
+
   const std::string& get_label() const;
   virtual void set_data_from_stimulation_backend( std::vector< double >& ) {};
   void update( Time const&, const long, const long ) override {};
