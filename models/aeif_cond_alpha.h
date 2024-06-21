@@ -100,7 +100,7 @@ and
 
  \tau_w \frac{dw}{dt} = a(V-E_L) - w
 
-For implementation details see the
+For the reference implementation of this model, see
 `aeif_models_implementation <../model_details/aeif_models_implementation.ipynb>`_ notebook.
 
 See also [1]_.
@@ -108,20 +108,25 @@ See also [1]_.
 Numerical stability
 -------------------
 
-Under some conditions, the exponential function inside the numeric solver
-routine for this model can cause a numerical instability. The total somatic
-current will be evaluated at each solver timestep and its absolute value
-limited to the value given by the parameter ``I_soma_max``. By default the
-value is set to positive infinity, which means somatic current is unbounded.
-Setting ``I_soma_max`` to any other value changes the dynamics of the model.
+Under some conditions, the exponential function inside this model can
+cause a numerical instability in the solver due to its tendency to
+divergence to positive infinity. The rate of change of the membrane
+voltage will be evaluated at each solver timestep and its absolute
+value limited to the value given by the parameter ``max_V_m_rate``. By
+default the value is set to positive infinity, which means that the
+rate is unbounded. Setting ``max_V_m_rate`` to any other value changes
+the dynamics of the model. See
+:doc:`doc/htmldoc/model_details/aeif_models_implementation.ipynb` for
+more details.
 
-As a guideline to choose a plausible maximum current, Brette and Gerstner [2]_
-use forward Euler integration with a fixed time step. Then, one will have the
-largest possible spike current if the membrane potential is just below the
-threshold for calling a spike at the beginning of a time step, i.e.,
-:math:`V_m = V_T + 5\Delta_T` in their example. For the parameter values used by
-Brette and Gerstner, this gives
-:math:`I_{\text{spike}}=g_L\Delta_T e^5=30~\text{nS}\times2~\text{mV}\times e^5\approx 8900~\text{pA}$`.
+As a guideline to choose a plausible maximum current, Brette and
+Gerstner [2]_ use forward Euler integration with a fixed time
+step. Then, one will have the largest possible spike current if the
+membrane potential is just below the threshold for calling a spike at
+the beginning of a time step, i.e., :math:`V_m = V_T + 5\Delta_T` in
+their example. For the parameter values used by Brette and Gerstner,
+this gives :math:`I_{\text{spike}}=g_L\Delta_T
+e^5=30~\text{nS}\times2~\text{mV}\times e^5\approx 8900~\text{pA}$`.
 This suggests an upper limit of :math:`\approx 10\,000~\text{pA}`.
 
 Parameters
@@ -142,16 +147,15 @@ The following parameters can be set in the status dictionary.
 
 =========== ======== =======================================
 **Membrane Parameters**
-------------------------------------------------------------
-``
- C_m         pF      Capacity of the membrane
- t_ref       ms      Duration of refractory period
- V_reset     mV      Reset value for V_m after a spike
- E_L         mV      Leak reversal potential
- g_L         nS      Leak conductance
- I_spike_max pA      Maximum spike-inducing current
- I_e         pA      Constant external input current
-===========  ======= =======================================
+-----------------------------------------------------------
+ C_m          pF      Capacity of the membrane
+ t_ref        ms      Duration of refractory period
+ V_reset      mV      Reset value for V_m after a spike
+ E_L          mV      Leak reversal potential
+ g_L          nS      Leak conductance
+ max_dVdt     V/s     Maximum membrane potential rate of change
+ I_e          pA      Constant external input current
+============= ======= =======================================
 
 ======== ======= ==================================
 **Spike adaptation parameters**
@@ -207,6 +211,11 @@ See also
 ++++++++
 
 iaf_cond_alpha, aeif_cond_exp
+
+Examples using this model
++++++++++++++++++++++++++
+
+.. listexamples:: aeif_cond_alpha
 
 EndUserDocs */
 
@@ -265,20 +274,20 @@ private:
     double V_reset_; //!< Reset Potential in mV
     double t_ref_;   //!< Refractory period in ms
 
-    double g_L;         //!< Leak Conductance in nS
-    double C_m;         //!< Membrane Capacitance in pF
-    double E_ex;        //!< Excitatory reversal Potential in mV
-    double E_in;        //!< Inhibitory reversal Potential in mV
-    double E_L;         //!< Leak reversal Potential (aka resting potential) in mV
-    double Delta_T;     //!< Slope factor in mV
-    double tau_w;       //!< Adaptation time-constant in ms
-    double a;           //!< Subthreshold adaptation in nS
-    double b;           //!< Spike-triggered adaptation in pA
-    double V_th;        //!< Spike threshold in mV
-    double tau_syn_ex;  //!< Excitatory synaptic rise time
-    double tau_syn_in;  //!< Excitatory synaptic rise time
-    double I_spike_max; //!< Maximum spike-inducing current in pA
-    double I_e;         //!< Intrinsic current in pA
+    double g_L;        //!< Leak Conductance in nS
+    double C_m;        //!< Membrane Capacitance in pF
+    double E_ex;       //!< Excitatory reversal Potential in mV
+    double E_in;       //!< Inhibitory reversal Potential in mV
+    double E_L;        //!< Leak reversal Potential (aka resting potential) in mV
+    double Delta_T;    //!< Slope factor in mV
+    double tau_w;      //!< Adaptation time-constant in ms
+    double a;          //!< Subthreshold adaptation in nS
+    double b;          //!< Spike-triggered adaptation in pA
+    double V_th;       //!< Spike threshold in mV
+    double tau_syn_ex; //!< Excitatory synaptic rise time
+    double tau_syn_in; //!< Inhibitory synaptic rise time
+    double max_dVdt;   //!< Maximum V_m rate of change in V/s
+    double I_e;        //!< Intrinsic current in pA
 
     double gsl_error_tol; //!< Error bound for GSL integrator
 
