@@ -110,7 +110,7 @@ nest::aeif_cond_alpha_dynamics( double, const double y[], double f[], void* pnod
   const double I_soma =
     -node.P_.g_L * ( V - node.P_.E_L ) + I_spike - I_syn_exc - I_syn_inh - w + node.P_.I_e + node.B_.I_stim_;
 
-  // dV/dt -- clamp if refractory, limit from above to avoid keep rate of change in plausible bounds
+  // dV/dt -- clamp if refractory, limit from above to keep rate of change in plausible bounds
   f[ S::V_M ] = is_refractory ? 0. : std::min( I_soma / node.P_.C_m, node.P_.max_dVdt );
 
   f[ S::DG_EXC ] = -dg_ex / node.P_.tau_syn_ex;
