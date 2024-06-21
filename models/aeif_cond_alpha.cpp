@@ -148,7 +148,7 @@ nest::aeif_cond_alpha::Parameters_::Parameters_()
   , V_th( -50.4 )                                         // mV
   , tau_syn_ex( 0.2 )                                     // ms
   , tau_syn_in( 2.0 )                                     // ms
-  , max_dVdt( std::numeric_limits< double >::infinity() ) // V/s
+  , max_dVdt( std::numeric_limits< double >::infinity() ) // mV/ms
   , I_e( 0.0 )                                            // pA
   , gsl_error_tol( 1e-6 )
 {

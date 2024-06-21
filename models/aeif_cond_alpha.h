@@ -105,29 +105,32 @@ For the reference implementation of this model, see
 
 See also [1]_.
 
-Numerical stability
--------------------
+.. admonition:: Exponentially diverging spike current
 
-Under some conditions, the exponential function inside this model can
-cause a numerical instability in the solver due to its tendency to
-divergence to positive infinity. The rate of change of the membrane
-voltage will be evaluated at each solver timestep and its absolute
-value limited to the value given by the parameter ``max_V_m_rate``. By
-default the value is set to positive infinity, which means that the
-rate is unbounded. Setting ``max_V_m_rate`` to any other value changes
-the dynamics of the model. See
-:doc:`doc/htmldoc/model_details/aeif_models_implementation.ipynb` for
-more details.
+   The spike current in the AdEx model grows exponentially. This is both
+   biologically implausible and numerically problematic.
 
-As a guideline to choose a plausible maximum current, Brette and
-Gerstner [2]_ use forward Euler integration with a fixed time
-step. Then, one will have the largest possible spike current if the
-membrane potential is just below the threshold for calling a spike at
-the beginning of a time step, i.e., :math:`V_m = V_T + 5\Delta_T` in
-their example. For the parameter values used by Brette and Gerstner,
-this gives :math:`I_{\text{spike}}=g_L\Delta_T
-e^5=30~\text{nS}\times2~\text{mV}\times e^5\approx 8900~\text{pA}$`.
-This suggests an upper limit of :math:`\approx 10\,000~\text{pA}`.
+   Brette and Gerstner [1]_, [2]_ side-stepped this problem by using
+   forward Euler integration with a fixed time step. Then, one will have
+   the largest possible spike current if the membrane potential is just below
+   the threshold for calling a spike at the beginning of a time step, i.e.,
+   :math:`V_m = V_T + 5\Delta_T` in their example. For the parameter values they
+   used, this gives :math:`I_{\text{spike}}=g_L\Delta_T
+e^5=30~\text{nS}\times2~\text{mV}\times e^5\approx 8900~\text{pA}`.
+   Taking into account the membrane capacitance $C=281~\text{pF}$, this corresponds
+   to a rate of change of the membrane potential of
+   :math:`\dot{V}=I_{\text{spike}}/C\approx 32~\text{mV}/\text{ms}`.
+
+   Experimentally, Borst and Sakmann [3]_ have observed rates of change of the
+   membrane potential of up to :math:`1274~\text{mV}/\text{ms}`, some 40 times larger
+   than the limit imposed by forward Euler integration and corresponding to
+   :math:`I_{\text{spike}}\approx 360~\text{nF}`.
+
+   The parameter ``max_dVdt`` allows the user to limit the rate of change of the
+   membrane potential. By default, this parameter is inifinite, so that the actual
+   membrane potential equation is integrated. To obtain the same behavior as for
+   the common forward Euler implementation, set ``max_dVdt = 32`` mV/ms, to obtain
+   biologically plausible behavior set it to around  ``max_dVdt = 1200`` mV/ms.
 
 Parameters
 ++++++++++
@@ -153,7 +156,7 @@ The following parameters can be set in the status dictionary.
  V_reset      mV      Reset value for V_m after a spike
  E_L          mV      Leak reversal potential
  g_L          nS      Leak conductance
- max_dVdt     V/s     Maximum membrane potential rate of change
+ max_dVdt     mV/ms   Maximum membrane potential rate of change
  I_e          pA      Constant external input current
 ============= ======= =======================================
 
@@ -206,6 +209,11 @@ References
        DOI: https://doi.org/10.1152/jn.00686.2005
 
 .. [2] https://brian2.readthedocs.io/en/stable/examples/frompapers.Brette_Gerstner_2005.html
+
+.. [3] Borst, J. G. G., & Sakmann, B. (1998). Calcium current during a single action
+       potential in a large presynaptic terminal of the rat brainstem.
+       The Journal of Physiology, 506(1), 143–157.
+       https://doi.org/10.1111/j.1469-7793.1998.143bx.x
 
 See also
 ++++++++
