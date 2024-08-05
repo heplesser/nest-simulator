@@ -1,0 +1,576 @@
+/*
+ *  microcircuit_spec.sli
+ *
+ *  This file is part of NEST.
+ *
+ *  Copyright (C) 2004 The NEST Initiative
+ *
+ *  NEST is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  NEST is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with NEST.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+% autorun=true
+
+/*
+    Implementation of the multi-layered local cortical network model by
+
+    Potjans, Tobias C. and Diesmann, Markus (2014) The cell-type specific
+    cortical microcircuit: relating structure and activity in a full-scale
+    spiking network model. Cerebral Cortex. doi:10.1093/cercor/bhs358.
+
+    The script defines and executes the following functions in the given sequence:
+    1. CheckParameters
+    2. PrepareSimulation
+    3. DerivedParameters
+    4. CreateNetworkNodes
+    5. WritenodeIDsToFile
+    6. ConnectNetworkNodes
+
+    Please see the file README.txt for details.
+
+    microcircuit_spec.sli: Version modified for SPEC CPU benchmark
+    	 - Number of threads can be set on command line
+	 - Model scale can be set on command line
+	 - Recording to memory only, can be turned off entirely
+	 - Random seed can be set
+	 - Total spike count, timers and som more stats reported at end
+	 - Entirely self-contained, does not depend on external files
+	 - Assumes being run on a single MPI process
+	 - Code for thalamic input, DC input and "optimized" randomization removed
+
+    Configuration via colon-separated user arguments, where all arguments are optional
+
+    nest --userargs=threads=T:scale=S:seed=R:record=true/false microcircuit_spec.sli
+
+    e.g.
+
+    nest --userargs=threads=4:scale=0.4:seed=12 microcircuit_spec.sli
+
+    Note: Because NEST uses bitfields of limited size in spike communication, only about
+          134 million connections can be handled on a single thread. Therefore, scale
+	  must not be larger than 0.4 for a single thread and 0.8 for two threads. If more
+	  connections are needed, increase NUM_BITS_LCID in nest_types.h and reduce other
+	  NUM_BITS_* correspondingly.
+
+    Note: Expected value for "Total spikes" depends on scale. The table shows results observed
+          for different random seed values (one value only for scale 1):
+
+          Scale 0.1:   30259   31039   30523
+	  Scale 0.2:   56532   57998   57597
+	  Scale 0.4:  110689  110406  109922
+	  Scale 1.0:  270442
+
+	  Changing the number of threads for fixed scale will lead to changes in "Total spikes" comparable
+	  to the differences observed for different seeds, since random numbers are distributed differently.
+
+	  Compiling with different compilers (specifically C++ standard libraries with different non-uniform
+	  random number algorithms) will lead to similar changes in "Total spikes".
+
+	  Different implementations of the exp() or expm1() function in different glibc() or hardware architectures
+	  may also lead to different "Total spike" values, see
+
+	      Blanco, W., Lopes, P. H., De S. Souza, A. A., & Mascagni, M. (2020).
+	      Non-replicability circumstances in a neural network model with Hodgkin-Huxley-type neurons.
+	      Journal of Computational Neuroscience, 48(3), 357-363. https://doi.org/10.1007/s10827-020-00748-3
+
+*/
+
+
+% ************************************************************************** %
+%                                                                            %
+% Parse command line                                                         %
+%                                                                            %
+% ************************************************************************** %
+
+/n_threads 1 def
+/scale 0.1 def
+/rng_seed 12345 def
+/record true def
+
+/reportfile (microcircuit_spec.rpt) def
+
+/t_sim 1000.0 def
+/dt 0.1 def
+
+statusdict /userargs get { (=) breakup } Map
+{
+ arrayload ;
+ /val Set /key Set
+
+ mark
+ key (threads) eq { /n_threads val cvi def } case
+ key (scale) eq { /scale val cvd def } case
+ key (seed) eq { /rng_seed val cvi def } case
+ key (record) eq { /record val (true) eq def } case
+ { /microcircuit_spec (Unknown option: ") key join (") join cvlit raiseerror }
+ switchdefault
+}
+forall
+
+
+% CheckParameters - This function performs a (non-exhaustive) check of
+% parameter dimensions and values.
+%
+% In particular, the following is checked:
+%   - Is the model of type /iaf_psc_exp?
+%   - Do dimensions of the given probablity matrix match
+%   - Are the numbers/fractions of neurons to record from
+%     compatible with the network size
+%
+/CheckParameters
+{
+    neuron_model /iaf_psc_exp eq not {
+	Rank 0 eq {
+           M_WARNING (CheckParameters)
+           (Unexpected neuron type: ) neuron_model cvs join
+           (. Script is tuned to /iaf_psc_exp neurons.) join
+           message
+	} if
+    } if
+
+    /n_layers full_scale_n_neurons length def
+    /n_pops_per_layer full_scale_n_neurons Dimensions 1 get def
+
+    conn_probs Dimensions 0 get
+    n_layers n_pops_per_layer mul
+    eq not {
+	M_ERROR (CheckParameters)
+	(/conn_probs does not contain /nlayers * /n_pops_per_layer rows)
+	message raiseerror
+    } if
+
+    conn_probs Dimensions 1 get
+    n_layers n_pops_per_layer mul
+    eq not  {
+	M_ERROR (CheckParameters)
+	(/conn_probs does not contain /nlayers * /n_pops_per_layer columns)
+	message raiseerror
+    } if
+
+} def
+
+
+% PrepareSimulation - Set kernel parameters and RNG seeds based on the
+% settings in sim_params.sli.
+%
+/PrepareSimulation
+{
+    ResetKernel
+
+    % set global kernel parameters
+    <<
+       /resolution dt
+       /local_num_threads n_threads
+       /overwrite_files true
+       /rng_seed rng_seed
+    >> SetKernelStatus
+} def
+
+
+% DerivedParameters - Compute derived parameters from the ones given
+% in network_params.sli.
+%
+/DerivedParameters
+{
+    % compute numbers of neurons for the given surface area
+    /n_neurons
+    full_scale_n_neurons { area mul cvi } [2] Map
+    def
+
+    % compute PSC amplitude from PSP amplitude
+
+    model_params using
+    % factor for transforming PSP amplitude to PSC amplitude
+
+    /re tau_m tau_syn_ex div def
+    /de tau_syn_ex tau_m sub def
+    /ri tau_m tau_syn_in div def
+    /di tau_syn_in tau_m sub def
+
+    /PSC_e_over_PSP_e
+    (((C_m)^(-1)*tau_m*tau_syn_ex/de*(re^(tau_m/de)-re^(tau_syn_ex/de)))^(-1))
+    ExecMath def
+
+    /PSC_i_over_PSP_i
+    (((C_m)^(-1)*tau_m*tau_syn_in/di*(ri^(tau_m/di)-ri^(tau_syn_in/di)))^(-1))
+    ExecMath def
+    endusing
+
+    /PSC_e PSC_e_over_PSP_e PSP_e mul def
+    /PSC_e_23_4 PSC_e_over_PSP_e PSP_e_23_4 mul def
+    /PSP_i PSP_e g mul def
+    /PSC_i PSC_i_over_PSP_i PSP_i mul def
+
+    % PSC amplitude for all external input
+    /PSC_ext PSC_e_over_PSP_e PSP_ext mul def
+
+    % array of synaptic current amplitudes
+    [4 2 4] [PSC_e PSC_i] LayoutArray /PSC_array Set
+    PSC_array [0 0 1 0]  PSC_e_23_4 put /PSC_array Set
+
+    % standard deviations of synaptic current amplitudes
+    /PSC_sd [PSC_e PSC_i] PSC_rel_sd mul def
+    /PSC_th_sd PSC_ext PSC_rel_sd mul def
+
+    % standard deviations of delays
+    /delays_sd delays delay_rel_sd mul def
+
+    /n_neurons_rec_spikes full_scale_n_neurons { { area mul cvi } Map } Map
+    def
+
+} def
+
+
+% the following variables are created here:
+% neuron_nodeIDs
+% poisson_nodeIDs
+% spike_recorder_nodeIDs
+/CreateNetworkNodes
+{
+    neuron_model model_params SetDefaults
+    % arrays of nodeIDs:
+    /neuron_nodeIDs         [n_layers n_pops_per_layer] 0 LayoutArray def
+    record { /spike_recorder_nodeIDs [n_layers n_pops_per_layer] 0 LayoutArray def } if
+    /poisson_nodeIDs        [n_layers n_pops_per_layer] 0 LayoutArray def
+
+    0 1 n_layers 1 sub {
+        /layer_index Set
+
+        0 1 n_pops_per_layer 1 sub {
+            /population_index Set
+
+	    % create the neurons
+	    neuron_model % what model
+	    n_neurons layer_index get population_index get % how many
+	    Create /population Set
+
+	    % store the NodeCollection
+            neuron_nodeIDs [layer_index population_index] % the position
+	    population put /neuron_nodeIDs Set
+
+            % initialize membrane potentials
+            population {
+               <<
+                  /V_m
+                  << /normal << /mean Vm0_mean /std Vm0_std >> >> CreateParameter
+               >>
+               SetStatus
+	    } forall
+
+	    record
+	    {
+            spike_recorder_nodeIDs [layer_index population_index] /spike_recorder <<
+	       /record_to /memory
+	    >> Create put /spike_recorder_nodeIDs Set
+	    }
+	    if
+
+	    K_bg layer_index get population_index get /K_bg_ Set
+
+	    poisson_nodeIDs [layer_index population_index] /poisson_generator <<
+	       /rate K_bg_ bg_rate mul
+            >> Create put /poisson_nodeIDs Set
+
+        } for % loop over e and i populations
+    } for % loop over layers
+} def
+
+
+% ConnectNetworkNodes - Connect the network nodes created in
+% CreateNetworkNodes based on the probabilities defined in
+% network_params.sli.
+%
+/ConnectNetworkNodes
+{
+ /tot_syn 0 def
+
+    0 1 n_layers 1 sub { % target layer
+        /target_layer Set
+
+        0 1 n_pops_per_layer 1 sub { % target population
+	    /target_pop Set
+
+            % get neuron IDs
+            neuron_nodeIDs target_layer get target_pop get /target_nodes Set
+
+            n_neurons target_layer get target_pop get /n_targets Set
+            full_scale_n_neurons target_layer get target_pop get /full_scale_n_targets Set
+
+	    0 1 n_layers 1 sub { % source layer
+	        /source_layer Set
+
+	        0 1 n_pops_per_layer 1 sub { % source population
+		    /source_pop Set
+
+		    % local connections
+
+		    % get neuron IDs
+                    neuron_nodeIDs source_layer get source_pop get /source_nodes Set
+
+                    n_neurons source_layer get source_pop get /n_sources Set
+                    full_scale_n_neurons source_layer get source_pop get /full_scale_n_sources Set
+
+                    % get connection probability
+		    conn_probs
+		    % pick row (target) in conn_probs
+		    target_layer n_pops_per_layer mul target_pop add get
+		    % pick column (source) in conn_probs
+		    source_layer n_pops_per_layer mul source_pop add get
+		    /conn_prob Set % probability for this connection
+
+                    % Compute numbers of synapses assuming binomial degree
+                    % distributions and allowing for multapses (see Potjans
+                    % and Diesmann 2012 Cereb Cortex Eq. 1)
+                    preserve_K {
+                        full_scale_n_sources full_scale_n_targets mul /prod Set
+                        ( log(1.-conn_prob)/log((prod-1.)/prod) ) ExecMath /n_syn_temp Set
+                        n_syn_temp n_targets mul full_scale_n_targets div
+                    }{
+                        n_sources n_targets mul /prod Set
+                        ( log(1.-conn_prob)/log((prod-1.)/prod) ) ExecMath
+                    } ifelse
+                    cvi /n_synapses Set
+
+                    n_synapses 0 gt {
+                        PSC_array target_layer get target_pop get source_layer
+                        get source_pop get /mean_weight Set
+
+                        % fill the weight dictionary for Connect and insert it into the synapse dictionary
+                        mean_weight 0 gt {
+                          syn_dict /weight
+                          << /normal << /mean mean_weight /std PSC_sd source_pop get abs >> >> CreateParameter
+                          0.0 (inf) cvd redraw
+                          put
+                        }{
+                          syn_dict /weight
+                          << /normal << /mean mean_weight /std PSC_sd source_pop get abs >> >> CreateParameter
+                          (-inf) cvd 0.0 redraw
+                          put
+                        } ifelse
+
+			% fill the delay dictionary for Connect and insert it into the synapse dictionary
+                        syn_dict /delay
+                        << /normal << /mean delays source_pop get /std delays_sd source_pop get abs >> >> CreateParameter
+                        0.05 (inf) cvd redraw
+                        put
+
+			% fill the connectivity dictionary with the number of synapses to be used
+                        conn_dict /N n_synapses put
+                        conn_dict /rule /fixed_total_number put
+
+                        % Connect the populations
+                        source_nodes target_nodes conn_dict syn_dict Connect
+
+                    } if % n_synapses > 0
+		    /tot_syn tot_syn n_synapses add def
+
+		    cdblog
+		    (n_syn: ) <- n_synapses <-
+		    (, tot_syn: ) <- tot_syn <-
+		    (, num_conns: ) <- GetKernelStatus /num_connections get <- endl
+		    ;
+
+	        } for % source population
+	    } for % source layer
+
+            % Connect devices
+
+            % Connect to the spike recorder
+            % record from a continuous range of IDs (appropriate for networks without spatial information)
+	    record {
+	       target_nodes n_neurons_rec_spikes target_layer get target_pop get Take
+               spike_recorder_nodeIDs target_layer get target_pop get
+               /all_to_all
+	       Connect
+            } if
+
+            % Connect to the Poisson generators
+            poisson_nodeIDs target_layer get target_pop get
+            target_nodes
+            /all_to_all
+            << /weight PSC_ext /delay delays 0 get >>
+            Connect
+
+        } for % target population
+    } for % target layer
+
+} def
+
+
+% ===================================================================================
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%     	Network parameters		%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% area of network in mm^2; scales numbers of neurons
+% use 1 for the full-size network (77,169 neurons)
+/area scale def
+
+% whether to use full-scale in-degrees when downscaling the number of neurons
+% When preserve_K is false, the full-scale connection probabilities are used.
+% Note that this produces different dynamics compared to the original model.
+/preserve_K true def
+
+/layers [(L23) (L4) (L5) (L6)] def
+/populations [(e) (i)] def
+
+/full_scale_n_neurons
+  [[20683   % layer 2/3 e
+    5834 ]  % layer 2/3 i
+   [21915   % layer 4 e
+    5479 ]  % layer 4 i
+   [4850    % layer 5 e
+    1065 ]  % layer 5 i
+   [14395   % layer 6 e
+    2948 ]] % layer 6 i
+def
+
+% mean EPSP amplitude (mV) for all connections except L4e->L2/3e
+/PSP_e .15 def
+% mean EPSP amplitude (mv) for L4e->L2/3e connections
+% see p. 801 of the paper, second paragraph under 'Model Parameterization',
+% and the caption to Supplementary Fig. 7
+/PSP_e_23_4 PSP_e 2 mul def
+% standard deviation of PSC amplitudes relative to mean PSC amplitudes
+/PSC_rel_sd 0.1 def
+% IPSP amplitude relative to EPSP amplitude
+/g -4. def
+
+% probabilities for >=1 connection between neurons in the given populations
+% columns correspond to source populations; rows to target populations
+% source      2/3e    2/3i    4e      4i      5e      5i      6e      6i
+/conn_probs [[0.1009  0.1689  0.0437  0.0818  0.0323  0.      0.0076  0.    ]
+             [0.1346  0.1371  0.0316  0.0515  0.0755  0.      0.0042  0.    ]
+             [0.0077  0.0059  0.0497  0.135   0.0067  0.0003  0.0453  0.    ]
+             [0.0691  0.0029  0.0794  0.1597  0.0033  0.      0.1057  0.    ]
+             [0.1004  0.0622  0.0505  0.0057  0.0831  0.3726  0.0204  0.    ]
+             [0.0548  0.0269  0.0257  0.0022  0.06    0.3158  0.0086  0.    ]
+             [0.0156  0.0066  0.0211  0.0166  0.0572  0.0197  0.0396  0.2252]
+             [0.0364  0.001   0.0034  0.0005  0.0277  0.008   0.0658  0.1443]]
+	     def
+
+% mean dendritic delays for excitatory and inhibitory transmission (ms)
+/delays [1.5 0.75] def
+% standard deviation relative to mean delays
+/delay_rel_sd 0.5 def
+% connection pattern used in connection calls connecting populations
+/conn_dict << /rule /fixed_total_number >> def
+% default synapse dictionary
+/syn_dict << /synapse_model /static_synapse >> def
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%          Single-neuron parameters		%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+/neuron_model /iaf_psc_exp def  % neuron model. For PSP-to-PSC conversion to
+                                % be correct, synapses should be current-based
+                                % with an exponential time course
+
+% Initial conditions for the membrane potential, options are:
+% (original): uniform mean and std for all populations
+/Vm0_mean -58.0 def
+/Vm0_std 10.0 def
+
+% neuron model parameters
+/model_params  << /tau_m 10.        % membrane time constant (ms)
+	          /tau_syn_ex 0.5   % excitatory synaptic time constant (ms)
+                  /tau_syn_in 0.5   % inhibitory synaptic time constant (ms)
+                  /t_ref 2.         % absolute refractory period (ms)
+	          /E_L -65.         % resting membrane potential (mV)
+	          /V_th -50.        % spike threshold (mV)
+             	  /C_m 250.         % membrane capacitance (pF)
+	          /V_reset -65.     % reset potential (mV)
+               >> def
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%           Stimulus parameters		%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% rate of background Poisson input at each external input synapse (spikes/s)
+/bg_rate 8. def
+
+% in-degrees for background input
+/K_bg [[1600   % 2/3e
+        1500]  % 2/3i
+       [2100   % 4e
+        1900]  % 4i
+       [2000   % 5e
+        1900]  % 5i
+       [2900   % 6e
+        2100]] % 6i
+        def
+
+/PSP_ext 0.15 def      % mean EPSP amplitude (mV) for external input
+
+% ===================================================================================
+
+
+% execute functions
+CheckParameters
+PrepareSimulation
+DerivedParameters
+CreateNetworkNodes
+
+/arch statusdict /architecture get def
+/cdblog (conn_debug.log) (w) file def
+
+cdblog (--------------------------------------) <- endl
+(double: ) <- arch /double get <- endl
+(int   : ) <- arch /int get <- endl
+(long  : ) <- arch /long get <- endl
+(llong : ) <- arch /long_long get <- endl
+(--------------------------------------) <- endl ;
+
+ConnectNetworkNodes
+
+cdblog close
+
+t_sim Simulate
+
+/ks GetKernelStatus def
+/tot_n_neurons n_neurons Flatten Total def
+
+reportfile (w) file
+
+(Number of threads: ) <- ks /local_num_threads get <- endl
+(Scale            : ) <- scale <- endl
+(Random seed      : ) <- ks /rng_seed get <- endl
+(Network size     : ) <- ks /network_size get <- endl
+(Num connections  : ) <- ks /num_connections get <- endl
+(Simulated time   : ) <- t_sim <- ( ms) <- endl
+(Total spikes     : ) <- ks /local_spike_counter get <- endl
+(Average rate     : ) <- ks /local_spike_counter get cvd tot_n_neurons cvd div t_sim div 1000 mul <- ( sp/s) <- endl
+
+record
+{
+  (Population spikes: ) <-
+  /scnts spike_recorder_nodeIDs { { /n_events get } Map } Map def
+  scnts <--
+  ( ==> Sum: ) <-
+  scnts Flatten 0 exch { add } Fold <- endl
+}
+if
+
+endl
+(Time create nodes: ) <- ks /time_construction_create get <- ( s) <- endl
+(Time connect     : ) <- ks /time_construction_connect get <- ( s) <- endl
+(Time prepare     : ) <- ks /time_communicate_prepare get <- ( s) <- endl
+(Time simulate    : ) <- ks /time_simulate get <- ( s) <- endl
+
+close
+
+(\nReport written to: ) =only reportfile =
+() =
