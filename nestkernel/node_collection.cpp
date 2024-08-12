@@ -76,16 +76,6 @@ nc_const_iterator::nc_const_iterator( NodeCollectionPTR collection_ptr,
 {
   assert( not collection_ptr.get() or collection_ptr.get() == &collection );
   assert( element_idx_ <= collection.size() ); // allow == for end()
-
-  FULL_LOGGING_ONLY(
-    kernel().write_to_dump( String::compose( "NCIT Prim ctor rk %1, thr %2, pix %3, eix %4, step %5, kind %6, rvp %7",
-      kernel().mpi_manager.get_rank(),
-      kernel().vp_manager.get_thread_id(),
-      part_idx_,
-      element_idx_,
-      step_,
-      static_cast< int >( kind_ ),
-      rank_or_vp_ ) ); )
 }
 
 nc_const_iterator::nc_const_iterator( NodeCollectionPTR collection_ptr,
@@ -112,16 +102,6 @@ nc_const_iterator::nc_const_iterator( NodeCollectionPTR collection_ptr,
 
   // Allow <= for end iterator
   assert( ( part < collection.parts_.size() and offset <= collection.parts_[ part ].size() ) );
-
-  FULL_LOGGING_ONLY(
-    kernel().write_to_dump( String::compose( "NCIT Comp ctor rk %1, thr %2, pix %3, eix %4, step %5, kind %6, rvp %7",
-      kernel().mpi_manager.get_rank(),
-      kernel().vp_manager.get_thread_id(),
-      part_idx_,
-      element_idx_,
-      step_,
-      static_cast< int >( kind_ ),
-      rank_or_vp_ ) ); )
 }
 
 size_t
@@ -231,8 +211,6 @@ nc_const_iterator::advance_local_iter_to_new_part_( size_t n )
         std::tie( part_idx_, element_idx_ ) = composite_collection_->specific_local_begin_(
           num_ranks, current_rank, part_idx_, element_idx_, NodeCollectionComposite::gid_to_rank_ );
 
-        FULL_LOGGING_ONLY( kernel().write_to_dump(
-          String::compose( "ACIL rk %1, pix %2, eix %3", kernel().mpi_manager.get_rank(), part_idx_, element_idx_ ) ); )
         break;
       }
       case NCIteratorKind::THREAD_LOCAL:
@@ -290,15 +268,6 @@ nc_const_iterator::operator*() const
   {
     if ( not composite_collection_->valid_idx_( part_idx_, element_idx_ ) )
     {
-      FULL_LOGGING_ONLY( kernel().write_to_dump(
-        String::compose( "nci::op* comp err rk %1, lp %2, le %3, pix %4, eix %5, end_pix %6, end_eix %7",
-          kernel().mpi_manager.get_rank(),
-          composite_collection_->last_part_,
-          composite_collection_->last_elem_,
-          part_idx_,
-          element_idx_,
-          composite_collection_->end().part_idx_,
-          composite_collection_->end().element_idx_ ) ); )
       assert( false );
       throw KernelException( "Invalid NodeCollection iterator for composite collection)" );
     }
@@ -1131,22 +1100,6 @@ NodeCollectionComposite::specific_local_begin_( size_t period,
       elem_idx += first_elem;
     }
 
-    FULL_LOGGING_ONLY(
-      kernel().write_to_dump( String::compose( "SPLB rk %1, thr %2, phase_first %3, offs %4, stp %5, sto %6,"
-                                               " pix %7, lp %8, le %9, primsz %10, nprts: %11, this: %12",
-        kernel().mpi_manager.get_rank(),
-        kernel().vp_manager.get_thread_id(),
-        phase_first_node,
-        offset,
-        first_part,
-        first_elem,
-        pix,
-        last_part_,
-        last_elem_,
-        parts_[ pix ].size(),
-        parts_.size(),
-        this ) ); )
-
     if ( elem_idx != invalid_index and elem_idx < parts_[ pix ].size()
       and ( pix < last_part_ or elem_idx <= last_elem_ ) )
     {
@@ -1252,9 +1205,7 @@ NodeCollectionComposite::slice( size_t start, size_t end, size_t stride ) const
       "InvalidNodeCollection: note that ResetKernel invalidates all previously created NodeCollections." );
   }
 
-  FULL_LOGGING_ONLY( kernel().write_to_dump( "Calling NCC from slice()" ); )
   const auto new_composite = NodeCollectionComposite( *this, start, end, stride );
-  FULL_LOGGING_ONLY( kernel().write_to_dump( "Calling NCC from slice() --- DONE" ); )
 
   if ( stride == 1 and new_composite.first_part_ == new_composite.last_part_ )
   {
@@ -1262,15 +1213,6 @@ NodeCollectionComposite::slice( size_t start, size_t end, size_t stride ) const
     return new_composite.parts_[ new_composite.first_part_ ].slice(
       new_composite.first_elem_, new_composite.last_elem_ + 1 );
   }
-
-  FULL_LOGGING_ONLY(
-    kernel().write_to_dump( String::compose( "NewComposite: fp %1, fe %2, lp %3, le %4, sz %5, strd %6",
-      new_composite.first_part_,
-      new_composite.first_elem_,
-      new_composite.last_part_,
-      new_composite.last_elem_,
-      new_composite.size_,
-      new_composite.stride_ ) ); )
 
   return std::make_shared< NodeCollectionComposite >( new_composite );
 }

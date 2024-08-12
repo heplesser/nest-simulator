@@ -769,6 +769,12 @@ nest::SimulationManager::update_connection_infrastructure( const size_t tid )
 #pragma omp single
     {
       kernel().mpi_manager.communicate_recv_counts_secondary_events();
+
+      FULL_LOGGING_ONLY( for ( auto rank = 0; rank < kernel().mpi_manager.get_num_processes(); ++rank ) {
+        kernel().write_to_dump( String::compose(
+          "SE from rank %1, recv sz %2", rank, kernel().mpi_manager.get_recv_count_secondary_events_in_int( rank ) ) );
+      } )
+
       kernel().event_delivery_manager.configure_secondary_buffers();
     }
   }
