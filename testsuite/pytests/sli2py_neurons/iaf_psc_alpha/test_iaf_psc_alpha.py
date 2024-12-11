@@ -340,10 +340,10 @@ expected_i0_t = np.array(
 )
 
 expected_i0_refr = np.array(
-    [
-        [0.1, -69.4229],
-        [0.2, -68.8515],
-        [0.3, -68.2858],
+    [  # [0.0, -70],      # <-- voltage trace. the membrane is at rest
+        [0.1, -69.4229],  #     because the current has not yet had the
+        [0.2, -68.8515],  #     chance to influence the membrane
+        [0.3, -68.2858],  #     potential (initial conditions).
         [0.4, -67.7258],
         [0.5, -67.1713],
         [0.6, -66.6223],
@@ -370,10 +370,10 @@ expected_i0_refr = np.array(
         [2.7, -56.276],
         [2.8, -55.8355],
         [2.9, -55.3993],
-        [3.0, -70],
-        [3.1, -70],
-        [3.2, -70],
-        [3.3, -70],
+        [3.0, -70],  # <- The membrane potential crossed threshold in the
+        [3.1, -70],  #    step 2.9 ms -> 3.0 ms. The membrane potential is
+        [3.2, -70],  #    reset (no super-threshold values can be observed).
+        [3.3, -70],  #    The spike is reported at 3.0 ms.
         [3.4, -70],
         [3.5, -70],
         [3.6, -70],
@@ -390,19 +390,16 @@ expected_i0_refr = np.array(
         [4.7, -70],
         [4.8, -70],
         [4.9, -70],
-        [5.0, -70],
-        [
-            5.1,
-            -69.4229,
-        ],
-        [5.2, -68.8515],
-        [5.3, -68.2858],
-        [5.4, -67.7258],
-        [5.5, -67.1713],
-        [5.6, -66.6223],
-        [5.7, -66.0788],
-        [5.8, -65.5407],
-        [5.9, -65.008],
+        [5.0, -70],  # <-------  The last point in time at which the membrane potential
+        [5.1, -69.4229],  # <-   is clamped. The fact that the neuron is not refractory
+        [5.2, -68.8515],  #   |  anymore is reflected in the state variable r==0.
+        [5.3, -68.2858],  #   |  The neuron was refractory for 2.0 ms.
+        [5.4, -67.7258],  #   |
+        [5.5, -67.1713],  #    -- The membrane potential starts to increase
+        [5.6, -66.6223],  #       immediately afterwards (step 5ms -> 5ms + h),
+        [5.7, -66.0788],  #       and the neuron can generate spikes again
+        [5.8, -65.5407],  #       (with time stamp 5ms + h).
+        [5.9, -65.0080],  #       The membrane trace is independent of the resolution.
         [6.0, -64.4806],
         [6.1, -63.9584],
         [6.2, -63.4414],
