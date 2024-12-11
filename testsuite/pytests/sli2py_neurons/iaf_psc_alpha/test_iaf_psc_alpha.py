@@ -315,15 +315,16 @@ expected_default = np.array(
 )
 
 expected_i0 = np.array(
-    [
-        [0.1, -69.602],
-        [0.2, -69.2079],
-        [0.3, -68.8178],
-        [0.4, -68.4316],
-        [0.5, -68.0492],
-        [4.3, -56.0204],
-        [4.4, -55.7615],
-        [4.5, -55.5051],
+    [  # [0.0, -70],      # <------ Voltage trace. the membrane is at rest
+        [0.1, -69.6020],  # <-      because the current has not yet had the
+        [0.2, -69.2079],  #   |     chance to influence the membrane potential.
+        [0.3, -68.8178],  #   |     However, the current is reflected in state
+        [0.4, -68.4316],  #   |     variable I0 in this initial condition of the
+        [0.5, -68.0492],  #   |     system.
+        # ...             #   |
+        [4.3, -56.0204],  #    ---  At the next observation point on the simulation
+        [4.4, -55.7615],  #         grid, the current present from time 0 on has
+        [4.5, -55.5051],  #         affected the membrane potential.
         [4.6, -55.2513],
         [4.7, -55.0001],
         [4.8, -70],
@@ -334,7 +335,7 @@ expected_i0 = np.array(
 
 expected_i0_t = np.array(
     [
-        [1, 4.8],
+        [1, 4.8],  #       <-- the neuron emits a spike with time stamp 4.8 ms
     ]
 )
 
