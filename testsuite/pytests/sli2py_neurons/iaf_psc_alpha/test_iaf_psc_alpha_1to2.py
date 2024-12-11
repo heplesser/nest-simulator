@@ -56,6 +56,23 @@ class IAFPSCAlpha1to2Simulation(testsimulation.Simulation):
 class TestIAFPSCAlpha1to2WithMultiRes:
     @pytest.mark.parametrize("delay", [1.0])
     def test_1to2(self, simulation):
+        """
+        Check spike interaction of two iaf_psc_alpha model neurons.
+
+        A DC current in the pre-synaptic neuron is adjusted to cause a spike
+        at a grid position (t=3.0 ms) indepdent of the resolution used.
+
+        Note that in a neuron model where synaptic events are modeled by a
+        truncated exponential the effect of the incoming spike would be
+        visible at the time of impact (here, t=4.0 ms). This is because the
+        initial condition for the postsynaptic potential (PSP) has a
+        non-zero voltage component. For PSPs with finite rise time the
+        situation is different. In this case the voltage component of the
+        initial condition is zero (see documentation of
+        test_iaf_psp). Therefore, at the time of impact the PSP is only
+        visible in other components of the state vector.
+        """
+
         simulation.setup()
 
         results = simulation.simulate()
@@ -64,6 +81,10 @@ class TestIAFPSCAlpha1to2WithMultiRes:
         assert actual == expected
 
     def test_default_delay(self, simulation):
+        """
+        Same as test_1to2 except that delay is set as default for synapse model.
+        """
+
         nest.SetDefaults("static_synapse", {"delay": 1.0})
         simulation.setup()
 
@@ -74,9 +95,15 @@ class TestIAFPSCAlpha1to2WithMultiRes:
 
 
 @testutil.use_simulation(IAFPSCAlpha1to2Simulation)
-@pytest.mark.parametrize("delay,resolution", [(2.0, 0.1)])
+@pytest.mark.parametrize("delay, resolution", [(2.0, 0.1)])
 @pytest.mark.parametrize("min_delay", [0.1, 0.5, 2.0])
 def test_mindelay_invariance(simulation):
+    """
+    Similar to test_1to2, but with different delay and using different min_delay values.
+
+    Results must be independent of min_delay used.
+    """
+
     assert simulation.min_delay <= simulation.delay
     nest.set(min_delay=simulation.min_delay, max_delay=simulation.delay)
     simulation.setup()
@@ -102,8 +129,8 @@ expect_default = np.array(
         [3.7, -70],
         [3.8, -70],
         [3.9, -70],
-        [4.0, -70],
-        [4.1, -69.9974],
+        [4.0, -70],  #      <- Spike arrives at 4.0, but due to finite rise time of PSC
+        [4.1, -69.9974],  #    we see an effect on the membrane potential only at 4.1
         [4.2, -69.9899],
         [4.3, -69.9781],
         [4.4, -69.9624],
@@ -140,8 +167,8 @@ expect_inv = np.array(
         [3.5, -70],
         [4.8, -70],
         [4.9, -70],
-        [5.0, -70],
-        [5.1, -69.9974],
+        [5.0, -70],  #      <- Spike arrives at 5.0, but due to finite rise time of PSC
+        [5.1, -69.9974],  #    we see an effect on the membrane potential only at 5.1
         [5.2, -69.9899],
         [5.3, -69.9781],
         [5.4, -69.9624],
