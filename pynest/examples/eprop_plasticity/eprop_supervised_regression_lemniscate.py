@@ -178,7 +178,7 @@ n_out = 2  # number of readout neurons
 params_nrn_out = {
     "C_m": 1.0,  # pF, membrane capacitance - takes effect only if neurons get current input (here not the case)
     "E_L": 0.0,  # mV, leak / resting membrane potential
-    "eprop_isi_trace_cutoff": 100,  # cutoff of integration of eprop trace between spikes    
+    "eprop_isi_trace_cutoff": 100,  # cutoff of integration of eprop trace between spikes
     "I_e": 0.0,  # pA, external current input
     "tau_m": 50.0,  # ms, membrane time constant
     "V_m": 0.0,  # mV, initial value of the membrane voltage
@@ -190,9 +190,9 @@ params_nrn_rec = {
     "beta": 33.3,  # width scaling of the pseudo-derivative
     "adapt_tau": 2000.0,  # ms, time constant of adaptive threshold
     "C_m": 250.0,
-    "c_reg": 150.0/ duration["sequence"],  # coefficient of firing rate regularization
+    "c_reg": 150.0 / duration["sequence"],  # coefficient of firing rate regularization
     "E_L": 0.0,
-    "eprop_isi_trace_cutoff": 100,    
+    "eprop_isi_trace_cutoff": 100,
     "f_target": 20.0,  # spikes/s, target firing rate for firing rate regularization
     "gamma": 10.0,  # height scaling of the pseudo-derivative
     "I_e": 0.0,
@@ -210,7 +210,6 @@ params_nrn_rec["adapt_beta"] = (
 )  # prefactor of adaptive threshold
 
 scale_factor = 1.0 - params_nrn_rec["kappa"]  # factor for rescaling due to removal of irregular spike arrival
-
 
 
 ####################
@@ -324,7 +323,7 @@ params_common_syn_eprop = {
         "epsilon": 1e-8,  # small numerical stabilization constant of Adam optimizer
         "eta": 5e-3 * scale_factor**2,  # learning rate
         "optimize_each_step": False,  # call optimizer every time step (True) or once per spike (False); both
-        # yield same results for gradient descent, False offers speed-up        
+        # yield same results for gradient descent, False offers speed-up
         "Wmin": -100.0,  # pA, minimal limit of the synaptic weights
         "Wmax": 100.0,  # pA, maximal limit of the synaptic weights
     },
