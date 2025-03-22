@@ -106,6 +106,11 @@ public:
   size_t get_wfr_interpolation_order() const;
 
   /**
+   * Get number of entries per time step for flexible data event
+   */
+  size_t get_flexible_data_event_size() const;
+
+  /**
    * Get the time at the beginning of the current time slice.
    */
   Time const& get_slice_origin() const;
@@ -196,36 +201,37 @@ private:
   void advance_time_();   //!< Update time to next time step
   void print_progress_(); //!< TODO: Remove, replace by logging!
 
-  Time clock_;                     //!< SimulationManager clock, updated once per slice
-  long slice_;                     //!< current update slice
-  long to_do_;                     //!< number of pending steps
-  long to_do_total_;               //!< number of requested steps in current simulation
-  long from_step_;                 //!< update clock_+from_step<=T<clock_+to_step_
-  long to_step_;                   //!< update clock_+from_step<=T<clock_+to_step_
-  timeval t_slice_begin_;          //!< Wall-clock time at the begin of a time slice
-  timeval t_slice_end_;            //!< Wall-clock time at the end of time slice
-  long t_real_;                    //!< Accumulated wall-clock time spent simulating (in us)
-  bool prepared_;                  //!< Indicates whether the SimulationManager is in a prepared
-                                   //!< state
-  bool simulating_;                //!< true if simulation in progress
-  bool simulated_;                 //!< indicates whether the SimulationManager has already been
-                                   //!< simulated for sometime
-  bool inconsistent_state_;        //!< true after exception during update_
-                                   //!< simulation must not be resumed
-  bool print_time_;                //!< Indicates whether time should be printed during
-                                   //!< simulations (or not)
-  bool use_wfr_;                   //!< Indicates wheter waveform relaxation is used
-  double wfr_comm_interval_;       //!< Desired waveform relaxation communication
-                                   //!< interval (in ms)
-  double wfr_tol_;                 //!< Convergence tolerance of waveform relaxation method
-  long wfr_max_iterations_;        //!< maximal number of iterations used for waveform
-                                   //!< relaxation
-  size_t wfr_interpolation_order_; //!< interpolation order for waveform
-                                   //!< relaxation method
-  double update_time_limit_;       //!< throw exception if single update cycle takes longer
-                                   //!< than update_time_limit_ (seconds, default inf)
-  double min_update_time_;         //!< shortest update time seen so far (seconds)
-  double max_update_time_;         //!< longest update time seen so far (seconds)
+  Time clock_;                      //!< SimulationManager clock, updated once per slice
+  long slice_;                      //!< current update slice
+  long to_do_;                      //!< number of pending steps
+  long to_do_total_;                //!< number of requested steps in current simulation
+  long from_step_;                  //!< update clock_+from_step<=T<clock_+to_step_
+  long to_step_;                    //!< update clock_+from_step<=T<clock_+to_step_
+  timeval t_slice_begin_;           //!< Wall-clock time at the begin of a time slice
+  timeval t_slice_end_;             //!< Wall-clock time at the end of time slice
+  long t_real_;                     //!< Accumulated wall-clock time spent simulating (in us)
+  bool prepared_;                   //!< Indicates whether the SimulationManager is in a prepared
+                                    //!< state
+  bool simulating_;                 //!< true if simulation in progress
+  bool simulated_;                  //!< indicates whether the SimulationManager has already been
+                                    //!< simulated for sometime
+  bool inconsistent_state_;         //!< true after exception during update_
+                                    //!< simulation must not be resumed
+  bool print_time_;                 //!< Indicates whether time should be printed during
+                                    //!< simulations (or not)
+  bool use_wfr_;                    //!< Indicates wheter waveform relaxation is used
+  double wfr_comm_interval_;        //!< Desired waveform relaxation communication
+                                    //!< interval (in ms)
+  double wfr_tol_;                  //!< Convergence tolerance of waveform relaxation method
+  long wfr_max_iterations_;         //!< maximal number of iterations used for waveform
+                                    //!< relaxation
+  size_t wfr_interpolation_order_;  //!< interpolation order for waveform
+                                    //!< relaxation method
+  size_t flexible_data_event_size_; //!< number of entries per time step
+  double update_time_limit_;        //!< throw exception if single update cycle takes longer
+                                    //!< than update_time_limit_ (seconds, default inf)
+  double min_update_time_;          //!< shortest update time seen so far (seconds)
+  double max_update_time_;          //!< longest update time seen so far (seconds)
 
   // private stop watches for benchmarking purposes
   Stopwatch< StopwatchGranularity::Normal, StopwatchParallelism::MasterOnly > sw_simulate_;
@@ -334,6 +340,12 @@ inline size_t
 SimulationManager::get_wfr_interpolation_order() const
 {
   return wfr_interpolation_order_;
+}
+
+inline size_t
+SimulationManager::get_flexible_data_event_size() const
+{
+  return flexible_data_event_size_;
 }
 
 inline Time

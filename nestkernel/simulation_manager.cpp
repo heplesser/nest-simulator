@@ -60,6 +60,7 @@ nest::SimulationManager::SimulationManager()
   , wfr_tol_( 0.0001 )
   , wfr_max_iterations_( 15 )
   , wfr_interpolation_order_( 3 )
+  , flexible_data_event_size_( 1 )
   , update_time_limit_( std::numeric_limits< double >::infinity() )
   , min_update_time_( std::numeric_limits< double >::infinity() )
   , max_update_time_( -std::numeric_limits< double >::infinity() )
@@ -101,6 +102,7 @@ nest::SimulationManager::initialize( const bool adjust_number_of_threads_or_rng_
   wfr_tol_ = 0.0001;
   wfr_max_iterations_ = 15;
   wfr_interpolation_order_ = 3;
+  flexible_data_event_size_ = 1;
   update_time_limit_ = std::numeric_limits< double >::infinity();
   min_update_time_ = std::numeric_limits< double >::infinity();
   max_update_time_ = -std::numeric_limits< double >::infinity();
@@ -400,6 +402,20 @@ nest::SimulationManager::set_status( const DictionaryDatum& d )
     }
   }
 
+  long data_event_size = flexible_data_event_size_;
+  if ( updateValue< long >( d, "flexible_data_event_size", data_event_size ) )
+  {
+    if ( data_event_size < 1 )
+    {
+      LOG( M_ERROR, "SimulationManager::set_status", "Flexible data event size must be ≥ 1." );
+      throw KernelException();
+    }
+    else
+    {
+      flexible_data_event_size_ = data_event_size;
+    }
+  }
+
   // update time limit
   double t_new = 0.0;
   if ( updateValue< double >( d, names::update_time_limit, t_new ) )
@@ -469,6 +485,7 @@ nest::SimulationManager::get_status( DictionaryDatum& d )
   def< double >( d, names::wfr_tol, wfr_tol_ );
   def< long >( d, names::wfr_max_iterations, wfr_max_iterations_ );
   def< long >( d, names::wfr_interpolation_order, wfr_interpolation_order_ );
+  def< long >( d, "flexible_data_event_size", flexible_data_event_size_ );
 
   def< double >( d, names::update_time_limit, update_time_limit_ );
   def< double >( d, names::min_update_time, min_update_time_ );

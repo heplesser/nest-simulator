@@ -732,6 +732,8 @@ NodeManager::check_wfr_use()
 
   GapJunctionEvent::set_coeff_length(
     kernel().connection_manager.get_min_delay() * ( kernel().simulation_manager.get_wfr_interpolation_order() + 1 ) );
+  FlexibleDataEvent::set_coeff_length(
+    kernel().connection_manager.get_min_delay() * kernel().simulation_manager.get_flexible_data_event_size() );
   InstantaneousRateConnectionEvent::set_coeff_length( kernel().connection_manager.get_min_delay() );
   DelayedRateConnectionEvent::set_coeff_length( kernel().connection_manager.get_min_delay() );
   DiffusionConnectionEvent::set_coeff_length( kernel().connection_manager.get_min_delay() );

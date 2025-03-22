@@ -409,6 +409,7 @@ public:
   virtual size_t handles_test_event( DSSpikeEvent&, size_t receptor_type );
   virtual size_t handles_test_event( DSCurrentEvent&, size_t receptor_type );
   virtual size_t handles_test_event( GapJunctionEvent&, size_t receptor_type );
+  virtual size_t handles_test_event( FlexibleDataEvent&, size_t receptor_type );
   virtual size_t handles_test_event( InstantaneousRateConnectionEvent&, size_t receptor_type );
   virtual size_t handles_test_event( DiffusionConnectionEvent&, size_t receptor_type );
   virtual size_t handles_test_event( DelayedRateConnectionEvent&, size_t receptor_type );
@@ -424,6 +425,16 @@ public:
    * @throws IllegalConnection
    */
   virtual void sends_secondary_event( GapJunctionEvent& ge );
+
+  /**
+   * Required to check if source neuron may send a SecondaryEvent.
+   *
+   * This base class implementation throws IllegalConnection
+   * and needs to be overwritten in the derived class.
+   * @ingroup event_interface
+   * @throws IllegalConnection
+   */
+  virtual void sends_secondary_event( FlexibleDataEvent& ge );
 
   /**
    * Required to check, if source neuron may send a SecondaryEvent.
@@ -635,6 +646,15 @@ public:
    * @throws UnexpectedEvent
    */
   virtual void handle( GapJunctionEvent& e );
+
+  /**
+   * Handler for flexible data events.
+   *
+   * @see handle(thread, FlexibleDataEvent&)
+   * @ingroup event_interface
+   * @throws UnexpectedEvent
+   */
+  virtual void handle( FlexibleDataEvent& e );
 
   /**
    * Handler for rate neuron events.

@@ -308,6 +308,21 @@ public:
 };
 
 /**
+ * Event transmitting a fixed but arbitrary number of doubles per time step within a min_delay interval.
+ */
+class FlexibleDataEvent : public DataSecondaryEvent< double, FlexibleDataEvent >
+{
+
+public:
+  FlexibleDataEvent()
+  {
+  }
+
+  void operator()() override;
+  FlexibleDataEvent* clone() const override;
+};
+
+/**
  * Event for rate model connections without delay. The event transmits
  * the rate to the connected neurons.
  */
@@ -411,6 +426,12 @@ inline GapJunctionEvent*
 GapJunctionEvent::clone() const
 {
   return new GapJunctionEvent( *this );
+}
+
+inline FlexibleDataEvent*
+FlexibleDataEvent::clone() const
+{
+  return new FlexibleDataEvent( *this );
 }
 
 inline InstantaneousRateConnectionEvent*

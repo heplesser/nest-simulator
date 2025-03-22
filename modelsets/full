@@ -46,6 +46,7 @@ ginzburg_neuron
 glif_cond
 glif_psc
 glif_psc_double_alpha
+flexible_data_connection
 hh_cond_exp_traub
 hh_cond_beta_gap_traub
 hh_psc_alpha

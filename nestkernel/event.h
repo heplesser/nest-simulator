@@ -96,6 +96,7 @@ class Node;
  * @see DelayedRateConnectionEvent
  * @see DiffusionConnectionEvent
  * @see GapJunctionEvent
+ * @see FlexibleDataEvent
  * @see InstantaneousRateConnectionEvent
  * @see LearningSignalConnectionEvent
 

@@ -377,6 +377,25 @@ Node::sends_secondary_event( GapJunctionEvent& )
 }
 
 void
+Node::handle( FlexibleDataEvent& )
+{
+  throw UnexpectedEvent( "The target node does not handle flexible data connection input." );
+}
+
+size_t
+Node::handles_test_event( FlexibleDataEvent&, size_t )
+{
+  throw IllegalConnection( "The target node or synapse model does not support flexible data connection input." );
+}
+
+void
+Node::sends_secondary_event( FlexibleDataEvent& )
+{
+  throw IllegalConnection( "The source node does not support flexible data connection output." );
+}
+
+
+void
 Node::handle( InstantaneousRateConnectionEvent& )
 {
   throw UnexpectedEvent( "The target node does not handle instantaneous rate input." );

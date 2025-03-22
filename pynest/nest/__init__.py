@@ -281,6 +281,7 @@ class NestModule(types.ModuleType):
     wfr_interpolation_order = KernelAttribute(
         "int", "Interpolation order of polynomial used in wfr iterations", default=3
     )
+    flexible_data_event_size = KernelAttribute("int", "Common size of flexible data events", default=1)
     max_num_syn_models = KernelAttribute("int", "Maximal number of synapse models supported", readonly=True)
     structural_plasticity_synapses = KernelAttribute(
         "dict",
