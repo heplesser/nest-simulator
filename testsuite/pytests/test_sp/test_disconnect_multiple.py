@@ -60,6 +60,7 @@ class TestDisconnect(unittest.TestCase):
             "eprop_learning_signal_connection_lbl",
             "eprop_learning_signal_connection_hpc",
             "sic_connection",
+            "flexible_data_connection",
         ]
 
     def test_multiple_synapse_deletion_all_to_all(self):

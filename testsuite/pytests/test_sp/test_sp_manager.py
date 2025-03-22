@@ -47,6 +47,7 @@ class TestStructuralPlasticityManager(unittest.TestCase):
             "rate_connection_instantaneous_lbl",
             "rate_connection_delayed",
             "rate_connection_delayed_lbl",
+            "flexible_data_connection",
         ]
 
     def test_register_synapses(self):

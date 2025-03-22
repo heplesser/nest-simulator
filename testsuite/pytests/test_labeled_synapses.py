@@ -196,8 +196,8 @@ class LabeledSynapsesTestCase(unittest.TestCase):
         """Try set a label to an 'un-label-able' synapse."""
 
         for syn in [s for s in nest.synapse_models if not s.endswith("_lbl")]:
-            if syn == "sic_connection":
-                # Skip sic_connection since it requires different pre- and post-synaptic neuron models
+            if syn in ["sic_connection", "flexible_data_connection"]:
+                # Skip since it requires different pre- and post-synaptic neuron models
                 continue
 
             a, r_type = self.default_network(syn)
