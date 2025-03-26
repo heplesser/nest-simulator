@@ -21,7 +21,7 @@
 
 r"""
 Tutorial on learning to generate a lemniscate with e-prop
-------------------------------------------------------------------------------------
+---------------------------------------------------------
 
 Training a regression model using supervised e-prop plasticity to generate a lemniscate
 
@@ -29,7 +29,8 @@ Description
 ~~~~~~~~~~~
 
 This script demonstrates supervised learning of a regression task with a recurrent spiking neural network that
-is equipped with the eligibility propagation (e-prop) plasticity mechanism by Bellec et al. [1]_.
+is equipped with the eligibility propagation (e-prop) plasticity mechanism by Bellec et al. [1]_ with
+additional biological features described in [3]_.
 
 This type of learning is demonstrated at the proof-of-concept task in [1]_. We based this script on their
 TensorFlow script given in [2]_ and changed the task as well as the parameters slightly.
@@ -118,7 +119,7 @@ np.random.seed(rng_seed)  # fix numpy random seed
 # performance metrics, such as average accuracy and mean error. Increasing the number of iterations enhances
 # learning performance.
 
-group_size = 1  # batch size
+group_size = 1  # number of instances over which to evaluate the learning performance
 n_iter = 200  # number of iterations, 5000 to reach convergence as in the figure
 
 steps = {
@@ -211,7 +212,6 @@ params_nrn_rec["adapt_beta"] = (
 
 scale_factor = 1.0 - params_nrn_rec["kappa"]  # factor for rescaling due to removal of irregular spike arrival
 
-
 ####################
 
 # Intermediate parrot neurons required between input spike generators and recurrent neurons,
@@ -223,7 +223,6 @@ nrns_in = nest.Create("parrot_neuron", n_in)
 nrns_rec = nest.Create("eprop_iaf_adapt", n_rec, params_nrn_rec)
 nrns_out = nest.Create("eprop_readout", n_out, params_nrn_out)
 gen_rate_target = nest.Create("step_rate_generator", n_out)
-
 gen_learning_window = nest.Create("step_rate_generator")
 
 # %% ###########################################################################################################
@@ -268,6 +267,7 @@ params_wr = {
     "targets": nrns_rec[:n_record_w] + nrns_out,  # limit targets to subsample weights to record from
     "start": duration["total_offset"],
     "stop": duration["total_offset"] + duration["task"],
+    "label": "weight_recorder",
 }
 
 params_sr_in = {
@@ -312,7 +312,6 @@ weights_out_rec = np.array(np.random.randn(n_rec, n_out) / np.sqrt(n_rec), dtype
 weights_in_rec *= scale_factor
 weights_rec_rec *= scale_factor
 weights_out_rec *= scale_factor
-
 
 params_common_syn_eprop = {
     "optimizer": {
@@ -461,6 +460,7 @@ params_gen_learning_window = {
 ####################
 
 nest.SetStatus(gen_learning_window, params_gen_learning_window)
+
 # %% ###########################################################################################################
 # Force final update
 # ~~~~~~~~~~~~~~~~~~

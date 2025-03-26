@@ -220,11 +220,11 @@ params_nrn_rec = {
     "V_th": 0.03,  # mV, spike threshold membrane voltage
 }
 
-scale_factor = 1.0 - params_nrn_rec["kappa"]  # factor for rescaling due to removal of irregular spike arrival
-
 params_nrn_rec["adapt_beta"] = (
     1.7 * (1.0 - np.exp(-1 / params_nrn_rec["adapt_tau"])) / (1.0 - np.exp(-1.0 / tau_m_mean))
 )  # prefactor of adaptive threshold
+
+scale_factor = 1.0 - params_nrn_rec["kappa"]  # factor for rescaling due to removal of irregular spike arrival
 
 ####################
 
@@ -238,7 +238,6 @@ nrns_rec = nest.Create("eprop_iaf_adapt", n_rec, params_nrn_rec)
 nrns_out = nest.Create("eprop_readout", n_out, params_nrn_out)
 gen_rate_target = nest.Create("step_rate_generator", n_out)
 gen_learning_window = nest.Create("step_rate_generator")
-
 
 # %% ###########################################################################################################
 # Create recorders
@@ -463,7 +462,6 @@ for target_signal in target_signal_list:
 ####################
 
 nest.SetStatus(gen_rate_target, params_gen_rate_target)
-
 
 # %% ###########################################################################################################
 # Create learning window
