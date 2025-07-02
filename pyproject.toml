@@ -1,3 +1,183 @@
+# [build-system]
+# requires = ["scikit-build-core", "cython<=3.0.12"]
+# build-backend = "scikit_build_core.build"
+
+[build-system]
+requires = [
+    "hatchling",
+    "scikit-build-core",
+    "pybind11",
+    "cmake",
+    "ninja",
+    "cython<=3.0.12"
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "pynest-ng"
+version = "3.8.post0.dev5"
+description = "NEST is a simulator for spiking neural network models that focuses on the dynamics, size and structure of neural systems rather than on the exact morphology of individual neurons."
+keywords = ["nest", "simulator", "neuroscience", "neural", "neuron", "network", "ai", "spike", "spiking"]
+readme = "README.md"
+license.file = "LICENSE"
+authors = [
+  { name = "NEST Initiative", email = "users@nest-simulator.org" },
+]
+maintainers = [
+  { name = "Steffen Graber", email = "s.graber@fz-juelich.de" },
+]
+requires-python = ">=3.9, <4.0"
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: C++",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Medical Science Apps.",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Typing :: Typed",
+]
+dependencies = [
+  "numpy",
+  "pynest-api",
+  "pandas",
+  "scipy",
+  "matplotlib",
+  "h5py",
+  "setuptools",
+]
+
+[tool.hatch.build.targets.wheel.hooks.scikit-build]
+experimental = true
+
+# [tool.hatch.build.hooks.custom]
+# path = "build_support/pip_post-install.py"
+
+[project.optional-dependencies]
+nestml = [
+  "nestml"
+]
+mpi = [
+  "mpi4py"
+]
+
+[project.urls]
+Homepage = "https://nest-simulator.org/"
+Documentation = "https://nest-simulator.readthedocs.io/en/stable/"
+"Bug Tracker" = "https://github.com/nest/nest-simulator/issues"
+Changelog = "https://nest-simulator.readthedocs.io/en/stable/whats_new/index.html"
+
+[tool.scikit-build]
+sdist.cmake = false
+build-dir = "build/{wheel_tag}"
+
+[tool.scikit-build.cmake.define]
+with-optimize ="-O2"
+with-warning = "ON"
+with-python = "ON"
+with-boost = "ON"
+with-gsl = "ON"
+with-openmp = "ON"
+# with-userdoc ="OFF"
+# with-mpi = "OFF"
+# with-libneurosim = "OFF"
+# with-sionlib = "OFF"
+# with-music = "OFF"
+# with-hdf5 = "OFF"
+
+#pip install . --config-settings=cmake.define.SOME_DEFINE=ON
+
+[tool.cibuildwheel]
+build-frontend = "default"
+build = ["cp39-*", "cp310-*", "cp311-*", "cp312-*", "cp313-*"]
+# build = ["cp312-*"]
+skip = "*-win* *-manylinux_i686" # Skip
+test-skip = ""
+archs = ["auto64"]
+config-settings = {}
+dependency-versions = "pinned"
+environment-pass = []
+build-verbosity = 2
+before-all =  """
+  NEST_SRC_DIR=${PWD}
+  if [ $AUDITWHEEL_POLICY == "musllinux_1_2" ]
+  then
+    apk add git readline readline-dev libc6-compat gsl gsl-dev ncurses ncurses-dev wget bzip2 hdf5 cmake
+  else
+    yum install -y git glibc glibc-devel readline readline-devel gsl gsl-devel ncurses ncurses-devel wget bzip2 hdf5 cmake
+  fi
+  # Install boost
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "Build OS"
+    echo $OSTYPE
+    brew install llvm libomp boost gsl libtool open-mpi graphviz ncurses cmake
+    brew reinstall readline 
+    brew link --force readline ncurses libomp 
+    echo "arch: $(arch)"
+    if [[ $(arch) == 'arm64' ]]; then
+      LDFLAGS="-L/opt/homebrew/lib"
+      CPPFLAGS="-I/opt/homebrew/include"
+    else
+      LDFLAGS="-L/usr/local/lib"
+      CPPFLAGS="-I/usr/local/include"
+    fi
+    hash -r
+  else
+    wget https://archives.boost.io/release/1.88.0/source/boost_1_88_0.tar.bz2
+    tar --bzip2 -xf boost_1_88_0.tar.bz2
+    cd boost_1_88_0
+    ./bootstrap.sh
+    ./b2 install
+  fi
+
+  """
+before-build = ""
+repair-wheel-command = ""
+test-command = ""
+before-test = ""
+test-requires = []
+test-extras = []
+container-engine = "docker"
+manylinux-x86_64-image = "manylinux2014"
+manylinux-i686-image = "manylinux2014"
+manylinux-aarch64-image = "manylinux2014"
+manylinux-ppc64le-image = "manylinux2014"
+manylinux-pypy_x86_64-image = "manylinux2014"
+manylinux-pypy_i686-image = "manylinux2014"
+manylinux-pypy_aarch64-image = "manylinux2014"
+musllinux-x86_64-image = "musllinux_1_2"
+musllinux-i686-image = "musllinux_1_2"
+musllinux-aarch64-image = "musllinux_1_2"
+musllinux-ppc64le-image = "musllinux_1_2"
+musllinux-s390x-image = "musllinux_1_2"
+
+[[tool.cibuildwheel.overrides]]
+select = "*-macos*"
+inherit.environment = "append"
+environment = { MACOSX_DEPLOYMENT_TARGET = "14.0" }
+# config-settings."cmake.define.READLINE_LIBRARY" = "/usr/local/opt/readline/lib"
+# config-settings."cmake.define.NCURSES_LIBRARY" = "/usr/local/opt/ncurses/lib"
+
+[tool.cibuildwheel.linux]
+repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
+
+[tool.cibuildwheel.macos]
+repair-wheel-command = "delocate-wheel --require-archs {delocate_archs} -w {dest_dir} -v {wheel}"
+
+[tool.cibuildwheel.windows]
+
+[tool.cibuildwheel.pyodide]
+
 [tool.pytest.ini_options]
 markers = [
     "skipif_missing_gsl: skip test if NEST was built without GSL support",
@@ -14,3 +194,4 @@ known_third_party = "nest"
 
 [tool.black]
 line-length = 120
+

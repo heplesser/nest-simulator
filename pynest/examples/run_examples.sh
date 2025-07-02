@@ -19,12 +19,6 @@
 # You should have received a copy of the GNU General Public License
 # along with NEST.  If not, see <http://www.gnu.org/licenses/>.
 
-NEST_CMD="$(which nest)"
-if [ $? != 0 ] ; then
-    echo "ERROR: command 'nest' not found. Please make sure PATH is set correctly"
-    echo "       by sourcing the script nest_vars.sh from your NEST installation."
-    exit 1
-fi
 
 python3 -c "import nest" >/dev/null 2>&1
 if [ $? != 0 ] ; then
@@ -43,11 +37,6 @@ if [ "${#}" -eq 0 ]; then
     # Find all examples that have a line containing "autorun=true"
     # The examples can be found in subdirectory nest and in the
     # examples installation path.
-    if [ -d "nest/" ] ; then
-        EXAMPLES="$(grep -rl --include=\*\.sli 'autorun=true' nest/)"
-    else
-        EXAMPLES="$(grep -rl --include=\*\.sli 'autorun=true' examples/)"
-    fi
     EXAMPLES+=" $(find . -name '*.py')"
 else
     EXAMPLES+=${@}
@@ -77,9 +66,7 @@ for i in $EXAMPLES; do
 
     ext="$(echo "$example" | cut -d. -f2)"
 
-    if [ $ext = sli ] ; then
-        runner=nest
-    elif [ $ext = py ] ; then
+    if [ $ext = py ] ; then
         runner=python3
     fi
 
