@@ -56,8 +56,13 @@ nest::SourceTable::initialize()
   {
     const size_t tid = kernel().vp_manager.get_thread_id();
     sources_.at( tid ).resize( 0 );
-    resize_sources();
+    {
+      resize_sources();
+    }
     compressible_sources_.at( tid ).resize( 0 );
+    // must have barrier here to avoid data race
+    // this barrier is needed to avoid race even when only registering plain static_synapse
+#pragma omp barrier
   } // of omp parallel
 }
 

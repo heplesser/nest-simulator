@@ -67,11 +67,12 @@ ModelManager::~ModelManager()
 void
 ModelManager::initialize( const bool )
 {
+  assert( proxynode_model_ == nullptr );
   if ( not proxynode_model_ )
   {
     proxynode_model_ = new GenericModel< proxynode >( "proxynode", "" );
     proxynode_model_->set_type_id( 1 );
-    proxynode_model_->set_threads();
+    proxynode_model_->set_threads(); // we must call this to ensure memory pool is adjusted to new number of threads
   }
 
   const size_t num_threads = kernel().vp_manager.get_num_threads();
@@ -177,7 +178,9 @@ ModelManager::register_node_model_( Model* model )
 #pragma omp parallel
   {
     const size_t t = kernel().vp_manager.get_thread_id();
-    proxy_nodes_[ t ].push_back( create_proxynode_( t, id ) );
+#pragma omp barrier
+    proxy_nodes_.at( t ).push_back( create_proxynode_( t, id ) );
+#pragma omp barrier
   }
 
   return id;
@@ -201,7 +204,7 @@ ModelManager::copy_node_model_( const size_t old_id, const std::string& new_name
 #pragma omp parallel
   {
     const size_t t = kernel().vp_manager.get_thread_id();
-    proxy_nodes_[ t ].push_back( create_proxynode_( t, new_id ) );
+    proxy_nodes_.at( t ).push_back( create_proxynode_( t, new_id ) );
   }
 }
 

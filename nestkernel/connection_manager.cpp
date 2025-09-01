@@ -133,6 +133,7 @@ nest::ConnectionManager::initialize( const bool adjust_number_of_threads_or_rng_
   // We need to obtain this while in serial context to avoid problems when
   // increasing the number of threads.
   const size_t num_conn_models = kernel().model_manager.get_num_connection_models();
+  assert( num_conn_models == 0 );
 
 #pragma omp parallel
   {

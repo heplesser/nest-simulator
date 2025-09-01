@@ -276,9 +276,30 @@ nest::KernelManager::change_number_of_threads( size_t new_num_threads )
   vp_manager.set_num_threads( new_num_threads );
 
   // Initialize in original order with new number of threads set
-  for ( auto& manager : managers )
+  if ( new_num_threads == 1 )
   {
-    manager->initialize( /* adjust_number_of_threads_or_rng_only */ true );
+    for ( auto& manager : managers )
+    {
+      manager->initialize( /* adjust_number_of_threads_or_rng_only */ true );
+    }
+  }
+  else
+  {
+
+    logging_manager.initialize( true );
+    mpi_manager.initialize( true );
+    vp_manager.initialize( true );
+    // module_manager.initialize( true );
+    random_manager.initialize( true );
+    // simulation_manager.initialize( true );
+    // modelrange_manager.initialize( true );
+    connection_manager.initialize( true );
+    // sp_manager.initialize( true );
+    // event_delivery_manager.initialize( true );
+    // io_manager.initialize( true );
+    model_manager.initialize( true );
+    // music_manager.initialize( true );
+    // node_manager.initialize( true );
   }
 
   // Finalizing deleted all register components. Now that all infrastructure

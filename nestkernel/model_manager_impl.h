@@ -72,7 +72,6 @@ ModelManager::register_connection_model( const std::string& name )
   {
     register_specific_connection_model_< ConnectionLabel< ConnectionT< TargetIdentifierPtrRport > > >( name + "_lbl" );
   }
-
   delete dummy_model;
 }
 
@@ -89,7 +88,8 @@ ModelManager::register_specific_connection_model_( const std::string& name )
     throw NamingConflict( msg );
   }
 
-  const auto new_syn_id = get_num_connection_models();
+  const auto new_syn_id = get_num_connection_models(); // This triggers -- write
+
   if ( new_syn_id >= invalid_synindex )
   {
     const std::string msg = String::compose(
@@ -103,13 +103,19 @@ ModelManager::register_specific_connection_model_( const std::string& name )
 #pragma omp parallel
   {
     ConnectorModel* conn_model = new GenericConnectorModel< CompleteConnectionT >( name );
-    conn_model->set_syn_id( new_syn_id );
+    conn_model->set_syn_id( new_syn_id ); // This triggers  -- previous read
+
     if ( not conn_model->has_property( ConnectionModelProperties::IS_PRIMARY ) )
     {
       conn_model->get_secondary_event()->add_syn_id( new_syn_id );
     }
     connection_models_.at( kernel().vp_manager.get_thread_id() ).push_back( conn_model );
-    kernel().connection_manager.resize_connections();
+    // barrier required both before and after to avoid thread data races
+    // These two are required to solve race that occurs when only registering static synapse (no models)
+    // but in all three variants (plain, hpc, lbl)
+#pragma omp barrier
+    kernel().connection_manager.resize_connections(); // why parallel?
+#pragma omp barrier
   } // end of parallel section
 }
 
