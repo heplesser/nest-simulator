@@ -197,6 +197,9 @@ NEST properties
 +-----------------------------------------------+----------------------------------------------------------------+
 | ``-Dtics_per_step=[number]``                  | Specify resolution [default=100 tics per step].                |
 +-----------------------------------------------+----------------------------------------------------------------+
+| ``-Dwith-enable-timers=[OFF|ON]``             | Enable internal timers [default=ON].                           |
+|                                               | Disabled timers return NaN.                                    |
++-----------------------------------------------+----------------------------------------------------------------+
 | ``-Dwith-threaded-timers=[OFF|ON]``           | Build with one internal timer per thread [default=ON].         |
 |                                               | Multi-threaded timers can affect the performance.              |
 +-----------------------------------------------+----------------------------------------------------------------+

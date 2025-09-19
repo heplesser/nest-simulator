@@ -155,7 +155,7 @@ private:
   //! Returns, whether the stopwatch is running.
   bool is_running_() const;
 
-#ifndef DISABLE_TIMING
+#ifdef ENABLE_TIMERS
   timestamp_t _beg, _end;
   size_t _prev_elapsed;
   bool _running;
@@ -169,7 +169,7 @@ template < clockid_t clock_type >
 inline void
 StopwatchTimer< clock_type >::start()
 {
-#ifndef DISABLE_TIMING
+#ifdef ENABLE_TIMERS
   if ( not is_running_() )
   {
     _prev_elapsed += _end - _beg;     // store prev. time, if we resume
@@ -183,7 +183,7 @@ template < clockid_t clock_type >
 inline void
 StopwatchTimer< clock_type >::stop()
 {
-#ifndef DISABLE_TIMING
+#ifdef ENABLE_TIMERS
   if ( is_running_() )
   {
     _end = get_current_time(); // invariant: _end >= _beg
@@ -196,7 +196,7 @@ template < clockid_t clock_type >
 inline bool
 StopwatchTimer< clock_type >::is_running_() const
 {
-#ifndef DISABLE_TIMING
+#ifdef ENABLE_TIMERS
   return _running;
 #else
   return false;
@@ -207,7 +207,7 @@ template < clockid_t clock_type >
 inline double
 StopwatchTimer< clock_type >::elapsed( timeunit_t timeunit ) const
 {
-#ifndef DISABLE_TIMING
+#ifdef ENABLE_TIMERS
   size_t time_elapsed;
   if ( is_running_() )
   {
@@ -221,7 +221,7 @@ StopwatchTimer< clock_type >::elapsed( timeunit_t timeunit ) const
   }
   return static_cast< double >( time_elapsed ) / static_cast< double >( timeunit );
 #else
-  return 0.;
+  return std::numeric_limits< double >::quiet_NaN();
 #endif
 }
 
@@ -229,7 +229,7 @@ template < clockid_t clock_type >
 inline void
 StopwatchTimer< clock_type >::reset()
 {
-#ifndef DISABLE_TIMING
+#ifdef ENABLE_TIMERS
   _beg = 0; // invariant: _end >= _beg
   _end = 0;
   _prev_elapsed = 0; // erase all prev. measurements
@@ -241,7 +241,7 @@ template < clockid_t clock_type >
 inline void
 StopwatchTimer< clock_type >::print( const std::string& msg, timeunit_t timeunit, std::ostream& os ) const
 {
-#ifndef DISABLE_TIMING
+#ifdef ENABLE_TIMERS
   double e = elapsed( timeunit );
   os << msg << e;
   switch ( timeunit )
