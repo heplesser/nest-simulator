@@ -411,7 +411,7 @@ public:
   double
   elapsed( timers::timeunit_t = timers::timeunit_t::SECONDS ) const
   {
-    return 0;
+    return std::numeric_limits< double >::quiet_NaN();
   }
   void
   reset()
@@ -453,7 +453,7 @@ public:
   double
   elapsed( timers::timeunit_t = timers::timeunit_t::SECONDS ) const
   {
-    return 0;
+    return std::numeric_limits< double >::quiet_NaN();
   }
   void
   reset()
