@@ -233,6 +233,7 @@ add_subdirectory( testsuite )
 if ( HAVE_PYTHON )
   add_subdirectory( pynest )
 endif ()
+add_subdirectory( miniapp )
 
 ################################################################################
 ##################           Summary of flags                 ##################
