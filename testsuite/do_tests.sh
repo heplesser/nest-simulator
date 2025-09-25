@@ -136,6 +136,21 @@ get_build_info ()
 HAVE_MPI="$(get_build_info have_mpi)"
 HAVE_OPENMP="$(get_build_info have_threads)"
 
+if test "${HAVE_MPI}" = "True"; then
+    MPI_LAUNCHER="$(get_build_info mpiexec)"
+    MPI_LAUNCHER_VERSION="$($MPI_LAUNCHER --version | head -n1)"
+    MPI_LAUNCHER_PREFLAGS="$(get_build_info mpiexec_preflags)"
+    # OpenMPI requires --oversubscribe to allow more processes than available cores
+    #
+    # ShellCheck warns about "SC2076 (warning): Remove quotes from right-hand side of =~ to match as a regex rather than literally.",
+    # but we want to match literally, therefore:
+    # shellcheck disable=SC2076
+    if [[ "${MPI_LAUNCHER_VERSION}" =~ "(OpenRTE)" ]] ||  [[ "${MPI_LAUNCHER_VERSION}" =~ "(Open MPI)" ]]; then
+	if [[ ! "$(get_build_info mpiexec_preflags)" =~ "--oversubscribe" ]]; then
+	    MPI_LAUNCHER_PREFLAGS="${MPI_LAUNCHER_PREFLAGS} --oversubscribe"
+	fi
+    fi
+fi
 
 # Under Mac OS X, suppress crash reporter dialogs. Restore old state at end.
 echo "INFO_OS=${INFO_OS:-}"
