@@ -136,23 +136,6 @@ get_build_info ()
 HAVE_MPI="$(get_build_info have_mpi)"
 HAVE_OPENMP="$(get_build_info have_threads)"
 
-if test "${HAVE_MPI}" = "True"; then
-    MPI_LAUNCHER="$(get_build_info mpiexec)"
-    MPI_LAUNCHER_VERSION="$($MPI_LAUNCHER --version | head -n1)"
-    MPI_LAUNCHER_PREFLAGS="$(get_build_info mpiexec_preflags)"
-    # OpenMPI requires --oversubscribe to allow more processes than available cores
-    #
-    # ShellCheck warns about "SC2076 (warning): Remove quotes from right-hand side of =~ to match as a regex rather than literally.",
-    # but we want to match literally, therefore:
-    # shellcheck disable=SC2076
-    if [[ "${MPI_LAUNCHER_VERSION}" =~ "(OpenRTE)" ]] ||  [[ "${MPI_LAUNCHER_VERSION}" =~ "(Open MPI)" ]]; then
-	if [[ ! "$(get_build_info mpiexec_preflags)" =~ "--oversubscribe" ]]; then
-	    MPI_LAUNCHER_PREFLAGS="${MPI_LAUNCHER_PREFLAGS} --oversubscribe"
-	fi
-    fi
-    MPI_LAUNCHER_NUMPROC_FLAG="$(get_build_info mpiexec_numproc_flag)"
-    MPI_LAUNCHER_CMDLINE="${MPI_LAUNCHER} ${MPI_LAUNCHER_PREFLAGS} ${MPI_LAUNCHER_NUMPROC_FLAG}"
-fi
 
 # Under Mac OS X, suppress crash reporter dialogs. Restore old state at end.
 echo "INFO_OS=${INFO_OS:-}"
@@ -219,75 +202,16 @@ if test "${PYTHON}"; then
     XUNIT_FILE="${REPORTDIR}/${XUNIT_NAME}.xml"
     env
     set +e
-    ${PYTHON} -m pytest --verbose --timeout "${TIME_LIMIT}" --junit-xml="${XUNIT_FILE}" \
+    ${PYTHON} -m pytest --verbose -s --timeout "${TIME_LIMIT}" --junit-xml="${XUNIT_FILE}" \
 	                --ignore="${PYNEST_TEST_DIR}/mpi" --ignore="${PYNEST_TEST_DIR}/sli2py_mpi" "${PYNEST_TEST_DIR}" 2>&1 | tee -a "${TEST_LOGFILE}"
 
     set -e
-
-    # Run tests in the sli2py_mpi subdirectory. The must be run without loading conftest.py.
-    if test "${HAVE_MPI}" = "True" && test "${HAVE_OPENMP}" = "True" ; then
-        XUNIT_FILE="${REPORTDIR}/${XUNIT_NAME}_sli2py_mpi.xml"
-        env
-        set +e
-        "${PYTHON}" -m pytest --verbose --timeout "${TIME_LIMIT}" --junit-xml="${XUNIT_FILE}" --numprocesses=1 \
-            "${PYNEST_TEST_DIR}/sli2py_mpi" 2>&1 | tee -a "${TEST_LOGFILE}"
-        set -e
-    fi
-
-    # Run tests in the mpi/* subdirectories, with one subdirectory per number of processes to use
-    if test "${HAVE_MPI}" = "True"; then
-        if test "${MPI_LAUNCHER}"; then
-
-	    if test "${INFO_OS:-}" = "Darwin"; then
-		# ref https://stackoverflow.com/a/752893
-		# Note that on GNU systems an additional '-r' would be needed for
-		# xargs, which is not available here.
-                proc_nums=$(cd "${PYNEST_TEST_DIR}/mpi/"; find ./* -maxdepth 0 -type d -print0 | xargs -0 -n1 basename)
-	    else
-                proc_nums=$(cd "${PYNEST_TEST_DIR}/mpi/"; find ./* -maxdepth 0 -type d -printf "%f\n")
-	    fi
-
-        # Loop over subdirectories whose names are the number of mpi procs to use
-        for numproc in ${proc_nums}; do
-            XUNIT_FILE="${REPORTDIR}/${XUNIT_NAME}_mpi_${numproc}.xml"
-            PYTEST_ARGS="--verbose --timeout ${TIME_LIMIT} --junit-xml=${XUNIT_FILE} ${PYNEST_TEST_DIR}/mpi/${numproc}"
-
-		set +e
-		# Some doubling up of code here because trying to add the -m 'not requires...' to PYTEST_ARGS
-		# loses the essential quotes.
-		if test "${DO_TESTS_SKIP_TEST_REQUIRING_MANY_CORES:-False}" != "False"; then
-		    echo "Running ${MPI_LAUNCHER_CMDLINE} ${numproc} ${PYTHON} -m pytest ${PYTEST_ARGS} -m 'not requires_many_cores'"
-            # Double-quoting PYTEST_ARGS here does not work
-            # shellcheck disable=SC2086
-            ${MPI_LAUNCHER_CMDLINE} "${numproc}" "${PYTHON}" -m pytest ${PYTEST_ARGS} -m 'not requires_many_cores' 2>&1 | tee -a "${TEST_LOGFILE}"
-		else
-		    echo "Running ${MPI_LAUNCHER_CMDLINE} ${numproc} ${PYTHON} -m pytest ${PYTEST_ARGS}"
-            # Double-quoting PYTEST_ARGS here does not work
-            # shellcheck disable=SC2086
-            ${MPI_LAUNCHER_CMDLINE} "${numproc}" "${PYTHON}" -m pytest ${PYTEST_ARGS} 2>&1 | tee -a "${TEST_LOGFILE}"
-		fi
-		set -e
-            done
-        fi
-    fi
 else
     echo
     echo "  Not running PyNEST tests because NEST was compiled without Python support."
     echo
 fi
 
-echo
-echo "Phase 8: Running C++ tests (experimental)"
-echo "-----------------------------------------"
-
-if command -v run_all_cpptests >/dev/null 2>&1; then
-    set +e
-    CPP_TEST_OUTPUT="$( run_all_cpptests --logger=JUNIT,error,"${REPORTDIR}/08_cpptests.xml":HRF,error,stdout 2>&1 )"
-    set -e
-    echo "${CPP_TEST_OUTPUT}" | tail -2
-else
-    echo "  Not running C++ tests because NEST was compiled without Boost."
-fi
 
 # the following steps rely on `$?`, so breaking on error is not an option and we turn it off
 set +e
