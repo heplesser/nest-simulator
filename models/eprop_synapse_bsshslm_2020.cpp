@@ -68,14 +68,14 @@ void
 EpropSynapseBSSHSLM2020CommonProperties::set_status( const dictionary& d, ConnectorModel& cm )
 {
   CommonSynapseProperties::set_status( d, cm );
-  d.update_value( names::average_gradient, average_gradient_ );
+  d->update_value( names::average_gradient, average_gradient_ );
 
-  if ( d.known( names::optimizer ) )
+  if ( d->known( names::optimizer ) )
   {
-    const dictionary& optimizer_dict = d.get< dictionary >( names::optimizer );
+    const dictionary& optimizer_dict = d->get< dictionary >( names::optimizer );
 
     std::string new_optimizer;
-    const bool set_optimizer = optimizer_dict.update_value( names::type, new_optimizer );
+    const bool set_optimizer = optimizer_dict->update_value( names::type, new_optimizer );
     if ( set_optimizer and new_optimizer != optimizer_cp_->get_name() )
     {
       if ( kernel().connection_manager.get_num_connections( cm.get_syn_id() ) > 0 )

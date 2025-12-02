@@ -66,12 +66,12 @@ EpropSynapseCommonProperties::set_status( const dictionary& d, ConnectorModel& c
 {
   CommonSynapseProperties::set_status( d, cm );
 
-  if ( d.known( names::optimizer ) )
+  if ( d->known( names::optimizer ) )
   {
-    dictionary optimizer_dict = d.get< dictionary >( names::optimizer );
+    dictionary optimizer_dict = d->get< dictionary >( names::optimizer );
 
     std::string new_optimizer;
-    const bool set_optimizer = optimizer_dict.update_value( names::type, new_optimizer );
+    const bool set_optimizer = optimizer_dict->update_value( names::type, new_optimizer );
     if ( set_optimizer and new_optimizer != optimizer_cp_->get_name() )
     {
       if ( kernel().connection_manager.get_num_connections( cm.get_syn_id() ) > 0 )

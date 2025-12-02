@@ -143,7 +143,7 @@ void
 IOManager::set_data_path_prefix_( const dictionary& dict )
 {
   std::string tmp;
-  if ( dict.update_value( names::data_path, tmp ) )
+  if ( dict->update_value( names::data_path, tmp ) )
   {
     DIR* testdir = opendir( tmp.c_str() );
     if ( testdir )
@@ -172,7 +172,7 @@ IOManager::set_data_path_prefix_( const dictionary& dict )
     }
   }
 
-  if ( dict.update_value( names::data_prefix, tmp ) )
+  if ( dict->update_value( names::data_prefix, tmp ) )
   {
     if ( tmp.find( '/' ) == std::string::npos )
     {
@@ -196,7 +196,7 @@ IOManager::set_status( const dictionary& d )
 {
   set_data_path_prefix_( d );
 
-  d.update_value( names::overwrite_files, overwrite_files_ );
+  d->update_value( names::overwrite_files, overwrite_files_ );
 }
 
 dictionary
@@ -384,7 +384,7 @@ IOManager::get_recording_backend_device_defaults( const std::string& backend_nam
 void
 IOManager::get_recording_backend_device_status( const std::string& backend_name,
   const RecordingDevice& device,
-  dictionary& d )
+  dictionary d )
 {
   recording_backends_[ backend_name ]->get_device_status( device, d );
 }

@@ -341,30 +341,30 @@ void
 nest::pp_cond_exp_mc_urbanczik::Parameters_::set( const dictionary& d )
 {
   // allow setting the membrane potential
-  d.update_value( names::t_ref, t_ref );
-  d.update_value( names::phi_max, urbanczik_params.phi_max );
-  d.update_value( names::rate_slope, urbanczik_params.rate_slope );
-  d.update_value( names::beta, urbanczik_params.beta );
-  d.update_value( names::theta, urbanczik_params.theta );
+  d->update_value( names::t_ref, t_ref );
+  d->update_value( names::phi_max, urbanczik_params.phi_max );
+  d->update_value( names::rate_slope, urbanczik_params.rate_slope );
+  d->update_value( names::beta, urbanczik_params.beta );
+  d->update_value( names::theta, urbanczik_params.theta );
 
-  d.update_value( names::g_sp, urbanczik_params.g_conn[ SOMA ] );
-  d.update_value( names::g_ps, urbanczik_params.g_conn[ DEND ] );
+  d->update_value( names::g_sp, urbanczik_params.g_conn[ SOMA ] );
+  d->update_value( names::g_ps, urbanczik_params.g_conn[ DEND ] );
 
   // extract from sub-dictionaries
   for ( size_t n = 0; n < NCOMP; ++n )
   {
-    if ( d.known( comp_names_[ n ] ) )
+    if ( d->known( comp_names_[ n ] ) )
     {
-      auto dd = d.get< dictionary >( comp_names_[ n ] );
+      auto dd = d->get< dictionary >( comp_names_[ n ] );
 
-      dd.update_value( names::E_L, urbanczik_params.E_L[ n ] );
-      dd.update_value( names::E_ex, E_ex[ n ] );
-      dd.update_value( names::E_in, E_in[ n ] );
-      dd.update_value( names::C_m, urbanczik_params.C_m[ n ] );
-      dd.update_value( names::g_L, urbanczik_params.g_L[ n ] );
-      dd.update_value( names::tau_syn_ex, urbanczik_params.tau_syn_ex[ n ] );
-      dd.update_value( names::tau_syn_in, urbanczik_params.tau_syn_in[ n ] );
-      dd.update_value( names::I_e, I_e[ n ] );
+      dd->update_value( names::E_L, urbanczik_params.E_L[ n ] );
+      dd->update_value( names::E_ex, E_ex[ n ] );
+      dd->update_value( names::E_in, E_in[ n ] );
+      dd->update_value( names::C_m, urbanczik_params.C_m[ n ] );
+      dd->update_value( names::g_L, urbanczik_params.g_L[ n ] );
+      dd->update_value( names::tau_syn_ex, urbanczik_params.tau_syn_ex[ n ] );
+      dd->update_value( names::tau_syn_in, urbanczik_params.tau_syn_in[ n ] );
+      dd->update_value( names::I_e, I_e[ n ] );
     }
   }
   if ( urbanczik_params.rate_slope < 0 )
@@ -404,8 +404,8 @@ nest::pp_cond_exp_mc_urbanczik::State_::get( dictionary& d ) const
   // Parameters_::get(), so that the per-compartment dictionaries exist
   for ( size_t n = 0; n < NCOMP; ++n )
   {
-    assert( d.known( comp_names_[ n ] ) );
-    auto dd = d.get< dictionary >( comp_names_[ n ] );
+    assert( d->known( comp_names_[ n ] ) );
+    auto dd = d->get< dictionary >( comp_names_[ n ] );
 
     dd[ names::V_m ] = y_[ idx( n, V_M ) ]; // Membrane potential
   }
@@ -417,10 +417,10 @@ nest::pp_cond_exp_mc_urbanczik::State_::set( const dictionary& d, const Paramete
   // extract from sub-dictionaries
   for ( size_t n = 0; n < NCOMP; ++n )
   {
-    if ( d.known( comp_names_[ n ] ) )
+    if ( d->known( comp_names_[ n ] ) )
     {
-      auto dd = d.get< dictionary >( comp_names_[ n ] );
-      dd.update_value( names::V_m, y_[ idx( n, V_M ) ] );
+      auto dd = d->get< dictionary >( comp_names_[ n ] );
+      dd->update_value( names::V_m, y_[ idx( n, V_M ) ] );
     }
   }
 }

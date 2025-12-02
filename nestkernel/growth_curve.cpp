@@ -50,7 +50,7 @@ nest::GrowthCurveLinear::get( dictionary& d ) const
 void
 nest::GrowthCurveLinear::set( const dictionary& d )
 {
-  d.update_value( names::eps, eps_ );
+  d->update_value( names::eps, eps_ );
 }
 
 double
@@ -90,8 +90,8 @@ nest::GrowthCurveGaussian::get( dictionary& d ) const
 void
 nest::GrowthCurveGaussian::set( const dictionary& d )
 {
-  d.update_value( names::eps, eps_ );
-  d.update_value( names::eta, eta_ );
+  d->update_value( names::eps, eps_ );
+  d->update_value( names::eta, eta_ );
   compute_local_();
 }
 
@@ -150,8 +150,8 @@ nest::GrowthCurveSigmoid::get( dictionary& d ) const
 void
 nest::GrowthCurveSigmoid::set( const dictionary& d )
 {
-  d.update_value( names::eps, eps_ );
-  d.update_value( names::psi, psi_ );
+  d->update_value( names::eps, eps_ );
+  d->update_value( names::psi, psi_ );
 
   // check that w is greater than 0
   if ( not( psi_ >= 0 ) )

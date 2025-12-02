@@ -142,10 +142,10 @@ nest::gif_psc_exp_multisynapse::Parameters_::set( const dictionary& d, Node* nod
 
   update_value_param( d, names::t_ref, t_ref_, node );
 
-  d.update_value( names::tau_sfa, tau_sfa_ );
-  d.update_value( names::q_sfa, q_sfa_ );
-  d.update_value( names::tau_stc, tau_stc_ );
-  d.update_value( names::q_stc, q_stc_ );
+  d->update_value( names::tau_sfa, tau_sfa_ );
+  d->update_value( names::q_sfa, q_sfa_ );
+  d->update_value( names::tau_stc, tau_stc_ );
+  d->update_value( names::q_stc, q_stc_ );
 
   if ( tau_sfa_.size() != q_sfa_.size() )
   {
@@ -202,7 +202,7 @@ nest::gif_psc_exp_multisynapse::Parameters_::set( const dictionary& d, Node* nod
   }
 
   std::vector< double > tau_tmp;
-  if ( d.update_value( names::tau_syn, tau_tmp ) )
+  if ( d->update_value( names::tau_syn, tau_tmp ) )
   {
     if ( has_connections_ and tau_tmp.size() < tau_syn_.size() )
     {

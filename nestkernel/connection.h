@@ -355,7 +355,7 @@ inline void
 Connection< targetidentifierT >::set_status( const dictionary& d, ConnectorModel& )
 {
   double delay;
-  if ( d.update_value( names::delay, delay ) )
+  if ( d->update_value( names::delay, delay ) )
   {
     kernel().connection_manager.get_delay_checker().assert_valid_delay_ms( delay );
     syn_id_delay_.set_delay_ms( delay );

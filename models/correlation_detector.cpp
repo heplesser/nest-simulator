@@ -167,7 +167,7 @@ void
 nest::correlation_detector::State_::set( const dictionary& d, const Parameters_& p, bool reset_required, Node* )
 {
   std::vector< long > nev;
-  if ( d.update_value( names::n_events, nev ) )
+  if ( d->update_value( names::n_events, nev ) )
   {
     if ( nev.size() == 2 and nev[ 0 ] == 0 and nev[ 1 ] == 0 )
     {

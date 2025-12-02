@@ -109,7 +109,7 @@ cm_default::get_status( dictionary& statusdict ) const
 void
 nest::cm_default::set_status( const dictionary& statusdict )
 {
-  statusdict.update_value( names::V_th, V_th_ );
+  statusdict->update_value( names::V_th, V_th_ );
   ArchivingNode::set_status( statusdict );
 
   /**
@@ -121,19 +121,19 @@ nest::cm_default::set_status( const dictionary& statusdict )
    */
   const auto add_compartments_list_or_dict = [ this, &statusdict ]( const std::string name )
   {
-    if ( is_type< std::vector< dictionary > >( statusdict.at( name ) ) )
+    if ( std::holds_alternative< std::vector< dictionary > >( statusdict.at( name ) ) )
     {
-      const auto compartments = statusdict.get< std::vector< dictionary > >( name );
+      const auto compartments = statusdict->get< std::vector< dictionary > >( name );
       // A list of compartments is provided, we add them all to the tree
       for ( const auto& compartment_dict : compartments )
       {
         add_compartment_( compartment_dict );
       }
     }
-    else if ( is_type< dictionary >( statusdict.at( name ) ) )
+    else if ( std::holds_alternative< dictionary >( statusdict.at( name ) ) )
     {
       // A single compartment is provided, we add add it to the tree
-      add_compartment_( statusdict.get< dictionary >( name ) );
+      add_compartment_( statusdict->get< dictionary >( name ) );
     }
     else
     {
@@ -152,17 +152,17 @@ nest::cm_default::set_status( const dictionary& statusdict )
    */
   const auto add_receptors_list_or_dict = [ this, &statusdict ]( const std::string name )
   {
-    if ( is_type< std::vector< dictionary > >( statusdict.at( name ) ) )
+    if ( std::holds_alternative< std::vector< dictionary > >( statusdict.at( name ) ) )
     {
-      const auto receptors = statusdict.get< std::vector< dictionary > >( name );
+      const auto receptors = statusdict->get< std::vector< dictionary > >( name );
       for ( const auto& receptor_dict : receptors )
       {
         add_receptor_( receptor_dict );
       }
     }
-    else if ( is_type< dictionary >( statusdict.at( name ) ) )
+    else if ( std::holds_alternative< dictionary >( statusdict.at( name ) ) )
     {
-      add_receptor_( statusdict.get< dictionary >( name ) );
+      add_receptor_( statusdict->get< dictionary >( name ) );
     }
     else
     {
@@ -172,7 +172,7 @@ nest::cm_default::set_status( const dictionary& statusdict )
     }
   };
 
-  if ( statusdict.known( names::compartments ) )
+  if ( statusdict->known( names::compartments ) )
   {
     // Compartments can only be set on a newly created compartment model.
     // To add additional compartments, add_compartments should be used.
@@ -183,12 +183,12 @@ nest::cm_default::set_status( const dictionary& statusdict )
     add_compartments_list_or_dict( names::compartments );
   }
 
-  if ( statusdict.known( names::add_compartments ) )
+  if ( statusdict->known( names::add_compartments ) )
   {
     add_compartments_list_or_dict( names::add_compartments );
   }
 
-  if ( statusdict.known( names::receptors ) )
+  if ( statusdict->known( names::receptors ) )
   {
     // Receptors can only be set on a newly created compartment model.
     // To add additional receptors, add_receptors should be used.
@@ -198,7 +198,7 @@ nest::cm_default::set_status( const dictionary& statusdict )
     }
     add_receptors_list_or_dict( names::receptors );
   }
-  if ( statusdict.known( names::add_receptors ) )
+  if ( statusdict->known( names::add_receptors ) )
   {
     add_receptors_list_or_dict( names::add_receptors );
   }
@@ -214,27 +214,27 @@ nest::cm_default::set_status( const dictionary& statusdict )
 void
 nest::cm_default::add_compartment_( const dictionary& dd )
 {
-  dd.init_access_flags();
+  dd->init_access_flags();
 
-  if ( dd.known( names::params ) )
+  if ( dd->known( names::params ) )
   {
-    c_tree_.add_compartment( dd.get< long >( names::parent_idx ), dd.get< dictionary >( names::params ) );
+    c_tree_.add_compartment( dd->get< long >( names::parent_idx ), dd->get< dictionary >( names::params ) );
   }
   else
   {
-    c_tree_.add_compartment( dd.get< long >( names::parent_idx ) );
+    c_tree_.add_compartment( dd->get< long >( names::parent_idx ) );
   }
 
-  dd.all_entries_accessed( "cm_default::add_compartment_", "Unread dictionary entries: " );
+  dd->all_entries_accessed( "cm_default::add_compartment_", "Unread dictionary entries: " );
 }
 
 void
 nest::cm_default::add_receptor_( const dictionary& dd )
 {
-  dd.init_access_flags();
+  dd->init_access_flags();
 
-  const long compartment_idx = dd.get< long >( names::comp_idx );
-  const std::string receptor_type = dd.get< std::string >( names::receptor_type );
+  const long compartment_idx = dd->get< long >( names::comp_idx );
+  const std::string receptor_type = dd->get< std::string >( names::receptor_type );
 
   // create a ringbuffer to collect spikes for the receptor
   RingBuffer buffer;
@@ -245,16 +245,16 @@ nest::cm_default::add_receptor_( const dictionary& dd )
 
   // add the receptor to the compartment
   Compartment* compartment = c_tree_.get_compartment( compartment_idx );
-  if ( dd.known( names::params ) )
+  if ( dd->known( names::params ) )
   {
-    compartment->compartment_currents.add_synapse( receptor_type, syn_idx, dd.get< dictionary >( names::params ) );
+    compartment->compartment_currents.add_synapse( receptor_type, syn_idx, dd->get< dictionary >( names::params ) );
   }
   else
   {
     compartment->compartment_currents.add_synapse( receptor_type, syn_idx );
   }
 
-  dd.all_entries_accessed( "cm_default::add_receptor_", "Unread dictionary entries: " );
+  dd->all_entries_accessed( "cm_default::add_receptor_", "Unread dictionary entries: " );
 }
 
 void

@@ -118,10 +118,10 @@ void
 nest::DelayChecker::set_status( const dictionary& d )
 {
   double min_d_tmp = 0.0;
-  bool min_delay_updated = d.update_value( names::min_delay, min_d_tmp );
+  bool min_delay_updated = d->update_value( names::min_delay, min_d_tmp );
 
   double max_d_tmp = 0.0;
-  bool max_delay_updated = d.update_value( names::max_delay, max_d_tmp );
+  bool max_delay_updated = d->update_value( names::max_delay, max_d_tmp );
 
   if ( min_delay_updated xor max_delay_updated )
   {

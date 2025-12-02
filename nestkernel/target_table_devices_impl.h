@@ -110,7 +110,7 @@ inline void
 nest::TargetTableDevices::get_synapse_status_to_device( const size_t tid,
   const size_t source_node_id,
   const synindex syn_id,
-  dictionary& dict,
+  dictionary dict,
   const size_t lcid ) const
 {
   const size_t lid = kernel().vp_manager.node_id_to_lid( source_node_id );

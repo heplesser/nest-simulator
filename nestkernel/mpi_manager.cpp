@@ -221,10 +221,10 @@ nest::MPIManager::finalize( const bool )
 void
 nest::MPIManager::set_status( const dictionary& dict )
 {
-  dict.update_value( names::adaptive_target_buffers, adaptive_target_buffers_ );
+  dict->update_value( names::adaptive_target_buffers, adaptive_target_buffers_ );
 
   long new_buffer_size_target_data = buffer_size_target_data_;
-  dict.update_value( names::buffer_size_target_data, new_buffer_size_target_data );
+  dict->update_value( names::buffer_size_target_data, new_buffer_size_target_data );
   if ( new_buffer_size_target_data != static_cast< long >( buffer_size_target_data_ )
     and new_buffer_size_target_data < static_cast< long >( max_buffer_size_target_data_ ) )
   {
@@ -232,16 +232,16 @@ nest::MPIManager::set_status( const dictionary& dict )
   }
 
   long new_buffer_size_spike_data = buffer_size_spike_data_;
-  dict.update_value( names::buffer_size_spike_data, new_buffer_size_spike_data );
+  dict->update_value( names::buffer_size_spike_data, new_buffer_size_spike_data );
   if ( new_buffer_size_spike_data != static_cast< long >( buffer_size_spike_data_ ) )
   {
     set_buffer_size_spike_data( new_buffer_size_spike_data );
   }
 
-  dict.update_value( names::growth_factor_buffer_spike_data, growth_factor_buffer_spike_data_ );
-  dict.update_value( names::growth_factor_buffer_target_data, growth_factor_buffer_target_data_ );
-  dict.update_value( names::max_buffer_size_target_data, max_buffer_size_target_data_ );
-  dict.update_value( names::shrink_factor_buffer_spike_data, shrink_factor_buffer_spike_data_ );
+  dict->update_value( names::growth_factor_buffer_spike_data, growth_factor_buffer_spike_data_ );
+  dict->update_value( names::growth_factor_buffer_target_data, growth_factor_buffer_target_data_ );
+  dict->update_value( names::max_buffer_size_target_data, max_buffer_size_target_data_ );
+  dict->update_value( names::shrink_factor_buffer_spike_data, shrink_factor_buffer_spike_data_ );
 }
 
 void

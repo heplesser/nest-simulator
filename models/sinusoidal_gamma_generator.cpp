@@ -146,14 +146,14 @@ nest::sinusoidal_gamma_generator::Parameters_::set( const dictionary& d,
   const sinusoidal_gamma_generator& n,
   Node* node )
 {
-  if ( not n.is_model_prototype() and d.known( names::individual_spike_trains ) )
+  if ( not n.is_model_prototype() and d->known( names::individual_spike_trains ) )
   {
     throw BadProperty(
       "The individual_spike_trains property can only be set as"
       " a model default using SetDefaults or upon CopyModel." );
   }
 
-  if ( d.update_value( names::individual_spike_trains, individual_spike_trains_ ) )
+  if ( d->update_value( names::individual_spike_trains, individual_spike_trains_ ) )
   {
     // this can happen only on model prototypes
     if ( individual_spike_trains_ )

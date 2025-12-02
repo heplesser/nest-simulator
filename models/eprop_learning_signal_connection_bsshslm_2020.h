@@ -220,7 +220,7 @@ eprop_learning_signal_connection_bsshslm_2020< targetidentifierT >::set_status( 
   ConnectorModel& cm )
 {
   ConnectionBase::set_status( d, cm );
-  d.update_value( names::weight, weight_ );
+  d->update_value( names::weight, weight_ );
 }
 
 template < typename targetidentifierT >

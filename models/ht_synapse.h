@@ -254,10 +254,10 @@ ht_synapse< targetidentifierT >::set_status( const dictionary& d, ConnectorModel
 {
   ConnectionBase::set_status( d, cm );
 
-  d.update_value( names::weight, weight_ );
-  d.update_value( names::tau_P, tau_P_ );
-  d.update_value( names::delta_P, delta_P_ );
-  d.update_value( names::P, p_ );
+  d->update_value( names::weight, weight_ );
+  d->update_value( names::tau_P, tau_P_ );
+  d->update_value( names::delta_P, delta_P_ );
+  d->update_value( names::P, p_ );
 
   if ( tau_P_ <= 0.0 )
   {

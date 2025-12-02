@@ -175,13 +175,13 @@ void
 rate_connection_instantaneous< targetidentifierT >::set_status( const dictionary& d, ConnectorModel& cm )
 {
   // If the delay is set, we throw a BadProperty
-  if ( d.known( names::delay ) )
+  if ( d->known( names::delay ) )
   {
     throw BadProperty( "rate_connection_instantaneous has no delay. Please use rate_connection_delayed." );
   }
 
   ConnectionBase::set_status( d, cm );
-  d.update_value( names::weight, weight_ );
+  d->update_value( names::weight, weight_ );
 }
 
 template < typename targetidentifierT >

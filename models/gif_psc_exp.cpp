@@ -143,10 +143,10 @@ nest::gif_psc_exp::Parameters_::set( const dictionary& d, Node* node )
   update_value_param( d, names::tau_syn_ex, tau_ex_, node );
   update_value_param( d, names::tau_syn_in, tau_in_, node );
 
-  d.update_value( names::tau_sfa, tau_sfa_ );
-  d.update_value( names::q_sfa, q_sfa_ );
-  d.update_value( names::tau_stc, tau_stc_ );
-  d.update_value( names::q_stc, q_stc_ );
+  d->update_value( names::tau_sfa, tau_sfa_ );
+  d->update_value( names::q_sfa, q_sfa_ );
+  d->update_value( names::tau_stc, tau_stc_ );
+  d->update_value( names::q_stc, q_stc_ );
 
   if ( tau_sfa_.size() != q_sfa_.size() )
   {

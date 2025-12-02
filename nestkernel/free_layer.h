@@ -26,11 +26,11 @@
 // C++ includes:
 #include <algorithm>
 #include <limits>
-#include <sstream>
+#include <vector>
 
 // Includes from nestkernel:
+#include "dictionary.h"
 #include "nest_names.h"
-
 
 // Includes from spatial:
 #include "layer.h"
@@ -133,16 +133,16 @@ FreeLayer< D >::set_status( const dictionary& d )
     } );
 
   // Read positions from dictionary
-  if ( d.known( names::positions ) )
+  if ( d->known( names::positions ) )
   {
     const auto positions = d.at( names::positions );
-    if ( is_type< std::vector< std::vector< double > > >( positions ) )
+    if ( std::holds_alternative< std::vector< std::vector< double > > >( positions ) )
     {
       positions_.clear();
       positions_.reserve( num_local_nodes_ );
 
       auto nc_it = this->node_collection_->begin();
-      const auto pos = boost::any_cast< std::vector< std::vector< double > > >( positions );
+      const auto pos = std::get< std::vector< std::vector< double > > >( positions );
       for ( auto it = pos.begin(); it != pos.end(); ++it, ++nc_it )
       {
         assert( nc_it != this->node_collection_->end() );
@@ -169,9 +169,9 @@ FreeLayer< D >::set_status( const dictionary& d )
       }
       assert( positions_.size() == num_local_nodes_ );
     }
-    else if ( is_type< std::shared_ptr< nest::Parameter > >( positions ) )
+    else if ( std::holds_alternative< std::shared_ptr< nest::Parameter > >( positions ) )
     {
-      auto pd = d.get< ParameterPTR >( names::positions );
+      auto pd = d->get< ParameterPTR >( names::positions );
       auto pos = dynamic_cast< DimensionParameter* >( pd.get() );
       positions_.clear();
       positions_.reserve( num_local_nodes_ );
@@ -211,9 +211,9 @@ FreeLayer< D >::set_status( const dictionary& d )
       throw KernelException( "'positions' must be an array or a DimensionParameter." );
     }
   }
-  if ( d.known( names::extent ) )
+  if ( d->known( names::extent ) )
   {
-    this->extent_ = d.get< std::vector< double > >( names::extent );
+    this->extent_ = d->get< std::vector< double > >( names::extent );
 
     Position< D > center = ( max_point + this->lower_left_ ) / 2;
     auto lower_left_point = this->lower_left_; // save lower-left-most point

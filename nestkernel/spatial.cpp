@@ -68,11 +68,11 @@ get_layer( NodeCollectionPTR nc )
 NodeCollectionPTR
 create_layer( const dictionary& layer_dict )
 {
-  layer_dict.init_access_flags();
+  layer_dict->init_access_flags();
 
   NodeCollectionPTR layer = AbstractLayer::create_layer( layer_dict );
 
-  layer_dict.all_entries_accessed( "CreateLayer", "params" );
+  layer_dict->all_entries_accessed( "CreateLayer", "params" );
 
   return layer;
 }
@@ -357,7 +357,7 @@ distance( const std::vector< ConnectionID >& conns )
 MaskPTR
 create_mask( const dictionary& mask_dict )
 {
-  mask_dict.init_access_flags();
+  mask_dict->init_access_flags();
 
   // TODO-PYNEST-NG: move
 
@@ -376,7 +376,7 @@ create_mask( const dictionary& mask_dict )
     }
     else
     {
-      mask = create_mask( kv.first, mask_dict.get< dictionary >( kv.first ) );
+      mask = create_mask( kv.first, mask_dict->get< dictionary >( kv.first ) );
     }
   }
 
@@ -387,7 +387,7 @@ create_mask( const dictionary& mask_dict )
     // For grid layers only, it is also possible to provide an array of longs.
     try
     {
-      const std::vector< long >& anchor = mask_dict.get< std::vector< long > >( names::anchor );
+      const std::vector< long >& anchor = mask_dict->get< std::vector< long > >( names::anchor );
 
       switch ( anchor.size() )
       {
@@ -419,7 +419,7 @@ create_mask( const dictionary& mask_dict )
     }
     catch ( TypeMismatch& e )
     {
-      std::vector< double > double_anchor = mask_dict.get< std::vector< double > >( names::anchor );
+      std::vector< double > double_anchor = mask_dict->get< std::vector< double > >( names::anchor );
       std::shared_ptr< AbstractMask > amask;
 
       switch ( double_anchor.size() )
@@ -439,7 +439,7 @@ create_mask( const dictionary& mask_dict )
       mask = amask;
     }
   }
-  mask_dict.all_entries_accessed( "CreateMask", "mask_dict" );
+  mask_dict->all_entries_accessed( "CreateMask", "mask_dict" );
 
   return mask;
 }
@@ -527,9 +527,9 @@ connect_layers( NodeCollectionPTR source_nc, NodeCollectionPTR target_nc, const 
   AbstractLayerPTR source = get_layer( source_nc );
   AbstractLayerPTR target = get_layer( target_nc );
 
-  connection_dict.init_access_flags();
+  connection_dict->init_access_flags();
   ConnectionCreator connector( connection_dict );
-  connection_dict.all_entries_accessed( "ConnectLayers", "connection_dict" );
+  connection_dict->all_entries_accessed( "ConnectLayers", "connection_dict" );
 
   kernel().node_manager.update_thread_local_node_data();
 

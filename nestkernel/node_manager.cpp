@@ -357,7 +357,7 @@ NodeManager::get_nodes( const dictionary& properties, const bool local_only )
         for ( const auto& [ key, value ] : properties )
         {
           // Break once we find a property that then node does not have or that has a different value
-          if ( not( node_status.known( key ) and value_equal( node_status.at( key ), value.item ) ) )
+          if ( not( node_status->known( key ) and value_equal( node_status.at( key ), value.item ) ) )
           {
             match = false;
             break;
@@ -575,14 +575,14 @@ NodeManager::set_status_single_node_( Node& target, const dictionary& d, bool cl
   {
     if ( clear_flags )
     {
-      d.init_access_flags();
+      d->init_access_flags();
     }
     target.set_status_base( d );
 
     // PYNEST-NG TODO: We need to check at the single-neuron level because otherwise we
     // trigger a false error if an NC has no member on a given rank.
     // Also has the advantage of triggering an error on the first node.
-    d.all_entries_accessed( "NodeManager::set_status", "params" );
+    d->all_entries_accessed( "NodeManager::set_status", "params" );
   }
 }
 

@@ -167,7 +167,7 @@ public:
   void get_synapse_status_to_device( const size_t tid,
     const size_t source_node_id,
     const synindex syn_id,
-    dictionary& dict,
+    dictionary dict,
     const size_t lcid ) const;
 
   /**
@@ -176,7 +176,7 @@ public:
   void get_synapse_status_from_device( const size_t tid,
     const size_t ldid,
     const synindex syn_id,
-    dictionary& dict,
+    dictionary dict,
     const size_t lcid ) const;
 
   /**
@@ -209,7 +209,7 @@ inline void
 TargetTableDevices::get_synapse_status_from_device( const size_t tid,
   const size_t ldid,
   const synindex syn_id,
-  dictionary& dict,
+  dictionary dict,
   const size_t lcid ) const
 {
   target_from_devices_[ tid ][ ldid ][ syn_id ]->get_synapse_status( tid, lcid, dict );

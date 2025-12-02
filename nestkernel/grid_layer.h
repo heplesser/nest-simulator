@@ -177,7 +177,7 @@ GridLayer< D >::set_status( const dictionary& d )
 {
   std::vector< long > new_dims( D );
 
-  d.update_value( names::shape, new_dims );
+  d->update_value( names::shape, new_dims );
 
   size_t new_size = 1;
   for ( int i = 0; i < D; ++i )
@@ -192,15 +192,15 @@ GridLayer< D >::set_status( const dictionary& d )
     throw BadProperty( "Total size of layer must be unchanged." );
   }
 
-  if ( d.known( names::extent ) )
+  if ( d->known( names::extent ) )
   {
     Position< D > center = this->get_center();
-    this->extent_ = d.get< std::vector< double > >( names::extent );
+    this->extent_ = d->get< std::vector< double > >( names::extent );
     this->lower_left_ = center - this->extent_ / 2;
   }
-  if ( d.known( names::center ) )
+  if ( d->known( names::center ) )
   {
-    this->lower_left_ = d.get< std::vector< double > >( names::center );
+    this->lower_left_ = d->get< std::vector< double > >( names::center );
     this->lower_left_ -= this->extent_ / 2;
   }
 

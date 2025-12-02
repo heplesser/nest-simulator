@@ -109,14 +109,14 @@ nest::SynapticElement::set( const dictionary& d )
   double new_tau_vacant = tau_vacant_;
 
   // Store values
-  d.update_value( names::growth_rate, growth_rate_ );
-  d.update_value( names::tau_vacant, new_tau_vacant );
-  d.update_value( names::continuous, continuous_ );
-  d.update_value( names::z, z_ );
+  d->update_value( names::growth_rate, growth_rate_ );
+  d->update_value( names::tau_vacant, new_tau_vacant );
+  d->update_value( names::continuous, continuous_ );
+  d->update_value( names::z, z_ );
 
-  if ( d.known( names::growth_curve ) )
+  if ( d->known( names::growth_curve ) )
   {
-    std::string growth_curve_name( d.get< std::string >( names::growth_curve ) );
+    std::string growth_curve_name( d->get< std::string >( names::growth_curve ) );
     if ( not growth_curve_->is( growth_curve_name ) )
     {
       growth_curve_ = kernel().sp_manager.new_growth_curve( growth_curve_name );

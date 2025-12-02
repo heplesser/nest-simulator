@@ -166,7 +166,7 @@ spike_train_injector::Parameters_::set( const dictionary& d,
       "allow_offgrid_times or shift_now_spikes is set to true." );
   }
 
-  const bool updated_spike_times = d.known( names::spike_times );
+  const bool updated_spike_times = d->known( names::spike_times );
   if ( flags_changed and not( updated_spike_times or spike_stamps_.empty() ) )
   {
     throw BadProperty(
@@ -176,7 +176,7 @@ spike_train_injector::Parameters_::set( const dictionary& d,
 
   if ( updated_spike_times )
   {
-    const auto d_times = d.get< std::vector< double > >( names::spike_times );
+    const auto d_times = d->get< std::vector< double > >( names::spike_times );
     const size_t n_spikes = d_times.size();
     spike_stamps_.clear();
     spike_stamps_.reserve( n_spikes );
@@ -210,10 +210,10 @@ spike_train_injector::Parameters_::set( const dictionary& d,
 
   // spike_multiplicities can be the same size as spike_times,
   // or can be of size 0 to only use the spike_times array
-  bool updated_spike_multiplicities = d.known( names::spike_multiplicities );
+  bool updated_spike_multiplicities = d->known( names::spike_multiplicities );
   if ( updated_spike_multiplicities )
   {
-    auto spike_multiplicities = d.get< std::vector< long > >( names::spike_multiplicities );
+    auto spike_multiplicities = d->get< std::vector< long > >( names::spike_multiplicities );
 
     if ( spike_multiplicities.empty() )
     {
@@ -233,7 +233,7 @@ spike_train_injector::Parameters_::set( const dictionary& d,
   }
 
   // Set position to start if something changed
-  if ( updated_spike_times or updated_spike_multiplicities or d.known( names::origin ) )
+  if ( updated_spike_times or updated_spike_multiplicities or d->known( names::origin ) )
   {
     s.position_ = 0;
   }

@@ -152,7 +152,7 @@ public:
   void
   check_synapse_params( const dictionary& syn_spec ) const
   {
-    if ( syn_spec.known( names::weight ) )
+    if ( syn_spec->known( names::weight ) )
     {
       throw BadProperty(
         "Weight cannot be specified since it needs to be equal "

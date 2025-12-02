@@ -137,57 +137,57 @@ def make_tuple_or_ndarray(operand):
         else:
             return tuple(operand)
 
-cdef object any_to_pyobj(any operand):
-    if is_type[int](operand):
-        return any_cast[int](operand)
-    if is_type[uint](operand):
-        return any_cast[uint](operand)
-    if is_type[long](operand):
-        return any_cast[long](operand)
-    if is_type[size_t](operand):
-        return any_cast[size_t](operand)
-    if is_type[uint64_t](operand):
-        return any_cast[uint64_t](operand)
-    if is_type[int64_t](operand):
-        return any_cast[int64_t](operand)
-    if is_type[double](operand):
-        return any_cast[double](operand)
-    if is_type[cbool](operand):
-        return any_cast[cbool](operand)
-    if is_type[string](operand):
-        return string_to_pystr(any_cast[string](operand))
-    if is_type[vector[int]](operand):
-        return numpy.array(any_cast[vector[int]](operand))
-    if is_type[vector[long]](operand):
-        return numpy.array(any_cast[vector[long]](operand))
-    if is_type[vector[size_t]](operand):
-        return numpy.array(any_cast[vector[size_t]](operand))
-    if is_type[vector[double]](operand):
-        return numpy.array(any_cast[vector[double]](operand))
-    if is_type[vector[vector[double]]](operand):
-        return numpy.array(any_cast[vector[vector[double]]](operand))
-    if is_type[vector[vector[vector[double]]]](operand):
-        return numpy.array(any_cast[vector[vector[vector[double]]]](operand))
-    if is_type[vector[vector[vector[long]]]](operand):
-        return numpy.array(any_cast[vector[vector[vector[long]]]](operand))
-    if is_type[vector[string]](operand):
+cdef object any_to_pyobj(any_type operand):
+    if holds_alternative[int](operand):
+        return get[int](operand)
+    if holds_alternative[uint](operand):
+        return get[uint](operand)
+    if holds_alternative[long](operand):
+        return get[long](operand)
+    if holds_alternative[size_t](operand):
+        return get[size_t](operand)
+    if holds_alternative[uint64_t](operand):
+        return get[uint64_t](operand)
+    if holds_alternative[int64_t](operand):
+        return get[int64_t](operand)
+    if holds_alternative[double](operand):
+        return get[double](operand)
+    if holds_alternative[cbool](operand):
+        return get[cbool](operand)
+    if holds_alternative[string](operand):
+        return string_to_pystr(get[string](operand))
+    if holds_alternative[vector[int]](operand):
+        return numpy.array(get[vector[int]](operand))
+    if holds_alternative[vector[long]](operand):
+        return numpy.array(get[vector[long]](operand))
+    if holds_alternative[vector[size_t]](operand):
+        return numpy.array(get[vector[size_t]](operand))
+    if holds_alternative[vector[double]](operand):
+        return numpy.array(get[vector[double]](operand))
+    if holds_alternative[vector[vector[double]]](operand):
+        return numpy.array(get[vector[vector[double]]](operand))
+    if holds_alternative[vector[vector[vector[double]]]](operand):
+        return numpy.array(get[vector[vector[vector[double]]]](operand))
+    if holds_alternative[vector[vector[vector[long]]]](operand):
+        return numpy.array(get[vector[vector[vector[long]]]](operand))
+    if holds_alternative[vector[string]](operand):
         # PYNEST-NG: Do we want to have this or are bytestrings fine?
-        # return any_cast[vector[string]](operand)
-        return list(map(lambda x: x.decode("utf-8"), any_cast[vector[string]](operand)))
-    if is_type[vector[dictionary]](operand):
-        return dict_vector_to_list(any_cast[vector[dictionary]](operand))
-    if is_type[vector[any]](operand):
+        # return get[vector[string]](operand)
+        return list(map(lambda x: x.decode("utf-8"), get[vector[string]](operand)))
+    if holds_alternative[vector[dictionary]](operand):
+        return dict_vector_to_list(get[vector[dictionary]](operand))
+    if holds_alternative[vector[any]](operand):
         # PYNEST-NG: This will create a Python list first and then convert to
         # either tuple or numpy array, which will copy the data element-wise.
-        return make_tuple_or_ndarray(any_vector_to_list(any_cast[vector[any]](operand)))
-    if is_type[dictionary](operand):
-        return dictionary_to_pydict(any_cast[dictionary](operand))
-    if is_type[NodeCollectionPTR](operand):
+        return make_tuple_or_ndarray(any_vector_to_list(get[vector[any]](operand)))
+    if holds_alternative[dictionary](operand):
+        return dictionary_to_pydict(get[dictionary](operand))
+    if holds_alternative[NodeCollectionPTR](operand):
         obj = NodeCollectionObject()
-        obj._set_nc(any_cast[NodeCollectionPTR](operand))
+        obj._set_nc(get[NodeCollectionPTR](operand))
         return nest.NodeCollection(obj)
-    if is_type[VerbosityLevel](operand):
-        return any_cast[VerbosityLevel](operand)
+    if holds_alternative[VerbosityLevel](operand):
+        return get[VerbosityLevel](operand)
 
 cdef object dictionary_to_pydict(dictionary cdict):
     cdef tmp = {}
@@ -415,7 +415,7 @@ def llapi_distance(object conn):  # PYNEST-NG: should there be a SynapseCollecti
 
 def llapi_make_nodecollection(object node_ids):
     cdef NodeCollectionPTR gids
-    # node_ids list is automatically converted to an std::vector
+    # node_ids list is automatically converted to an vector
     gids = make_nodecollection(node_ids)
     obj = NodeCollectionObject()
     obj._set_nc(gids)
@@ -600,7 +600,7 @@ def llapi_get_nc_status(NodeCollectionObject nc, object key=None):
     if key is None:
         return dictionary_to_pydict(statuses)
     elif isinstance(key, str):
-        if not statuses.known(pystr_to_string(key)):
+        if not statuses->known(pystr_to_string(key)):
             raise KeyError(key)
         value = any_to_pyobj(statuses[pystr_to_string(key)])
         # PYNEST-NG: This is backwards-compatible, but makes it harder

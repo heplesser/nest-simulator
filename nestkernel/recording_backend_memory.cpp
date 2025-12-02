@@ -219,54 +219,54 @@ nest::RecordingBackendMemory::DeviceData::get_status( dictionary& d ) const
 {
   dictionary events;
 
-  if ( d.known( names::events ) )
+  if ( d->known( names::events ) )
   {
-    events = d.get< dictionary >( names::events );
+    events = d->get< dictionary >( names::events );
   }
 
-  auto init_intvector = [ &events ]( std::string key ) -> std::vector< int >&
+  auto init_intvector = [ &events ]( std::string key ) -> std::vector< int >
   {
-    if ( not events.known( key ) )
+    if ( not events->known( key ) )
     {
-      events[ key ] = std::vector< int >();
+      ( *events )[ key ] = std::vector< int >();
     }
-    return boost::any_cast< std::vector< int >& >( events[ key ] );
+    return std::get< std::vector< int > >( ( *events )[ key ] );
   };
-  auto init_doublevector = [ &events ]( std::string key ) -> std::vector< double >&
+  auto init_doublevector = [ &events ]( std::string key ) -> std::vector< double >
   {
-    if ( not events.known( key ) )
+    if ( not events->known( key ) )
     {
-      events[ key ] = std::vector< double >();
+      ( *events )[ key ] = std::vector< double >();
     }
-    return boost::any_cast< std::vector< double >& >( events[ key ] );
+    return std::get< std::vector< double > >( ( *events )[ key ] );
   };
 
   // TODO-PYNEST-NG: check that the vector in events is appended correctly
-  auto& senders = init_intvector( names::senders );
+  std::vector< int > senders = init_intvector( names::senders );
   senders.insert( senders.end(), senders_.begin(), senders_.end() );
 
   if ( time_in_steps_ )
   {
-    auto& times = init_intvector( names::times );
+    std::vector< int > times = init_intvector( names::times );
     times.insert( times.end(), times_steps_.begin(), times_steps_.end() );
 
-    auto& offsets = init_doublevector( names::offsets );
+    std::vector< double > offsets = init_doublevector( names::offsets );
     offsets.insert( offsets.end(), times_offset_.begin(), times_offset_.end() );
   }
   else
   {
-    auto& times = init_doublevector( names::times );
+    std::vector< double > times = init_doublevector( names::times );
     times.insert( times.end(), times_ms_.begin(), times_ms_.end() );
   }
 
   for ( size_t i = 0; i < double_values_.size(); ++i )
   {
-    auto& double_name = init_doublevector( double_value_names_[ i ] );
+    std::vector< double > double_name = init_doublevector( double_value_names_[ i ] );
     double_name.insert( double_name.end(), double_values_[ i ].begin(), double_values_[ i ].end() );
   }
   for ( size_t i = 0; i < long_values_.size(); ++i )
   {
-    auto& long_name = init_intvector( long_value_names_[ i ] );
+    std::vector< int > long_name = init_intvector( long_value_names_[ i ] );
     long_name.insert( long_name.end(), long_values_[ i ].begin(), long_values_[ i ].end() );
   }
 
@@ -278,7 +278,7 @@ void
 nest::RecordingBackendMemory::DeviceData::set_status( const dictionary& d )
 {
   bool time_in_steps = false;
-  if ( d.update_value( names::time_in_steps, time_in_steps ) )
+  if ( d->update_value( names::time_in_steps, time_in_steps ) )
   {
     if ( kernel().simulation_manager.has_been_simulated() )
     {
@@ -289,7 +289,7 @@ nest::RecordingBackendMemory::DeviceData::set_status( const dictionary& d )
   }
 
   long n_events = 1;
-  if ( d.update_value( names::n_events, n_events ) and n_events == 0 )
+  if ( d->update_value( names::n_events, n_events ) and n_events == 0 )
   {
     clear();
   }

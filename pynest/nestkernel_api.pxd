@@ -37,24 +37,25 @@ cdef extern from "nestkernel_exceptions.h":
     cdef void create_exceptions()
     cdef void custom_exception_handler()
 
-
-cdef extern from "dictionary.h" namespace "boost":
-    cppclass any:
-        any()
-        any& operator=[T](T&)
-    T any_cast[T](any& operand)
-
 cdef extern from "dictionary.h":
+    cppclass any_type:
+        any_type()
+        any_type& operator=[T](T&)
+
     cppclass DictEntry_:
         DictEntry_()
-        DictEntry_(const any&)
+        DictEntry_(const any_type&)
         any item
         cbool accessed
+
+cdef extern from "dictionary.h" namespace "std":
+    T get[T](any_type& operand)
+    cbool holds_alternative[T](const any_type&)
 
 cdef extern from "dictionary.h":
     cppclass dictionary:
         dictionary()
-        any& operator[](const string&)
+        any_type& operator[](const string&)
         cppclass const_iterator:
             pair[string, DictEntry_]& operator*()
             const_iterator operator++()
@@ -63,9 +64,8 @@ cdef extern from "dictionary.h":
         const_iterator begin()
         const_iterator end()
         cbool known(const string&)
-    string debug_type(const any&)
+    string debug_type(const any_type&)
     string debug_dict_types(const dictionary&)
-    cbool is_type[T](const any&)
 
 
 cdef extern from "logging.h" namespace "nest":

@@ -60,11 +60,11 @@ BufferResizeLog::to_dict( dictionary& events ) const
   // libnestutil/dict_util.h
   auto init_intvector = [ &events ]( std::string key ) -> std::vector< int >&
   {
-    if ( not events.known( key ) )
+    if ( not events->known( key ) )
     {
       events[ key ] = std::vector< int >();
     }
-    return boost::any_cast< std::vector< int >& >( events[ key ] );
+    return std::get< std::vector< int > >( events[ key ] );
   };
 
   auto& times = init_intvector( names::times );

@@ -89,11 +89,13 @@ SPManager::finalize( const bool adjust_number_of_threads_or_rng_only )
 void
 SPManager::get_status( dictionary& d )
 {
-  dictionary sp_synapses;
+  dictionary sp_synapses_ptr = std::make_shared< dictionary >();
+  dictionary sp_synapses = *sp_synapses_ptr;
 
   for ( std::vector< SPBuilder* >::const_iterator i = sp_conn_builders_.begin(); i != sp_conn_builders_.end(); i++ )
   {
-    dictionary sp_synapse_params;
+    dictionary sp_synapse_params_ptr = std::make_shared< dictionary >();
+    dictionary sp_synapse_params = *sp_synapse_params_ptr;
     const std::string model = kernel().model_manager.get_connection_model( ( *i )->get_synapse_model(), 0 ).get_name();
     sp_synapse_params[ names::synapse_model ] = model;
     sp_synapse_params[ names::pre_synaptic_element ] = ( *i )->get_pre_synaptic_element_name();
@@ -101,10 +103,10 @@ SPManager::get_status( dictionary& d )
     sp_synapse_params[ names::allow_autapses ] = ( *i )->allows_autapses();
     sp_synapse_params[ names::allow_multapses ] = ( *i )->allows_multapses();
 
-    sp_synapses[ ( *i )->get_name() ] = sp_synapse_params;
+    sp_synapses[ ( *i )->get_name() ] = sp_synapse_params_ptr;
   }
 
-  d[ names::structural_plasticity_synapses ] = sp_synapses;
+  d[ names::structural_plasticity_synapses ] = sp_synapses_ptr;
   d[ names::structural_plasticity_update_interval ] = structural_plasticity_update_interval_;
 
   std::vector< std::string > growth_curves;
@@ -118,16 +120,15 @@ SPManager::get_status( dictionary& d )
 void
 SPManager::set_status( const dictionary& d )
 {
-  d.update_value< double >( names::structural_plasticity_update_interval, structural_plasticity_update_interval_ );
+  d->update_value< double >( names::structural_plasticity_update_interval, structural_plasticity_update_interval_ );
 
-  if ( not d.known( names::structural_plasticity_synapses ) )
+  if ( not d->known( names::structural_plasticity_synapses ) )
   {
     return;
   }
 
   dictionary syn_specs;
-  dictionary syn_spec;
-  dictionary conn_spec;
+  auto conn_spec = std::make_shared< dictionary >();
 
   NodeCollectionPTR sources( new NodeCollectionPrimitive() );
   NodeCollectionPTR targets( new NodeCollectionPrimitive() );
@@ -138,23 +139,23 @@ SPManager::set_status( const dictionary& d )
   }
   sp_conn_builders_.clear();
 
-  d.update_value< dictionary >( names::structural_plasticity_synapses, syn_specs );
-  for ( auto& [ key, entry ] : syn_specs )
+  d->update_value< dictionary >( names::structural_plasticity_synapses, syn_specs );
+  for ( auto& [ key, entry ] : *syn_specs )
   {
-    // PYNEST-NG: We could get the dictionary here directly by boost::any_cast< dictionary >(entry.item),
+    // TODO-PYNEST-NG: We could get the dictionary here directly by std::get< dictionary >(entry.item),
     // but using the proper get() methods seems cleaner.
-    const auto syn_spec = syn_specs.get< dictionary >( key );
-    if ( syn_spec.known( names::allow_autapses ) )
+    const dictionary& syn_spec = syn_specs->get< dictionary >( key );
+    if ( syn_spec->known( names::allow_autapses ) )
     {
-      conn_spec[ names::allow_autapses ] = syn_spec.get< bool >( names::allow_autapses );
+      ( *conn_spec )[ names::allow_autapses ] = syn_spec->get< bool >( names::allow_autapses );
     }
-    if ( syn_spec.known( names::allow_multapses ) )
+    if ( syn_spec->known( names::allow_multapses ) )
     {
-      conn_spec[ names::allow_multapses ] = syn_spec.get< bool >( names::allow_multapses );
+      ( *conn_spec )[ names::allow_multapses ] = syn_spec->get< bool >( names::allow_multapses );
     }
 
     // We use a ConnBuilder with dummy values to check the synapse parameters
-    SPBuilder* conn_builder = new SPBuilder( sources, targets, /* third_out */ nullptr, conn_spec, { syn_spec } );
+    SPBuilder* conn_builder = new SPBuilder( sources, targets, /* third_out */ nullptr, *conn_spec, { *syn_spec } );
     conn_builder->set_name( key );
 
     // check that the user defined the min and max delay properly, if the
@@ -256,13 +257,13 @@ SPManager::disconnect( NodeCollectionPTR sources,
   }
 
   BipartiteConnBuilder* cb = nullptr;
-  conn_spec.init_access_flags();
+  conn_spec->init_access_flags();
 
-  if ( not conn_spec.known( names::rule ) )
+  if ( not conn_spec->known( names::rule ) )
   {
     throw BadProperty( "Disconnection spec must contain disconnection rule." );
   }
-  const std::string rule_name = conn_spec.get< std::string >( names::rule );
+  const std::string rule_name = conn_spec->get< std::string >( names::rule );
 
   if ( not kernel().connection_manager.valid_connection_rule( rule_name ) )
   {
@@ -274,14 +275,14 @@ SPManager::disconnect( NodeCollectionPTR sources,
     throw BadProperty( "Disconnect() only accepts a single synapse specification, no collocated synapses." );
   }
 
-  syn_specs[ 0 ].init_access_flags();
+  syn_specs[ 0 ]->init_access_flags();
 
   if ( not sp_conn_builders_.empty() )
   { // Implement a getter for sp_conn_builders_
 
     for ( std::vector< SPBuilder* >::const_iterator i = sp_conn_builders_.begin(); i != sp_conn_builders_.end(); i++ )
     {
-      const std::string syn_model = syn_specs[ 0 ].get< std::string >( names::synapse_model );
+      const std::string syn_model = syn_specs[ 0 ]->get< std::string >( names::synapse_model );
       if ( ( *i )->get_synapse_model() == kernel().model_manager.get_synapse_model_id( syn_model ) )
       {
         cb = kernel().connection_manager.get_conn_builder( rule_name,
@@ -307,9 +308,9 @@ SPManager::disconnect( NodeCollectionPTR sources,
   assert( cb );
 
   // At this point, all entries in conn_spec and syn_spec have been checked
-  conn_spec.all_entries_accessed( "Disconnect", "conn_spec" );
+  conn_spec->all_entries_accessed( "Disconnect", "conn_spec" );
 
-  syn_specs[ 0 ].all_entries_accessed( "Disconnect", "syn_spec" );
+  syn_specs[ 0 ]->all_entries_accessed( "Disconnect", "syn_spec" );
 
   // Set flag before calling cb->disconnect() in case exception is thrown after some connections have been removed.
   kernel().connection_manager.set_connections_have_changed();

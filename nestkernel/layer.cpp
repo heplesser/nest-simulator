@@ -54,34 +54,34 @@ AbstractLayer::create_layer( const dictionary& layer_dict )
   size_t length = 0;
   AbstractLayer* layer_local = nullptr;
 
-  auto element_name = layer_dict.get< std::string >( names::elements );
+  auto element_name = layer_dict->get< std::string >( names::elements );
   auto element_id = kernel().model_manager.get_node_model_id( element_name );
 
-  if ( layer_dict.known( names::positions ) )
+  if ( layer_dict->known( names::positions ) )
   {
-    if ( layer_dict.known( names::shape ) )
+    if ( layer_dict->known( names::shape ) )
     {
       throw BadProperty( "Cannot specify both positions and shape." );
     }
     int num_dimensions = 0;
 
     const auto positions = layer_dict.at( names::positions );
-    if ( is_type< std::vector< std::vector< double > > >( positions ) )
+    if ( std::holds_alternative< std::vector< std::vector< double > > >( positions ) )
     {
-      const auto pos = layer_dict.get< std::vector< std::vector< double > > >( names::positions );
+      const auto pos = layer_dict->get< std::vector< std::vector< double > > >( names::positions );
       length = pos.size();
       num_dimensions = pos[ 0 ].size();
     }
-    else if ( is_type< std::shared_ptr< nest::Parameter > >( positions ) )
+    else if ( std::holds_alternative< std::shared_ptr< nest::Parameter > >( positions ) )
     {
-      auto pd = layer_dict.get< ParameterPTR >( names::positions );
+      auto pd = layer_dict->get< ParameterPTR >( names::positions );
       auto pos = dynamic_cast< DimensionParameter* >( pd.get() );
       // To avoid nasty segfaults, we check that the parameter is indeed a DimensionParameter.
       if ( not std::is_same< std::remove_reference< decltype( *pos ) >::type, DimensionParameter >::value )
       {
         throw KernelException( "When 'positions' is a Parameter, it must be a DimensionParameter." );
       }
-      length = layer_dict.get< long >( names::n );
+      length = layer_dict->get< long >( names::n );
       num_dimensions = pos->get_num_dimensions();
     }
     else
@@ -107,9 +107,9 @@ AbstractLayer::create_layer( const dictionary& layer_dict )
       throw BadProperty( "Positions must have 2 or 3 coordinates." );
     }
   }
-  else if ( layer_dict.known( names::shape ) )
+  else if ( layer_dict->known( names::shape ) )
   {
-    std::vector< long > shape = layer_dict.get< std::vector< long > >( names::shape );
+    std::vector< long > shape = layer_dict->get< std::vector< long > >( names::shape );
 
     if ( not std::all_of( shape.begin(), shape.end(), []( long x ) { return x > 0; } ) )
     {

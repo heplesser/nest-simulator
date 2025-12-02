@@ -170,7 +170,7 @@ void
 rate_connection_delayed< targetidentifierT >::set_status( const dictionary& d, ConnectorModel& cm )
 {
   ConnectionBase::set_status( d, cm );
-  d.update_value( names::weight, weight_ );
+  d->update_value( names::weight, weight_ );
 }
 
 template < typename targetidentifierT >

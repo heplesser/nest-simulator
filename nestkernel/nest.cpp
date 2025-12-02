@@ -34,10 +34,6 @@
 #include "sp_manager.h"
 #include "sp_manager_impl.h"
 
-#include "connector_model_impl.h"
-
-#include "conn_builder_conngen.h"
-
 #include "grid_mask.h"
 #include "spatial.h"
 
@@ -45,9 +41,7 @@
 
 #include "genericmodel_impl.h"
 #include "model_manager.h"
-#include "model_manager_impl.h"
 
-#include "config.h"
 #include "dictionary.h"
 
 namespace nest
@@ -140,7 +134,7 @@ pprint_to_string( NodeCollectionPTR nc )
   if ( nc )
   {
     std::stringstream stream;
-    nc->print_me( stream );
+    stream << nc;
     return stream.str();
   }
   else
@@ -161,9 +155,9 @@ nc_size( NodeCollectionPTR nc )
 void
 set_kernel_status( const dictionary& dict )
 {
-  dict.init_access_flags();
+  dict->init_access_flags();
   kernel().set_status( dict );
-  dict.all_entries_accessed( "SetKernelStatus", "params" );
+  dict->all_entries_accessed( "SetKernelStatus", "params" );
 }
 
 dictionary
@@ -181,7 +175,8 @@ dictionary
 get_nc_status( NodeCollectionPTR nc )
 {
   dictionary result;
-  size_t node_index = 0;
+  // TODO-PYNEST-NG
+  /*size_t node_index = 0;
   for ( NodeCollection::const_iterator it = nc->begin(); it < nc->end(); ++it, ++node_index )
   {
     const auto node_status = get_node_status( ( *it ).node_id );
@@ -191,7 +186,7 @@ get_nc_status( NodeCollectionPTR nc )
       if ( p != result.end() )
       {
         // key exists
-        auto& v = boost::any_cast< std::vector< boost::any >& >( p->second.item );
+        auto& v = std::get< std::vector< boost::any >& >( p->second.item );
         v[ node_index ] = kv_pair.second.item;
       }
       else
@@ -202,7 +197,7 @@ get_nc_status( NodeCollectionPTR nc )
         result[ kv_pair.first ] = new_entry;
       }
     }
-  }
+  }*/
   return result;
 }
 
@@ -227,7 +222,7 @@ set_nc_status( NodeCollectionPTR nc, std::vector< dictionary >& params )
     // to do the access checking on the individual local node because we otherwise
     // will falsely claim "non read" if a NC has no member on a given rank.
 
-    // params[ 0 ].init_access_flags();
+    // params[ 0 ]->init_access_flags();
 
     // We must iterate over all nodes here because we otherwise miss "siblings" of devices
     // May consider ways to fix this.
@@ -235,16 +230,16 @@ set_nc_status( NodeCollectionPTR nc, std::vector< dictionary >& params )
     {
       kernel().node_manager.set_status( node.node_id, params[ 0 ] );
     }
-    // params[ 0 ].all_entries_accessed( "NodeCollection.set()", "params" );
+    // params[ 0 ]->all_entries_accessed( "NodeCollection.set()", "params" );
   }
   else if ( nc->size() == params.size() )
   {
     size_t idx = 0;
     for ( auto const& node : *nc )
     {
-      // params[ idx ].init_access_flags();
+      // params[ idx ]->init_access_flags();
       kernel().node_manager.set_status( node.node_id, params[ idx ] );
-      // params[ idx ].all_entries_accessed( "NodeCollection.set()", "params" );
+      // params[ idx ]->all_entries_accessed( "NodeCollection.set()", "params" );
       ++idx;
     }
   }
@@ -259,7 +254,7 @@ set_nc_status( NodeCollectionPTR nc, std::vector< dictionary >& params )
 void
 set_connection_status( const std::deque< ConnectionID >& conns, const dictionary& dict )
 {
-  dict.init_access_flags();
+  dict->init_access_flags();
   for ( auto& conn : conns )
   {
     kernel().connection_manager.set_synapse_status( conn.get_source_node_id(),
@@ -269,7 +264,7 @@ set_connection_status( const std::deque< ConnectionID >& conns, const dictionary
       conn.get_port(),
       dict );
   }
-  dict.all_entries_accessed( "connection.set()", "params" );
+  dict->all_entries_accessed( "connection.set()", "params" );
 }
 
 void
@@ -480,11 +475,11 @@ connect_sonata( const dictionary& graph_specs, const long hyperslab_size )
 std::deque< ConnectionID >
 get_connections( const dictionary& dict )
 {
-  dict.init_access_flags();
+  dict->init_access_flags();
 
   const auto& connectome = kernel().connection_manager.get_connections( dict );
 
-  dict.all_entries_accessed( "GetConnections", "params" );
+  dict->all_entries_accessed( "GetConnections", "params" );
 
   return connectome;
 }
@@ -600,30 +595,30 @@ get_model_defaults( const std::string& component )
 }
 
 ParameterPTR
-create_parameter( const boost::any& value )
+create_parameter( const any_type& value )
 {
-  if ( is_type< double >( value ) )
-  {
-    return create_parameter( boost::any_cast< double >( value ) );
-  }
-  else if ( is_type< int >( value ) )
-  {
-    return create_parameter( static_cast< long >( boost::any_cast< int >( value ) ) );
-  }
-  else if ( is_type< long >( value ) )
-  {
-    return create_parameter( boost::any_cast< long >( value ) );
-  }
-  else if ( is_type< dictionary >( value ) )
-  {
-    return create_parameter( boost::any_cast< dictionary >( value ) );
-  }
-  else if ( is_type< ParameterPTR >( value ) )
-  {
-    return boost::any_cast< ParameterPTR >( value );
-  }
-  throw BadProperty(
-    std::string( "Parameter must be parametertype, constant or dictionary, got " ) + debug_type( value ) );
+  return std::visit(
+    [ &value ]( auto&& val ) -> ParameterPTR
+    {
+      using T = std::decay_t< decltype( val ) >;
+      if constexpr ( std::is_same_v< T, ParameterPTR > )
+      {
+        return val;
+      }
+      else if constexpr ( std::is_same_v< T, double > or std::is_same_v< T, long > or std::is_same_v< T, dictionary& >
+        or std::is_same_v< T, int > )
+      {
+        // Convert int to long, otherwise keep the type (T) as is
+        using ArgT = std::conditional_t< std::is_same_v< T, int >, long, T >;
+        return create_parameter( static_cast< const ArgT& >( val ) );
+      }
+      else
+      {
+        throw BadProperty(
+          std::string( "Parameter must be parametertype, constant or dictionary, got " ) + debug_type( value ) );
+      }
+    },
+    value );
 }
 
 ParameterPTR
@@ -645,15 +640,15 @@ create_parameter( const dictionary& param_dict )
 {
   // The dictionary should only have a single key, which is the name of
   // the parameter type to create.
-  if ( param_dict.size() != 1 )
+  if ( param_dict->size() != 1 )
   {
     throw BadProperty( "Parameter definition dictionary must contain one single key only." );
   }
-  const auto n = param_dict.begin()->first;
-  const auto pdict = param_dict.get< dictionary >( n );
-  pdict.init_access_flags();
-  auto parameter = create_parameter( n, pdict );
-  pdict.all_entries_accessed( "create_parameter", "param" );
+  const string n = param_dict->begin()->first;
+  const dictionary& pdict = param_dict->get< dictionary >( n );
+  pdict->init_access_flags();
+  ParameterPTR parameter = create_parameter( n, pdict );
+  pdict->all_entries_accessed( "create_parameter", "param" );
   return parameter;
 }
 
@@ -708,8 +703,8 @@ apply( const ParameterPTR param, const NodeCollectionPTR nc )
 std::vector< double >
 apply( const ParameterPTR param, const dictionary& positions )
 {
-  auto source_nc = positions.get< NodeCollectionPTR >( names::source );
-  auto targets = positions.get< std::vector< std::vector< double > > >( names::targets );
+  auto source_nc = positions->get< NodeCollectionPTR >( names::source );
+  auto targets = positions->get< std::vector< std::vector< double > > >( names::targets );
   return param->apply( source_nc, targets );
 }
 
@@ -756,13 +751,13 @@ create_doughnut( const dictionary& d )
 {
   // The doughnut (actually an annulus) is created using a DifferenceMask
   Position< 2 > center( 0, 0 );
-  if ( d.known( names::anchor ) )
+  if ( d->known( names::anchor ) )
   {
-    center = d.get< std::vector< double > >( names::anchor );
+    center = d->get< std::vector< double > >( names::anchor );
   }
 
-  const double outer = d.get< double >( names::outer_radius );
-  const double inner = d.get< double >( names::inner_radius );
+  const double outer = d->get< double >( names::outer_radius );
+  const double inner = d->get< double >( names::inner_radius );
   if ( inner >= outer )
   {
     throw BadProperty(

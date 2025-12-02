@@ -182,8 +182,8 @@ nest::RecordingBackendScreen::DeviceData::get_status( dictionary& d ) const
 void
 nest::RecordingBackendScreen::DeviceData::set_status( const dictionary& d )
 {
-  d.update_value( names::precision, precision_ );
-  d.update_value( names::time_in_steps, time_in_steps_ );
+  d->update_value( names::precision, precision_ );
+  d->update_value( names::time_in_steps, time_in_steps_ );
 }
 
 void

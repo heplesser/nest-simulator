@@ -105,7 +105,7 @@ protected:
 template < int D >
 GridMask< D >::GridMask( const dictionary& d )
 {
-  std::vector< long > shape = d.get< std::vector< long > >( names::shape );
+  std::vector< long > shape = d->get< std::vector< long > >( names::shape );
 
   if ( D == 2 )
   {
@@ -140,7 +140,7 @@ dictionary
 GridMask< D >::get_dict() const
 {
   dictionary d;
-  dictionary maskd;
+  dictionary maskd = std::make_shared< dictionary >();
   d[ get_name() ] = maskd;
 
   long shape_x = lower_right_[ 0 ] - upper_left_[ 0 ];
@@ -152,7 +152,7 @@ GridMask< D >::get_dict() const
     long shape_z = lower_right_[ 2 ] - upper_left_[ 2 ];
     shape_dim.push_back( shape_z );
   }
-  maskd[ names::shape ] = shape_dim;
+  ( *maskd )[ names::shape ] = shape_dim;
 
   return d;
 }

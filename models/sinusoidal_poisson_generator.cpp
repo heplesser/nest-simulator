@@ -140,14 +140,14 @@ nest::sinusoidal_poisson_generator::Parameters_::set( const dictionary& d,
   const sinusoidal_poisson_generator& n,
   Node* node )
 {
-  if ( not n.is_model_prototype() and d.known( names::individual_spike_trains ) )
+  if ( not n.is_model_prototype() and d->known( names::individual_spike_trains ) )
   {
     throw BadProperty(
       "The individual_spike_trains property can only be set as"
       " a model default using SetDefaults or upon CopyModel." );
   }
 
-  d.update_value( names::individual_spike_trains, individual_spike_trains_ );
+  d->update_value( names::individual_spike_trains, individual_spike_trains_ );
 
   if ( update_value_param( d, names::rate, rate_, node ) )
   {

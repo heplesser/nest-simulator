@@ -330,9 +330,9 @@ stdp_pl_synapse_hom< targetidentifierT >::set_status( const dictionary& d, Conne
 {
   // base class properties
   ConnectionBase::set_status( d, cm );
-  d.update_value( names::weight, weight_ );
+  d->update_value( names::weight, weight_ );
 
-  d.update_value( names::Kplus, Kplus_ );
+  d->update_value( names::Kplus, Kplus_ );
 }
 
 } // of namespace nest

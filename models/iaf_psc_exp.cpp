@@ -163,13 +163,13 @@ nest::iaf_psc_exp::Parameters_::set( const dictionary& d, Node* node )
     throw BadProperty( "Refractory time must not be negative." );
   }
 
-  d.update_value( "rho", rho_ );
+  d->update_value( "rho", rho_ );
   if ( rho_ < 0 )
   {
     throw BadProperty( "Stochastic firing intensity must not be negative." );
   }
 
-  d.update_value( "delta", delta_ );
+  d->update_value( "delta", delta_ );
   if ( delta_ < 0 )
   {
     throw BadProperty( "Width of threshold region must not be negative." );

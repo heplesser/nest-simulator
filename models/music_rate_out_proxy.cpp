@@ -85,7 +85,7 @@ nest::music_rate_out_proxy::Parameters_::set( const dictionary& d, State_& s )
 
   if ( not s.published_ )
   {
-    d.update_value( names::port_name, port_name_ );
+    d->update_value( names::port_name, port_name_ );
   }
 }
 

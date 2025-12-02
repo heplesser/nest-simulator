@@ -373,9 +373,9 @@ jonke_synapse< targetidentifierT >::set_status( const dictionary& d, ConnectorMo
 {
   ConnectionBase::set_status( d, cm );
 
-  d.update_value( names::weight, weight_ );
+  d->update_value( names::weight, weight_ );
 
-  d.update_value( names::Kplus, Kplus_ );
+  d->update_value( names::Kplus, Kplus_ );
   if ( Kplus_ < 0 )
   {
     throw BadProperty( "Kplus must be non-negative." );

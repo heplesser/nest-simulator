@@ -44,7 +44,7 @@ template < class ModelT >
 size_t
 ModelManager::register_node_model( const std::string& name, std::string deprecation_info )
 {
-  if ( modeldict_.known( name ) )
+  if ( modeldict_->known( name ) )
   {
     const std::string msg =
       String::compose( "A model called '%1' already exists. Please choose a different name!", name );
@@ -82,7 +82,7 @@ ModelManager::register_specific_connection_model_( const std::string& name )
 {
   kernel().vp_manager.assert_single_threaded();
 
-  if ( synapsedict_.known( name ) )
+  if ( synapsedict_->known( name ) )
   {
     std::string msg =
       String::compose( "A synapse type called '%1' already exists.\nPlease choose a different name!", name );

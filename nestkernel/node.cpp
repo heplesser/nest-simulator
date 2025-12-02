@@ -179,7 +179,7 @@ Node::set_status_base( const dictionary& dict )
       String::compose( "Setting status of a '%1' with node ID %2: %3", get_name(), get_node_id(), e.what() ) );
   }
 
-  dict.update_value( names::frozen, frozen_ );
+  dict->update_value( names::frozen, frozen_ );
 }
 
 /**

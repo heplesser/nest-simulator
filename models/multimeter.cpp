@@ -122,7 +122,8 @@ nest::multimeter::Parameters_::get( dictionary& d ) const
 void
 nest::multimeter::Parameters_::set( const dictionary& d, const Buffers_& b, Node* node )
 {
-  if ( b.has_targets_ and ( d.known( names::interval ) or d.known( names::offset ) or d.known( names::record_from ) ) )
+  if ( b.has_targets_
+    and ( d->known( names::interval ) or d->known( names::offset ) or d->known( names::record_from ) ) )
   {
     throw BadProperty(
       "The recording interval, the interval offset and the list of properties "
@@ -171,7 +172,7 @@ nest::multimeter::Parameters_::set( const dictionary& d, const Buffers_& b, Node
     }
   }
 
-  d.update_value( names::record_from, record_from_ );
+  d->update_value( names::record_from, record_from_ );
 }
 
 void

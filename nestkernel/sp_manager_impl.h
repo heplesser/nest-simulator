@@ -39,7 +39,7 @@ template < typename GrowthCurve >
 void
 SPManager::register_growth_curve( const std::string& name )
 {
-  assert( not growthcurvedict_.known( name ) );
+  assert( not growthcurvedict_->known( name ) );
   GenericGrowthCurveFactory* nc = new GrowthCurveFactory< GrowthCurve >();
   assert( nc );
   const int id = growthcurve_factories_.size();

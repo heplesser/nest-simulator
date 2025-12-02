@@ -186,13 +186,13 @@ nest::iaf_tum_2000::Parameters_::set( const dictionary& d, Node* node )
     throw BadProperty( "'U' must be in [0,1]." );
   }
 
-  d.update_value( "rho", rho_ );
+  d->update_value( "rho", rho_ );
   if ( rho_ < 0 )
   {
     throw BadProperty( "Stochastic firing intensity must not be negative." );
   }
 
-  d.update_value( "delta", delta_ );
+  d->update_value( "delta", delta_ );
   if ( delta_ < 0 )
   {
     throw BadProperty( "Width of threshold region must not be negative." );
@@ -216,8 +216,8 @@ nest::iaf_tum_2000::State_::set( const dictionary& d, const Parameters_& p, doub
 
   double x = x_;
   double y = y_;
-  d.update_value( names::x, x );
-  d.update_value( names::y, y );
+  d->update_value( names::x, x );
+  d->update_value( names::y, y );
 
   if ( x + y > 1.0 )
   {

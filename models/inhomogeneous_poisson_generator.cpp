@@ -112,14 +112,14 @@ nest::inhomogeneous_poisson_generator::Parameters_::assert_valid_rate_time_and_i
 void
 nest::inhomogeneous_poisson_generator::Parameters_::set( const dictionary& d, Buffers_& b, Node* )
 {
-  const bool times = d.known( names::rate_times );
-  const bool rates = d.update_value( names::rate_values, rate_values_ );
+  const bool times = d->known( names::rate_times );
+  const bool rates = d->update_value( names::rate_values, rate_values_ );
 
   // if offgrid flag changes, it must be done so either before any rates are
   // set or when setting new rates (which removes old ones)
-  if ( d.known( names::allow_offgrid_times ) )
+  if ( d->known( names::allow_offgrid_times ) )
   {
-    const auto flag_offgrid = d.get< bool >( names::allow_offgrid_times );
+    const auto flag_offgrid = d->get< bool >( names::allow_offgrid_times );
 
     if ( flag_offgrid != allow_offgrid_times_ and not( times or rate_times_.empty() ) )
     {
@@ -144,7 +144,7 @@ nest::inhomogeneous_poisson_generator::Parameters_::set( const dictionary& d, Bu
     return;
   }
 
-  const auto d_times = d.get< std::vector< double > >( names::rate_times );
+  const auto d_times = d->get< std::vector< double > >( names::rate_times );
 
   if ( d_times.empty() )
   {

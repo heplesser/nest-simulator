@@ -249,7 +249,7 @@ poisson_generator_ps::set_status( const dictionary& d )
 
   // If the rate is changed, the event_hook must handle the interval from
   // the rate change to the first subsequent spike.
-  if ( d.known( names::rate ) )
+  if ( d->known( names::rate ) )
   {
     B_.next_spike_.assign( P_.num_targets_, Buffers_::SpikeTime( Time::neg_inf(), 0 ) );
   }

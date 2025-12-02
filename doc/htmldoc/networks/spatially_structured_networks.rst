@@ -1523,8 +1523,8 @@ The ``Mask`` class has a few methods that must be overridden:
        : rx_( 1.0 )
        , ry_( 1.0 )
      {
-       d.update_value( "r_x", rx_ );
-       d.update_value( "r_y", ry_ );
+       d->update_value( "r_x", rx_ );
+       d->update_value( "r_y", ry_ );
      }
 
      using Mask< 2 >::inside;

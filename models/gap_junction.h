@@ -188,13 +188,13 @@ void
 gap_junction< targetidentifierT >::set_status( const dictionary& d, ConnectorModel& cm )
 {
   // If the delay is set, we throw a BadProperty
-  if ( d.known( names::delay ) )
+  if ( d->known( names::delay ) )
   {
     throw BadProperty( "gap_junction connection has no delay" );
   }
 
   ConnectionBase::set_status( d, cm );
-  d.update_value( names::weight, weight_ );
+  d->update_value( names::weight, weight_ );
 }
 
 } // namespace

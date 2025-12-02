@@ -142,7 +142,7 @@ void
 nest::RandomManager::set_status( const dictionary& d )
 {
   long rng_seed;
-  bool rng_seed_updated = d.update_value( names::rng_seed, rng_seed );
+  bool rng_seed_updated = d->update_value( names::rng_seed, rng_seed );
 
   if ( rng_seed_updated )
   {
@@ -155,7 +155,7 @@ nest::RandomManager::set_status( const dictionary& d )
   }
 
   std::string rng_type;
-  bool rng_type_updated = d.update_value( names::rng_type, rng_type );
+  bool rng_type_updated = d->update_value( names::rng_type, rng_type );
 
   if ( rng_type_updated )
   {

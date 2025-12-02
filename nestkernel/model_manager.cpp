@@ -136,19 +136,19 @@ ModelManager::get_status( dictionary& dict )
 void
 ModelManager::copy_model( const std::string& old_name, const std::string& new_name, const dictionary& params )
 {
-  if ( modeldict_.known( new_name ) or synapsedict_.known( new_name ) )
+  if ( modeldict_->known( new_name ) or synapsedict_->known( new_name ) )
   {
     throw NewModelNameExists( new_name );
   }
 
-  if ( modeldict_.known( old_name ) )
+  if ( modeldict_->known( old_name ) )
   {
-    const size_t old_id = modeldict_.get< size_t >( old_name );
+    const size_t old_id = modeldict_->get< size_t >( old_name );
     copy_node_model_( old_id, new_name, params );
   }
-  else if ( synapsedict_.known( old_name ) )
+  else if ( synapsedict_->known( old_name ) )
   {
-    const size_t old_id = synapsedict_.get< size_t >( old_name );
+    const size_t old_id = synapsedict_->get< size_t >( old_name );
     copy_connection_model_( old_id, new_name, params );
   }
   else
@@ -236,15 +236,15 @@ bool
 ModelManager::set_model_defaults( const std::string& name, const dictionary& params )
 {
   size_t id;
-  if ( modeldict_.known( name ) )
+  if ( modeldict_->known( name ) )
   {
-    id = modeldict_.get< size_t >( name );
+    id = modeldict_->get< size_t >( name );
     set_node_defaults_( id, params );
     return true;
   }
-  else if ( synapsedict_.known( name ) )
+  else if ( synapsedict_->known( name ) )
   {
-    id = synapsedict_.get< synindex >( name );
+    id = synapsedict_->get< synindex >( name );
     set_synapse_defaults_( id, params );
     return true;
   }
@@ -258,18 +258,18 @@ ModelManager::set_model_defaults( const std::string& name, const dictionary& par
 void
 ModelManager::set_node_defaults_( size_t model_id, const dictionary& params )
 {
-  params.init_access_flags();
+  params->init_access_flags();
 
   get_node_model( model_id )->set_status( params );
 
-  params.all_entries_accessed( "ModelManager::set_node_defaults_", "params" );
+  params->all_entries_accessed( "ModelManager::set_node_defaults_", "params" );
   model_defaults_modified_ = true;
 }
 
 void
 ModelManager::set_synapse_defaults_( size_t model_id, const dictionary& params )
 {
-  params.init_access_flags();
+  params->init_access_flags();
 
   assert_valid_syn_id( model_id, kernel().vp_manager.get_thread_id() );
 
@@ -301,16 +301,16 @@ ModelManager::set_synapse_defaults_( size_t model_id, const dictionary& params )
     }
   }
 
-  params.all_entries_accessed( "ModelManager::set_synapse_defaults_", "params" );
+  params->all_entries_accessed( "ModelManager::set_synapse_defaults_", "params" );
   model_defaults_modified_ = true;
 }
 
 size_t
 ModelManager::get_node_model_id( const std::string model_name ) const
 {
-  if ( modeldict_.known( model_name ) )
+  if ( modeldict_->known( model_name ) )
   {
-    return modeldict_.get< size_t >( model_name );
+    return modeldict_->get< size_t >( model_name );
   }
 
   throw UnknownModelName( model_name );
@@ -319,9 +319,9 @@ ModelManager::get_node_model_id( const std::string model_name ) const
 size_t
 ModelManager::get_synapse_model_id( std::string model_name )
 {
-  if ( synapsedict_.known( model_name ) )
+  if ( synapsedict_->known( model_name ) )
   {
-    return synapsedict_.get< synindex >( model_name );
+    return synapsedict_->get< synindex >( model_name );
   }
 
   throw UnknownSynapseType( model_name );

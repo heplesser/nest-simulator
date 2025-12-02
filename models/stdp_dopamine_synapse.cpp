@@ -78,7 +78,7 @@ STDPDopaCommonProperties::set_status( const dictionary& d, ConnectorModel& cm )
   CommonSynapseProperties::set_status( d, cm );
 
   NodeCollectionPTR vt_nc;
-  if ( d.update_value( names::volume_transmitter, vt_nc ) )
+  if ( d->update_value( names::volume_transmitter, vt_nc ) )
   {
     if ( vt_nc->size() != 1 )
     {
@@ -96,14 +96,14 @@ STDPDopaCommonProperties::set_status( const dictionary& d, ConnectorModel& cm )
     volume_transmitter_ = vt;
   }
 
-  d.update_value( names::A_minus, A_minus_ );
-  d.update_value( names::A_plus, A_plus_ );
-  d.update_value( names::Wmax, Wmax_ );
-  d.update_value( names::Wmin, Wmin_ );
-  d.update_value( names::b, b_ );
-  d.update_value( names::tau_c, tau_c_ );
-  d.update_value( names::tau_n, tau_n_ );
-  d.update_value( names::tau_plus, tau_plus_ );
+  d->update_value( names::A_minus, A_minus_ );
+  d->update_value( names::A_plus, A_plus_ );
+  d->update_value( names::Wmax, Wmax_ );
+  d->update_value( names::Wmin, Wmin_ );
+  d->update_value( names::b, b_ );
+  d->update_value( names::tau_c, tau_c_ );
+  d->update_value( names::tau_n, tau_n_ );
+  d->update_value( names::tau_plus, tau_plus_ );
 }
 
 } // of namespace nest

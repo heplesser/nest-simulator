@@ -109,7 +109,7 @@ nest::iaf_chs_2007::Parameters_::set( const dictionary& d, State_& s, Node* node
   update_value_param( d, names::tau_reset, tau_reset_, node );
   update_value_param( d, names::V_noise, U_noise_, node );
 
-  const bool updated_noise = d.update_value( names::noise, noise_ );
+  const bool updated_noise = d->update_value( names::noise, noise_ );
   if ( updated_noise )
   {
     s.position_ = 0;

@@ -170,14 +170,14 @@ nest::ConnectionManager::finalize( const bool adjust_number_of_threads_or_rng_on
       delete cbf;
     }
     connbuilder_factories_.clear();
-    connruledict_.clear();
+    connruledict_->clear();
 
     for ( auto tcbf : thirdconnbuilder_factories_ )
     {
       delete tcbf;
     }
     thirdconnbuilder_factories_.clear();
-    thirdconnruledict_.clear();
+    thirdconnruledict_->clear();
   }
 }
 
@@ -189,7 +189,7 @@ nest::ConnectionManager::set_status( const dictionary& d )
     delay_checkers_[ i ].set_status( d );
   }
 
-  d.update_value( names::keep_source_table, keep_source_table_ );
+  d->update_value( names::keep_source_table, keep_source_table_ );
   if ( not keep_source_table_ and kernel().sp_manager.is_structural_plasticity_enabled() )
   {
     throw KernelException(
@@ -197,10 +197,10 @@ nest::ConnectionManager::set_status( const dictionary& d )
       "to false." );
   }
 
-  d.update_value( names::use_compressed_spikes, use_compressed_spikes_ );
+  d->update_value( names::use_compressed_spikes, use_compressed_spikes_ );
 
   //  Need to update the saved values if we have changed the delay bounds.
-  if ( d.known( names::min_delay ) or d.known( names::max_delay ) )
+  if ( d->known( names::min_delay ) or d->known( names::max_delay ) )
   {
     update_delay_extrema_();
   }
@@ -227,7 +227,7 @@ nest::ConnectionManager::get_status( dictionary& dict )
   sw_construction_connect.get_status( dict, names::time_construction_connect, names::time_construction_connect_cpu );
 
   std::vector< std::string > connection_rules;
-  for ( auto const& element : connruledict_ )
+  for ( auto const& element : *connruledict_ )
   {
     connection_rules.push_back( element.first );
   }
@@ -390,12 +390,12 @@ nest::ConnectionManager::get_conn_builder( const std::string& name,
   const dictionary& conn_spec,
   const std::vector< dictionary >& syn_specs )
 {
-  if ( not connruledict_.known( name ) )
+  if ( not connruledict_->known( name ) )
   {
     throw IllegalConnection( String::compose( "Unknown connection rule '%1'.", name ) );
   }
 
-  const size_t rule_id = connruledict_.get< size_t >( name );
+  const size_t rule_id = connruledict_->get< size_t >( name );
   BipartiteConnBuilder* cb =
     connbuilder_factories_.at( rule_id )->create( sources, targets, third_out, conn_spec, syn_specs );
   assert( cb );
@@ -410,12 +410,12 @@ nest::ConnectionManager::get_third_conn_builder( const std::string& name,
   const dictionary& conn_spec,
   const std::vector< dictionary >& syn_specs )
 {
-  if ( not thirdconnruledict_.known( name ) )
+  if ( not thirdconnruledict_->known( name ) )
   {
     throw IllegalConnection( String::compose( "Unknown third-factor connection rule '%1'.", name ) );
   }
 
-  const size_t rule_id = thirdconnruledict_.get< size_t >( name );
+  const size_t rule_id = thirdconnruledict_->get< size_t >( name );
   ThirdOutBuilder* cb =
     thirdconnbuilder_factories_.at( rule_id )->create( sources, targets, third_in, conn_spec, syn_specs );
   assert( cb );
@@ -448,20 +448,20 @@ nest::ConnectionManager::connect( NodeCollectionPTR sources,
     throw IllegalConnection( "Postsynaptic nodes cannot be an empty NodeCollection" );
   }
 
-  conn_spec.init_access_flags();
+  conn_spec->init_access_flags();
   for ( auto& syn_param : syn_specs )
   {
-    syn_param.init_access_flags();
+    syn_param->init_access_flags();
   }
 
-  if ( not conn_spec.known( names::rule ) )
+  if ( not conn_spec->known( names::rule ) )
   {
     throw BadProperty( "The connection specification must contain a connection rule." );
   }
 
-  const std::string rule_name = conn_spec.get< std::string >( names::rule );
+  const std::string rule_name = conn_spec->get< std::string >( names::rule );
 
-  if ( not connruledict_.known( rule_name ) )
+  if ( not connruledict_->known( rule_name ) )
   {
     throw BadProperty( String::compose( "Unknown connectivity rule: %1", rule_name ) );
   }
@@ -469,10 +469,10 @@ nest::ConnectionManager::connect( NodeCollectionPTR sources,
   ConnBuilder cb( rule_name, sources, targets, conn_spec, syn_specs );
 
   // at this point, all entries in conn_spec and syn_spec have been checked
-  conn_spec.all_entries_accessed( "Connect", "conn_spec" );
+  conn_spec->all_entries_accessed( "Connect", "conn_spec" );
   for ( auto& syn_param : syn_specs )
   {
-    syn_param.all_entries_accessed( "Connect", "syn_spec" );
+    syn_param->all_entries_accessed( "Connect", "syn_spec" );
   }
 
   // Set flag before calling cb->connect() in case exception is thrown after some connections have been created.
@@ -644,14 +644,14 @@ nest::ConnectionManager::connect_arrays( long* sources,
     for ( auto& param_key : p_keys )
     {
       // Check that the parameter exists for the synapse model.
-      const auto syn_model_default_it = syn_model_defaults.find( param_key );
-      if ( syn_model_default_it == syn_model_defaults.end() )
+      const auto syn_model_default_it = syn_model_defaults->find( param_key );
+      if ( syn_model_default_it == syn_model_defaults->end() )
       {
         throw BadParameter( syn_model + " does not have parameter " + param_key );
       }
 
       // If the default value is an integer, the synapse parameter must also be an integer.
-      if ( is_type< long >( syn_model_default_it->second.item ) )
+      if ( std::holds_alternative< long >( syn_model_default_it->second.item ) )
       {
         param_pointers[ param_key ].second = true;
         param_dicts[ i ][ param_key ] = 0;
@@ -751,12 +751,12 @@ nest::ConnectionManager::connect_arrays( long* sources,
         }
 
         // PYNEST-NG: Possible performance bottleneck
-        param_dicts[ tid ].init_access_flags( /* thread_local_dict */ true );
+        param_dicts[ tid ]->init_access_flags( /* thread_local_dict */ true );
 
         connect( *s, target_node, tid, synapse_model_id, param_dicts[ tid ], delay_buffer, weight_buffer );
 
         // PYNEST-NG: Possible performance bottleneck
-        param_dicts[ tid ].all_entries_accessed( "connect_arrays", "params", /* thread_local_dict */ true );
+        param_dicts[ tid ]->all_entries_accessed( "connect_arrays", "params", /* thread_local_dict */ true );
 
         increment_wd( w, d );
       }
@@ -818,38 +818,38 @@ nest::ConnectionManager::connect_tripartite( NodeCollectionPTR sources,
     throw IllegalConnection( "Third-factor nodes cannot be an empty NodeCollection" );
   }
 
-  conn_spec.init_access_flags();
+  conn_spec->init_access_flags();
   for ( auto& [ key, syn_spec_array ] : syn_specs )
   {
     for ( auto& syn_spec : syn_spec_array )
     {
-      syn_spec.init_access_flags();
+      syn_spec->init_access_flags();
     }
   }
 
-  if ( not conn_spec.known( names::rule ) )
+  if ( not conn_spec->known( names::rule ) )
   {
     throw BadProperty( "The connection specification must contain a connection rule." );
   }
-  if ( not third_conn_spec.known( names::rule ) )
+  if ( not third_conn_spec->known( names::rule ) )
   {
     throw BadProperty( "The third-factor connection specification must contain a connection rule." );
   }
 
-  const std::string primary_rule = conn_spec.get< std::string >( names::rule );
-  const std::string third_rule = third_conn_spec.get< std::string >( names::rule );
+  const std::string primary_rule = conn_spec->get< std::string >( names::rule );
+  const std::string third_rule = third_conn_spec->get< std::string >( names::rule );
 
   kernel().node_manager.update_thread_local_node_data();
 
   ConnBuilder cb( primary_rule, third_rule, sources, targets, third, conn_spec, third_conn_spec, syn_specs );
 
   // at this point, all entries in conn_spec and syn_spec have been checked
-  conn_spec.all_entries_accessed( "Connect", "Unread dictionary entries in conn_spec: " );
+  conn_spec->all_entries_accessed( "Connect", "Unread dictionary entries in conn_spec: " );
   for ( auto& [ key, syn_spec_array ] : syn_specs )
   {
     for ( auto& syn_spec : syn_spec_array )
     {
-      syn_spec.all_entries_accessed( "Connect", "Unread dictionary entries in syn_specs: " );
+      syn_spec->all_entries_accessed( "Connect", "Unread dictionary entries in syn_specs: " );
     }
   }
 
@@ -1082,19 +1082,19 @@ nest::ConnectionManager::get_connections( const dictionary& params )
   NodeCollectionPTR target_a = NodeCollectionPTR( nullptr );
 
   long synapse_label = UNLABELED_CONNECTION;
-  params.update_value( names::synapse_label, synapse_label );
+  params->update_value( names::synapse_label, synapse_label );
 
-  if ( params.known( names::source ) )
+  if ( params->known( names::source ) )
   {
-    source_a = params.get< NodeCollectionPTR >( names::source );
+    source_a = params->get< NodeCollectionPTR >( names::source );
     if ( not source_a->valid() )
     {
       throw KernelException( "GetConnection requires valid source NodeCollection." );
     }
   }
-  if ( params.known( names::target ) )
+  if ( params->known( names::target ) )
   {
-    target_a = params.get< NodeCollectionPTR >( names::target );
+    target_a = params->get< NodeCollectionPTR >( names::target );
     if ( not target_a->valid() )
     {
       throw KernelException( "GetConnection requires valid target NodeCollection." );
@@ -1122,9 +1122,9 @@ nest::ConnectionManager::get_connections( const dictionary& params )
   }
 
   // We check, whether a synapse model is given. If not, we will iterate all.
-  if ( params.known( names::synapse_model ) )
+  if ( params->known( names::synapse_model ) )
   {
-    const std::string synmodel_name = params.get< std::string >( names::synapse_model );
+    const std::string synmodel_name = params->get< std::string >( names::synapse_model );
     // The following throws UnknownSynapseType for invalid synmodel_name
     size_t syn_id = kernel().model_manager.get_synapse_model_id( synmodel_name );
     get_connections( connectome, source_a, target_a, syn_id, synapse_label );

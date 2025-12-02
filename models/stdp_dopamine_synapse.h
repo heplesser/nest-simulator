@@ -377,12 +377,12 @@ stdp_dopamine_synapse< targetidentifierT >::set_status( const dictionary& d, Con
 {
   // base class properties
   ConnectionBase::set_status( d, cm );
-  d.update_value( names::weight, weight_ );
+  d->update_value( names::weight, weight_ );
 
-  d.update_value( names::c, c_ );
-  d.update_value( names::n, n_ );
+  d->update_value( names::c, c_ );
+  d->update_value( names::n, n_ );
 
-  d.update_value( names::Kplus, Kplus_ );
+  d->update_value( names::Kplus, Kplus_ );
   if ( Kplus_ < 0 )
   {
     throw BadProperty( "Kplus must be non-negative." );
@@ -396,14 +396,14 @@ stdp_dopamine_synapse< targetidentifierT >::check_synapse_params( const dictiona
   // Setting of parameter c and n not thread safe.
   if ( kernel().vp_manager.get_num_threads() > 1 )
   {
-    if ( syn_spec.known( names::c ) )
+    if ( syn_spec->known( names::c ) )
     {
       throw NotImplemented(
         "For multi-threading Connect doesn't support the setting "
         "of parameter c in stdp_dopamine_synapse. "
         "Use SetDefaults() or CopyModel()." );
     }
-    if ( syn_spec.known( names::n ) )
+    if ( syn_spec->known( names::n ) )
     {
       throw NotImplemented(
         "For multi-threading Connect doesn't support the setting "

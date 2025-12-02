@@ -41,22 +41,22 @@ ConnectionCreator::ConnectionCreator( const dictionary& dict )
 {
   std::string connection_type;
 
-  dict.update_value( names::connection_type, connection_type );
-  dict.update_value( names::allow_autapses, allow_autapses_ );
-  dict.update_value( names::allow_multapses, allow_multapses_ );
-  dict.update_value( names::allow_oversized_mask, allow_oversized_ );
+  dict->update_value( names::connection_type, connection_type );
+  dict->update_value( names::allow_autapses, allow_autapses_ );
+  dict->update_value( names::allow_multapses, allow_multapses_ );
+  dict->update_value( names::allow_oversized_mask, allow_oversized_ );
 
   // Need to store number of connections in a temporary variable to be able to detect negative values.
-  if ( dict.known( names::number_of_connections ) )
+  if ( dict->known( names::number_of_connections ) )
   {
-    if ( is_type< ParameterPTR >( dict.at( names::number_of_connections ) ) )
+    if ( std::holds_alternative< ParameterPTR >( dict.at( names::number_of_connections ) ) )
     {
-      dict.update_value< ParameterPTR >( names::number_of_connections, number_of_connections_ );
+      dict->update_value< ParameterPTR >( names::number_of_connections, number_of_connections_ );
     }
     else
     {
       // Assume indegree is a scalar.
-      const long value = dict.get< long >( names::number_of_connections );
+      const long value = dict->get< long >( names::number_of_connections );
       if ( value < 0 )
       {
         throw BadProperty( "Number of connections cannot be less than zero." );
@@ -64,23 +64,23 @@ ConnectionCreator::ConnectionCreator( const dictionary& dict )
       number_of_connections_ = ParameterPTR( new ConstantParameter( value ) );
     }
   }
-  if ( dict.known( names::mask ) )
+  if ( dict->known( names::mask ) )
   {
-    mask_ = create_mask( dict.get< dictionary >( names::mask ) );
+    mask_ = create_mask( *dict->get< dictionary >( names::mask ) );
   }
-  if ( dict.known( names::kernel ) )
+  if ( dict->known( names::kernel ) )
   {
     kernel_ = create_parameter( dict.at( names::kernel ) );
   }
 
-  if ( dict.known( names::synapse_parameters ) )
+  if ( dict->known( names::synapse_parameters ) )
   {
     // If synapse_parameters exists, we have collocated synapses.
     std::vector< dictionary > syn_params_dvd;
 
     try
     {
-      dict.update_value( names::synapse_parameters, syn_params_dvd );
+      dict->update_value( names::synapse_parameters, syn_params_dvd );
     }
     catch ( const nest::TypeMismatch& )
     {
@@ -93,7 +93,7 @@ ConnectionCreator::ConnectionCreator( const dictionary& dict )
     for ( auto syn_param_it = syn_params_dvd.begin(); syn_param_it < syn_params_dvd.end();
           ++syn_param_it, ++param_dict )
     {
-      extract_params_( *syn_param_it, *param_dict );
+      extract_params_( **syn_param_it, *param_dict );
     }
   }
   else
@@ -116,7 +116,7 @@ ConnectionCreator::ConnectionCreator( const dictionary& dict )
   }
   if ( delay_.empty() )
   {
-    if ( not syn_defaults.get< bool >( names::has_delay ) )
+    if ( not syn_defaults->get< bool >( names::has_delay ) )
     {
       delay_ = { create_parameter( numerics::nan ) };
     }
@@ -128,7 +128,7 @@ ConnectionCreator::ConnectionCreator( const dictionary& dict )
 
   if ( connection_type == names::pairwise_bernoulli_on_source )
   {
-    if ( dict.known( names::number_of_connections ) )
+    if ( dict->known( names::number_of_connections ) )
     {
       type_ = Fixed_indegree;
     }
@@ -143,7 +143,7 @@ ConnectionCreator::ConnectionCreator( const dictionary& dict )
   }
   else if ( connection_type == names::pairwise_bernoulli_on_target )
   {
-    if ( dict.known( names::number_of_connections ) )
+    if ( dict->known( names::number_of_connections ) )
     {
       type_ = Fixed_outdegree;
     }
@@ -161,15 +161,15 @@ ConnectionCreator::ConnectionCreator( const dictionary& dict )
 void
 ConnectionCreator::extract_params_( const dictionary& dict, std::vector< dictionary >& params )
 {
-  const std::string syn_name = dict.known( names::synapse_model ) ? dict.get< std::string >( names::synapse_model )
-                                                                  : std::string( "static_synapse" );
+  const std::string syn_name = dict->known( names::synapse_model ) ? dict->get< std::string >( names::synapse_model )
+                                                                   : std::string( "static_synapse" );
 
   // The following call will throw "UnknownSynapseType" if syn_name is not naming a known model
   const size_t synapse_model_id = kernel().model_manager.get_synapse_model_id( syn_name );
   synapse_model_.push_back( synapse_model_id );
 
   dictionary syn_defaults = kernel().model_manager.get_connector_defaults( synapse_model_id );
-  if ( dict.known( names::weight ) )
+  if ( dict->known( names::weight ) )
   {
     weight_.push_back( create_parameter( dict.at( names::weight ) ) );
   }
@@ -178,13 +178,13 @@ ConnectionCreator::extract_params_( const dictionary& dict, std::vector< diction
     weight_.push_back( create_parameter( syn_defaults[ names::weight ] ) );
   }
 
-  if ( dict.known( names::delay ) )
+  if ( dict->known( names::delay ) )
   {
     delay_.push_back( create_parameter( dict.at( names::delay ) ) );
   }
   else
   {
-    if ( not syn_defaults.get< bool >( names::has_delay ) )
+    if ( not syn_defaults->get< bool >( names::has_delay ) )
     {
       delay_.push_back( create_parameter( numerics::nan ) );
     }
@@ -199,9 +199,9 @@ ConnectionCreator::extract_params_( const dictionary& dict, std::vector< diction
   // problems when setting a value to a dictionary-entry in syn_dict.
   auto copy_long_if_known = [ &syn_dict, &dict ]( const std::string& name ) -> void
   {
-    if ( dict.known( name ) )
+    if ( dict->known( name ) )
     {
-      syn_dict[ name ] = dict.get< long >( name );
+      syn_dict[ name ] = dict->get< long >( name );
     }
   };
   copy_long_if_known( names::synapse_label );

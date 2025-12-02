@@ -104,10 +104,10 @@ nest::StimulationDevice::Parameters_::get( dictionary& d ) const
 void
 nest::StimulationDevice::Parameters_::set( const dictionary& d )
 {
-  d.update_value( names::label, label_ );
+  d->update_value( names::label, label_ );
 
   std::string stimulus_source;
-  if ( d.update_value( names::stimulus_source, stimulus_source ) )
+  if ( d->update_value( names::stimulus_source, stimulus_source ) )
   {
 
     if ( not kernel().io_manager.is_valid_stimulation_backend( stimulus_source ) )
@@ -176,7 +176,7 @@ nest::StimulationDevice::get_status( dictionary& d ) const
     // overwrite with cached parameters
     for ( auto& kv_pair : backend_params_ )
     {
-      d[ kv_pair.first ] = kv_pair.second;
+      d[ kv_pair.first ] = kv_pair.second.item;
     }
   }
 }

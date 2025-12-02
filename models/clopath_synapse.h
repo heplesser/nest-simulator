@@ -313,11 +313,11 @@ void
 clopath_synapse< targetidentifierT >::set_status( const dictionary& d, ConnectorModel& cm )
 {
   ConnectionBase::set_status( d, cm );
-  d.update_value( names::weight, weight_ );
-  d.update_value( names::x_bar, x_bar_ );
-  d.update_value( names::tau_x, tau_x_ );
-  d.update_value( names::Wmin, Wmin_ );
-  d.update_value( names::Wmax, Wmax_ );
+  d->update_value( names::weight, weight_ );
+  d->update_value( names::x_bar, x_bar_ );
+  d->update_value( names::tau_x, tau_x_ );
+  d->update_value( names::Wmin, Wmin_ );
+  d->update_value( names::Wmax, Wmax_ );
 
   // check if weight_ and Wmin_ has the same sign
   if ( not( ( ( weight_ >= 0 ) - ( weight_ < 0 ) ) == ( ( Wmin_ >= 0 ) - ( Wmin_ < 0 ) ) ) )

@@ -26,8 +26,7 @@
 #ifdef HAVE_HDF5
 
 // C++ includes:
-#include <boost/any.hpp> // TODO: probably not needed if boost::any_cast goes away
-#include <cstdlib>       // for div()
+#include <cstdlib> // for div()
 #include <string>
 #include <vector>
 
@@ -94,7 +93,7 @@ SonataConnector::connect()
   */
   // clang-format on
 
-  auto edges_container = boost::any_cast< std::vector< dictionary > >( graph_specs_.at( "edges" ) );
+  auto edges_container = std::get< std::vector< dictionary > >( graph_specs_.at( "edges" ) );
 
   // synapse-specific parameters that should be skipped when we set default synapse parameters
   skip_syn_params_ = {
@@ -105,14 +104,14 @@ SonataConnector::connect()
   // Iterate edge files
   for ( auto edge_dict : edges_container )
   {
-    cur_fname_ = boost::any_cast< std::string >( edge_dict.at( "edges_file" ) );
+    cur_fname_ = std::get< std::string >( edge_dict.at( "edges_file" ) );
 
     const auto file = open_file_( cur_fname_ );
     const auto edges_top_level_grp = open_group_( file, "edges" );
 
     // Create map of edge type ids to NEST synapse_model ids
     // cur_edge_params_ = edge_dict[ "syn_specs" ];
-    cur_edge_params_ = boost::any_cast< dictionary >( edge_dict.at( "syn_specs" ) );
+    cur_edge_params_ = std::get< dictionary >( edge_dict.at( "syn_specs" ) );
 
     create_edge_type_id_2_syn_spec_( cur_edge_params_ );
 
@@ -411,9 +410,9 @@ SonataConnector::connect_chunk_( const hsize_t hyperslab_size, const hsize_t off
   std::vector< std::exception_ptr > exceptions_raised_( kernel().vp_manager.get_num_threads() );
 
   // Retrieve the correct NodeCollections
-  const auto nest_nodes = boost::any_cast< dictionary >( graph_specs_.at( "nodes" ) );
-  const auto src_nc = boost::any_cast< NodeCollectionPTR >( nest_nodes.at( source_attribute_value_ ) );
-  const auto tgt_nc = boost::any_cast< NodeCollectionPTR >( nest_nodes.at( target_attribute_value_ ) );
+  const auto nest_nodes = std::get< dictionary >( graph_specs_.at( "nodes" ) );
+  const auto src_nc = std::get< NodeCollectionPTR >( nest_nodes.at( source_attribute_value_ ) );
+  const auto tgt_nc = std::get< NodeCollectionPTR >( nest_nodes.at( target_attribute_value_ ) );
 
   const auto snode_begin = src_nc->begin();
   const auto tnode_begin = tgt_nc->begin();
@@ -444,7 +443,7 @@ SonataConnector::connect_chunk_( const hsize_t hyperslab_size, const hsize_t off
         const size_t target_thread = target->get_thread();
 
         const auto edge_type_id = edge_type_id_data_subset[ i ];
-        const auto syn_spec = boost::any_cast< dictionary >( cur_edge_params_.at( std::to_string( edge_type_id ) ) );
+        const auto syn_spec = std::get< dictionary >( cur_edge_params_.at( std::to_string( edge_type_id ) ) );
 
         const double weight =
           get_syn_property_( syn_spec, i, weight_dataset_exist_, syn_weight_data_subset, names::weight );
@@ -549,10 +548,10 @@ SonataConnector::create_edge_type_id_2_syn_spec_( dictionary edge_params )
 {
   for ( auto& syn_kv_pair : edge_params )
   {
-    const auto type_id = std::stoi( boost::any_cast< std::string >( syn_kv_pair.first ) );
-    auto d = boost::any_cast< dictionary >( syn_kv_pair.second.item );
+    const auto type_id = std::stoi( std::get< std::string >( syn_kv_pair.first ) );
+    auto d = std::get< dictionary >( syn_kv_pair.second.item );
 
-    const auto syn_name = boost::any_cast< std::string >( d.at( "synapse_model" ) );
+    const auto syn_name = std::get< std::string >( d.at( "synapse_model" ) );
 
     // The following call will throw "UnknownSynapseType" if syn_name is not naming a known model
     const size_t synapse_model_id = kernel().model_manager.get_synapse_model_id( syn_name );
@@ -576,7 +575,7 @@ SonataConnector::set_synapse_params_( dictionary syn_dict, size_t synapse_model_
       continue; // weight, delay or other not-settable parameter
     }
 
-    if ( syn_dict.known( param_name ) )
+    if ( syn_dict->known( param_name ) )
     {
       synapse_params[ param_name ] = std::shared_ptr< ConnParameter >(
         ConnParameter::create( syn_dict.at( param_name ), kernel().vp_manager.get_num_threads() ) );
@@ -644,9 +643,9 @@ SonataConnector::get_syn_property_( const dictionary& syn_spec,
   {
     return data[ index ];
   }
-  else if ( syn_spec.known( name ) )
+  else if ( syn_spec->known( name ) )
   {
-    return boost::any_cast< double >( syn_spec.at( name ) );
+    return std::get< double >( syn_spec.at( name ) );
   }
   // default value is NaN
   return numerics::nan;
