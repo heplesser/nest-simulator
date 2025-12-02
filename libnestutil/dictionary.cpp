@@ -58,7 +58,7 @@ operator<<( std::ostream& os, const std::vector< T >& vec )
 
 template <>
 double
-dictionary::cast_value_< double >( const boost::any& value, const std::string& key ) const
+dictionary::cast_value_< double >( const any_type& value, const std::string& key ) const
 {
   try
   {
@@ -90,7 +90,7 @@ dictionary::cast_value_< double >( const boost::any& value, const std::string& k
 
 template <>
 std::vector< double >
-dictionary::cast_value_< std::vector< double > >( const boost::any& value, const std::string& key ) const
+dictionary::cast_value_< std::vector< double > >( const any_type& value, const std::string& key ) const
 {
   try
   {
@@ -118,7 +118,7 @@ dictionary::cast_value_< std::vector< double > >( const boost::any& value, const
 
 // debug
 std::string
-debug_type( const boost::any& operand )
+debug_type( const any_type& operand )
 {
   return boost::core::demangle( operand.type().name() );
 }
@@ -209,9 +209,9 @@ operator<<( std::ostream& os, const dictionary& dict )
       type = "std::vector<std::string>";
       value_stream << boost::any_cast< std::vector< std::string > >( item ) << '\n';
     }
-    else if ( is_type< std::vector< boost::any > >( item ) )
+    else if ( is_type< std::vector< any_type > >( item ) )
     {
-      type = "vector<boost::any>";
+      type = "vector<any_type>";
       value_stream << "vector<any>" << '\n';
     }
     else if ( is_type< dictionary >( item ) )
@@ -244,7 +244,7 @@ operator<<( std::ostream& os, const dictionary& dict )
 }
 
 bool
-value_equal( const boost::any& first, const boost::any& second )
+value_equal( const any_type& first, const any_type& second )
 {
   if ( is_type< int >( first ) )
   {
@@ -463,7 +463,7 @@ dictionary::register_access_( const DictEntry_& entry ) const
   }
 }
 
-boost::any&
+any_type&
 dictionary::operator[]( const std::string& key )
 {
   auto& entry = maptype_::operator[]( key );
@@ -472,7 +472,7 @@ dictionary::operator[]( const std::string& key )
   return entry.item;
 }
 
-boost::any&
+any_type&
 dictionary::operator[]( std::string&& key )
 {
   auto& entry = maptype_::operator[]( key );
@@ -481,7 +481,7 @@ dictionary::operator[]( std::string&& key )
   return entry.item;
 }
 
-boost::any&
+any_type&
 dictionary::at( const std::string& key )
 {
   auto& entry = maptype_::at( key );
@@ -490,7 +490,7 @@ dictionary::at( const std::string& key )
   return entry.item;
 }
 
-const boost::any&
+const any_type&
 dictionary::at( const std::string& key ) const
 {
   const auto& entry = maptype_::at( key );

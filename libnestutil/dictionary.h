@@ -23,14 +23,19 @@
 #ifndef DICTIONARY_H
 #define DICTIONARY_H
 
-#include <boost/any.hpp>
 #include <map>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "exceptions.h"
 
 class dictionary;
+
+// TODO-PYNEST-NG: Shouldn't we use (signed) long instead of size_t?
+typedef std::
+  variant< std::string, size_t, double, std::vector< std::string >, std::vector< size_t >, std::vector< double > >
+    any_type;
 
 /**
  * @brief Get the typename of the operand.
@@ -38,47 +43,47 @@ class dictionary;
  * @param operand to get the typename of.
  * @return std::string of the typename.
  */
-std::string debug_type( const boost::any& operand );
+std::string debug_type( const any_type& operand );
 
 std::string debug_dict_types( const dictionary& dict );
 
 template < typename T >
 bool
-is_type( const boost::any& operand )
+is_type( const any_type& operand )
 {
-  return operand.type() == typeid( T );
+  return std::holds_alternative< T >( operand );
 }
 
 /**
- * @brief Check whether two boost::any values are equal.
+ * @brief Check whether two any_type values are equal.
  *
  * @param first The first value.
  * @param second The other value.
  * @return Whether the values are equal, both in type and value.
  */
-bool value_equal( const boost::any& first, const boost::any& second );
+bool value_equal( const any_type& first, const any_type& second );
 
 /**
  * @brief A Python-like dictionary, based on std::map.
  *
- * Values are stored as boost::any objects, with std::string keys.
+ * Values are stored as any_type objects, with std::string keys.
  */
 struct DictEntry_
 {
   //! Constructor without arguments needed by std::map::operator[]
   DictEntry_()
-    : item( boost::any() )
+    : item( any_type() )
     , accessed( false )
   {
   }
-  DictEntry_( const boost::any& item )
+  DictEntry_( const any_type& item )
     : item( item )
     , accessed( false )
   {
   }
 
-  boost::any item;       //!< actual item stored
-  mutable bool accessed; //!< initally false, set to true once entry is accessed
+  any_type item;         //!< actual item stored
+  mutable bool accessed; //!< initially false, set to true once entry is accessed
 };
 
 class dictionary : public std::map< std::string, DictEntry_ >
@@ -105,13 +110,13 @@ private:
    */
   template < typename T >
   T
-  cast_value_( const boost::any& value, const std::string& key ) const
+  cast_value_( const any_type& value, const std::string& key ) const
   {
     try
     {
-      return boost::any_cast< T >( value );
+      return std::get< T >( value );
     }
-    catch ( const boost::bad_any_cast& )
+    catch ( const std::bad_variant_access& )
     {
       std::string msg = std::string( "Failed to cast '" ) + key + "' from " + debug_type( value ) + " to type "
         + std::string( boost::core::demangle( typeid( T ).name() ) );
@@ -132,15 +137,15 @@ private:
    */
   template < typename T >
   std::vector< T >
-  cast_vector_value_( const boost::any& value, const std::string& key ) const
+  cast_vector_value_( const any_type& value, const std::string& key ) const
   {
     // PyNEST passes vector with element type any if and only if it needs to pass
     // and empty vector, because the element type of empty lists cannot be inferred
     // at the Python level. The assertion just double-checks that we never get a
     // non-empty vector-of-any.
-    if ( value.type() == typeid( std::vector< boost::any > ) )
+    if ( std::holds_alternative< std::vector< any_type > >( value ) )
     {
-      assert( boost::any_cast< std::vector< boost::any > >( value ).empty() );
+      assert( boost::any_cast< std::vector< any_type > >( value ).empty() );
       return std::vector< T >();
     }
 
@@ -166,7 +171,7 @@ private:
    * @return value cast to an integer.
    */
   size_t // TODO: or template?
-  cast_to_integer_( const boost::any& value, const std::string& key ) const
+  cast_to_integer_( const any_type& value, const std::string& key ) const
   {
     if ( is_type< size_t >( value ) )
     {
@@ -365,10 +370,10 @@ public:
   all_entries_accessed( const std::string& where, const std::string& what, const bool thread_local_dict = false ) const;
 
   // Wrappers for access flags
-  boost::any& operator[]( const std::string& key );
-  boost::any& operator[]( std::string&& key );
-  boost::any& at( const std::string& key );
-  const boost::any& at( const std::string& key ) const;
+  any_type& operator[]( const std::string& key );
+  any_type& operator[]( std::string&& key );
+  any_type& at( const std::string& key );
+  const any_type& at( const std::string& key ) const;
   iterator find( const std::string& key );
   const_iterator find( const std::string& key ) const;
 };
@@ -376,10 +381,10 @@ public:
 std::ostream& operator<<( std::ostream& os, const dictionary& dict );
 
 template <>
-double dictionary::cast_value_< double >( const boost::any& value, const std::string& key ) const;
+double dictionary::cast_value_< double >( const any_type& value, const std::string& key ) const;
 
 template <>
-std::vector< double > dictionary::cast_value_< std::vector< double > >( const boost::any& value,
+std::vector< double > dictionary::cast_value_< std::vector< double > >( const any_type& value,
   const std::string& key ) const;
 
 #endif /* DICTIONARY_H_ */
