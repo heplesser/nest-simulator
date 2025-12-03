@@ -25,12 +25,10 @@
 
 // C++ includes:
 #include <cmath>
-#include <limits>
 
 // Includes from nestkernel:
 #include "generic_factory.h"
 #include "nest_names.h"
-#include "nest_types.h"
 #include "node.h"
 #include "node_collection.h"
 #include "random_generators.h"
@@ -156,7 +154,7 @@ public:
    */
   ConstantParameter( const dictionary& d )
   {
-    value_ = d->get< double >( "value" ); // PYNEST-NG: Must be able to pass value as long and double
+    value_ = d.get< double >( "value" ); // PYNEST-NG: Must be able to pass value as long and double
     returns_int_only_ = value_is_integer_( value_ );
   }
 
@@ -197,8 +195,8 @@ public:
     : lower_( 0.0 )
     , range_( 1.0 )
   {
-    d->update_value( names::min, lower_ );
-    d->update_value( names::max, range_ );
+    d.update_value( names::min, lower_ );
+    d.update_value( names::max, range_ );
     if ( lower_ >= range_ )
     {
       throw BadProperty(
@@ -239,7 +237,7 @@ public:
     : Parameter( false, true )
     , max_( 1.0 )
   {
-    d->update_integer_value( names::max, max_ );
+    d.update_integer_value( names::max, max_ );
     if ( max_ <= 0 )
     {
       throw BadProperty( "nest::UniformIntParameter: max > 0 required." );
@@ -330,7 +328,7 @@ public:
   ExponentialParameter( const dictionary& d )
     : beta_( 1.0 )
   {
-    d->update_value( names::beta, beta_ );
+    d.update_value( names::beta, beta_ );
   }
 
   double
@@ -367,7 +365,7 @@ public:
     , dimension_( 0 )
     , synaptic_endpoint_( 0 )
   {
-    bool dimension_specified = d->update_integer_value( names::dimension, dimension_ );
+    bool dimension_specified = d.update_integer_value( names::dimension, dimension_ );
     if ( not dimension_specified )
     {
       throw BadParameterValue( "Dimension must be specified when creating a node position parameter." );
@@ -376,7 +374,7 @@ public:
     {
       throw BadParameterValue( "Node position parameter dimension cannot be negative." );
     }
-    d->update_integer_value( names::synaptic_endpoint, synaptic_endpoint_ );
+    d.update_integer_value( names::synaptic_endpoint, synaptic_endpoint_ );
     if ( synaptic_endpoint_ < 0 or 2 < synaptic_endpoint_ )
     {
       throw BadParameterValue( "Synaptic endpoint must either be unspecified (0), source (1) or target (2)." );
@@ -436,7 +434,7 @@ public:
     : Parameter( true )
     , dimension_( 0 )
   {
-    d->update_integer_value( names::dimension, dimension_ );
+    d.update_integer_value( names::dimension, dimension_ );
     if ( dimension_ < 0 )
     {
       throw BadParameterValue( "Spatial distance parameter dimension cannot be negative." );
@@ -685,7 +683,7 @@ public:
     , parameter2_( m2 )
     , comparator_( -1 )
   {
-    if ( not d->update_integer_value( names::comparator, comparator_ ) )
+    if ( not d.update_integer_value( names::comparator, comparator_ ) )
     {
       throw BadParameter( "A comparator has to be specified." );
     }

@@ -301,12 +301,12 @@ void
 vogels_sprekeler_synapse< targetidentifierT >::set_status( const dictionary& d, ConnectorModel& cm )
 {
   ConnectionBase::set_status( d, cm );
-  d->update_value( names::weight, weight_ );
-  d->update_value( names::tau, tau_ );
-  d->update_value( names::alpha, alpha_ );
-  d->update_value( names::eta, eta_ );
-  d->update_value( names::Wmax, Wmax_ );
-  d->update_value( names::Kplus, Kplus_ );
+  d.update_value( names::weight, weight_ );
+  d.update_value( names::tau, tau_ );
+  d.update_value( names::alpha, alpha_ );
+  d.update_value( names::eta, eta_ );
+  d.update_value( names::Wmax, Wmax_ );
+  d.update_value( names::Kplus, Kplus_ );
 
   // if the weight_ is not 0, we check to ensure that weight_ and Wmax_ are of
   // the same sign

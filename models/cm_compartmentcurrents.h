@@ -477,7 +477,7 @@ public:
   void
   add_synapse( const std::string& type, const long syn_idx, const dictionary& receptor_params )
   {
-    receptor_params->init_access_flags();
+    receptor_params.init_access_flags();
 
     if ( type == "AMPA" )
     {
@@ -504,7 +504,7 @@ public:
       assert( false );
     }
 
-    receptor_params->all_entries_accessed( "receptor_params", "Unread dictionary entries: " );
+    receptor_params.all_entries_accessed( "receptor_params", "Unread dictionary entries: " );
   };
 
   void

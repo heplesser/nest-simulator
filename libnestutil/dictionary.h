@@ -59,7 +59,10 @@ typedef std::variant< size_t,
   std::vector< int >,
   std::vector< long >,
   std::vector< double >,
+  std::vector< std::vector< long > >,
   std::vector< std::vector< double > >,
+  std::vector< std::vector< std::vector< long > > >,
+  std::vector< std::vector< std::vector< double > > >,
   std::vector< std::string >,
   std::vector< dictionary > >
   any_type;
@@ -81,6 +84,32 @@ public:
   any_type& operator[]( std::string&& key ) const;
   any_type& at( const std::string& key );
   const any_type& at( const std::string& key ) const;
+
+  auto begin() const;
+  auto end() const;
+
+  auto size() const;
+  auto empty() const;
+  void clear() const;
+  auto find( const std::string& key ) const;
+
+  bool known( const std::string& key ) const;
+  void mark_as_accessed( const std::string& key ) const;
+  bool has_been_accessed( const std::string& key ) const;
+  void init_access_flags( const bool thread_local_dict = false ) const;
+  void
+  all_entries_accessed( const std::string& where, const std::string& what, const bool thread_local_dict = false ) const;
+
+  template < typename T >
+  T get( const std::string& key ) const;
+
+  size_t get_integer( const std::string& key ) const;
+
+  template < typename T >
+  bool update_value( const std::string& key, T& value ) const;
+
+  template < typename T >
+  bool update_integer_value( const std::string& key, T& value ) const;
 };
 
 namespace nest
@@ -369,5 +398,104 @@ double dictionary_::cast_value_< double >( const any_type& value, const std::str
 template <>
 std::vector< double > dictionary_::cast_value_< std::vector< double > >( const any_type& value,
   const std::string& key ) const;
+
+inline auto
+dictionary::begin() const
+{
+  return ( **this ).begin();
+}
+
+inline auto
+dictionary::end() const
+{
+  return ( **this ).end();
+}
+
+template <>
+std::vector< double > dictionary_::cast_value_< std::vector< double > >( const any_type& value,
+  const std::string& key ) const;
+
+inline auto
+dictionary::size() const
+{
+  return ( **this ).size();
+}
+
+inline auto
+dictionary::empty() const
+{
+  return ( **this ).empty();
+}
+
+inline void
+dictionary::clear() const
+{
+  ( **this ).clear();
+}
+
+inline auto
+dictionary::find( const std::string& key ) const
+{
+  return ( **this ).find( key );
+}
+
+inline bool
+dictionary::known( const std::string& key ) const
+{
+  return ( **this ).known( key );
+}
+
+inline void
+dictionary::mark_as_accessed( const std::string& key ) const
+{
+  ( **this ).mark_as_accessed( key );
+}
+
+inline bool
+dictionary::has_been_accessed( const std::string& key ) const
+{
+  return ( **this ).has_been_accessed( key );
+}
+
+inline void
+dictionary::init_access_flags( const bool thread_local_dict ) const
+{
+  ( **this ).init_access_flags( thread_local_dict );
+}
+
+inline void
+dictionary::all_entries_accessed( const std::string& where,
+  const std::string& what,
+  const bool thread_local_dict ) const
+{
+  ( **this ).all_entries_accessed( where, what, thread_local_dict );
+}
+
+template < typename T >
+inline T
+dictionary::get( const std::string& key ) const
+{
+  return ( **this ).get< T >( key );
+}
+
+inline size_t
+dictionary::get_integer( const std::string& key ) const
+{
+  return ( **this ).get_integer( key );
+}
+
+template < typename T >
+inline bool
+dictionary::update_value( const std::string& key, T& value ) const
+{
+  return ( **this ).update_value( key, value );
+}
+
+template < typename T >
+inline bool
+dictionary::update_integer_value( const std::string& key, T& value ) const
+{
+  return ( **this ).update_integer_value( key, value );
+}
 
 #endif /* DICTIONARY_H */

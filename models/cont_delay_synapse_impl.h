@@ -59,12 +59,12 @@ cont_delay_synapse< targetidentifierT >::set_status( const dictionary& d, Connec
 {
   ConnectionBase::set_status( d, cm );
 
-  d->update_value( names::weight, weight_ );
+  d.update_value( names::weight, weight_ );
 
   // set delay if mentioned
   double delay;
 
-  if ( d->update_value( names::delay, delay ) )
+  if ( d.update_value( names::delay, delay ) )
   {
 
     const double h = Time::get_resolution().get_ms();
@@ -92,7 +92,7 @@ template < typename targetidentifierT >
 void
 cont_delay_synapse< targetidentifierT >::check_synapse_params( const dictionary& syn_spec ) const
 {
-  if ( syn_spec->known( names::delay ) )
+  if ( syn_spec.known( names::delay ) )
   {
     LOG( VerbosityLevel::WARNING,
       "Connect",

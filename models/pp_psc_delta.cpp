@@ -156,8 +156,8 @@ nest::pp_psc_delta::Parameters_::set( const dictionary& d, Node* node )
 
   try
   {
-    d->update_value( names::tau_sfa, tau_sfa_ );
-    d->update_value( names::q_sfa, q_sfa_ );
+    d.update_value( names::tau_sfa, tau_sfa_ );
+    d.update_value( names::q_sfa, q_sfa_ );
   }
   catch ( TypeMismatch& e )
   {

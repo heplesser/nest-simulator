@@ -78,10 +78,10 @@ nest::RecordingDevice::Parameters_::get( dictionary& d ) const
 void
 nest::RecordingDevice::Parameters_::set( const dictionary& d )
 {
-  d->update_value( names::label, label_ );
+  d.update_value( names::label, label_ );
 
   std::string record_to;
-  if ( d->update_value( names::record_to, record_to ) )
+  if ( d.update_value( names::record_to, record_to ) )
   {
     if ( not kernel().io_manager.is_valid_recording_backend( record_to ) )
     {
@@ -102,7 +102,7 @@ void
 nest::RecordingDevice::State_::get( dictionary& d ) const
 {
   size_t n_events = 0;
-  d->update_value( names::n_events, n_events );
+  d.update_value( names::n_events, n_events );
   d[ names::n_events ] = n_events + n_events_;
 }
 
@@ -111,7 +111,7 @@ nest::RecordingDevice::State_::set( const dictionary& d )
 {
   long n_events = 0;
 
-  if ( d->update_value( names::n_events, n_events ) )
+  if ( d.update_value( names::n_events, n_events ) )
   {
     if ( n_events != 0 )
     {
@@ -143,7 +143,7 @@ nest::RecordingDevice::set_status( const dictionary& d )
     dictionary backend_params;
 
     // copy all properties not previously accessed from d to backend_params
-    for ( auto& [ key, entry ] : d )
+    for ( auto& [ key, entry ] : *d )
     {
       if ( not d.has_been_accessed( key ) )
       {
@@ -155,7 +155,7 @@ nest::RecordingDevice::set_status( const dictionary& d )
 
     // cache all properties accessed by the backend in private member
     backend_params_.clear();
-    for ( auto& [ key, entry ] : backend_params )
+    for ( auto& [ key, entry ] : *backend_params )
     {
       if ( backend_params.has_been_accessed( key ) )
       {

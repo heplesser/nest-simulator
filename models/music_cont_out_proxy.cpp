@@ -118,10 +118,10 @@ nest::music_cont_out_proxy::Parameters_::set( const dictionary& d,
 {
   if ( state.published_ == false )
   {
-    d->update_value( names::port_name, port_name_ );
+    d.update_value( names::port_name, port_name_ );
   }
 
-  if ( buffers.has_targets_ and ( d->known( names::interval ) || d->known( names::record_from ) ) )
+  if ( buffers.has_targets_ and ( d.known( names::interval ) || d.known( names::record_from ) ) )
   {
     throw BadProperty(
       "The recording interval and the list of properties to record "
@@ -129,7 +129,7 @@ nest::music_cont_out_proxy::Parameters_::set( const dictionary& d,
   }
 
   double v;
-  if ( d->update_value( names::interval, v ) )
+  if ( d.update_value( names::interval, v ) )
   {
     if ( Time( Time::ms( v ) ) < Time::get_resolution() )
     {
@@ -148,9 +148,9 @@ nest::music_cont_out_proxy::Parameters_::set( const dictionary& d,
     }
   }
 
-  d->update_value( names::record_from, record_from_ );
+  d.update_value( names::record_from, record_from_ );
 
-  if ( d->known( names::targets ) )
+  if ( d.known( names::targets ) )
   {
     if ( record_from_.empty() )
     {
@@ -159,7 +159,7 @@ nest::music_cont_out_proxy::Parameters_::set( const dictionary& d,
 
     if ( state.published_ == false )
     {
-      targets_ = d->get< NodeCollectionPTR >( names::targets );
+      targets_ = d.get< NodeCollectionPTR >( names::targets );
     }
     else
     {

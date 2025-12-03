@@ -44,13 +44,13 @@ nest::Na::Na( double v_comp, const dictionary& channel_params )
   , q10_( 1. / 3.21 )
 {
   // update sodium channel parameters
-  if ( channel_params->known( "gbar_Na" ) )
+  if ( channel_params.known( "gbar_Na" ) )
   {
-    gbar_Na_ = channel_params->get< double >( "gbar_Na" );
+    gbar_Na_ = channel_params.get< double >( "gbar_Na" );
   }
-  if ( channel_params->known( "e_Na" ) )
+  if ( channel_params.known( "e_Na" ) )
   {
-    e_Na_ = channel_params->get< double >( "e_Na" );
+    e_Na_ = channel_params.get< double >( "e_Na" );
   }
 
   init_statevars( v_comp );
@@ -206,13 +206,13 @@ nest::K::K( double v_comp, const dictionary& channel_params )
   , q10_( 1. / 3.21 )
 {
   // update potassium channel parameters
-  if ( channel_params->known( "gbar_K" ) )
+  if ( channel_params.known( "gbar_K" ) )
   {
-    gbar_K_ = channel_params->get< double >( "gbar_K" );
+    gbar_K_ = channel_params.get< double >( "gbar_K" );
   }
-  if ( channel_params->known( "e_Na" ) )
+  if ( channel_params.known( "e_Na" ) )
   {
-    e_K_ = channel_params->get< double >( "e_K" );
+    e_K_ = channel_params.get< double >( "e_K" );
   }
 
   // initialize the state variables
@@ -334,17 +334,17 @@ nest::AMPA::AMPA( const long syn_index, const dictionary& receptor_params )
   syn_idx = syn_index;
 
   // update AMPA receptor parameters
-  if ( receptor_params->known( "e_AMPA" ) )
+  if ( receptor_params.known( "e_AMPA" ) )
   {
-    e_rev_ = receptor_params->get< double >( "e_AMPA" );
+    e_rev_ = receptor_params.get< double >( "e_AMPA" );
   }
-  if ( receptor_params->known( "tau_r_AMPA" ) )
+  if ( receptor_params.known( "tau_r_AMPA" ) )
   {
-    tau_r_ = receptor_params->get< double >( "tau_r_AMPA" );
+    tau_r_ = receptor_params.get< double >( "tau_r_AMPA" );
   }
-  if ( receptor_params->known( "tau_d_AMPA" ) )
+  if ( receptor_params.known( "tau_d_AMPA" ) )
   {
-    tau_d_ = receptor_params->get< double >( "tau_d_AMPA" );
+    tau_d_ = receptor_params.get< double >( "tau_d_AMPA" );
   }
 
   double tp = ( tau_r_ * tau_d_ ) / ( tau_d_ - tau_r_ ) * std::log( tau_d_ / tau_r_ );
@@ -421,17 +421,17 @@ nest::GABA::GABA( const long syn_index, const dictionary& receptor_params )
   syn_idx = syn_index;
 
   // update GABA receptor parameters
-  if ( receptor_params->known( "e_GABA" ) )
+  if ( receptor_params.known( "e_GABA" ) )
   {
-    e_rev_ = receptor_params->get< double >( "e_GABA" );
+    e_rev_ = receptor_params.get< double >( "e_GABA" );
   }
-  if ( receptor_params->known( "tau_r_GABA" ) )
+  if ( receptor_params.known( "tau_r_GABA" ) )
   {
-    tau_r_ = receptor_params->get< double >( "tau_r_GABA" );
+    tau_r_ = receptor_params.get< double >( "tau_r_GABA" );
   }
-  if ( receptor_params->known( "tau_d_GABA" ) )
+  if ( receptor_params.known( "tau_d_GABA" ) )
   {
-    tau_d_ = receptor_params->get< double >( "tau_d_GABA" );
+    tau_d_ = receptor_params.get< double >( "tau_d_GABA" );
   }
 
   double tp = ( tau_r_ * tau_d_ ) / ( tau_d_ - tau_r_ ) * std::log( tau_d_ / tau_r_ );
@@ -508,17 +508,17 @@ nest::NMDA::NMDA( const long syn_index, const dictionary& receptor_params )
   syn_idx = syn_index;
 
   // update NMDA receptor parameters
-  if ( receptor_params->known( "e_NMDA" ) )
+  if ( receptor_params.known( "e_NMDA" ) )
   {
-    e_rev_ = receptor_params->get< double >( "e_NMDA" );
+    e_rev_ = receptor_params.get< double >( "e_NMDA" );
   }
-  if ( receptor_params->known( "tau_r_NMDA" ) )
+  if ( receptor_params.known( "tau_r_NMDA" ) )
   {
-    tau_r_ = receptor_params->get< double >( "tau_r_NMDA" );
+    tau_r_ = receptor_params.get< double >( "tau_r_NMDA" );
   }
-  if ( receptor_params->known( "tau_d_NMDA" ) )
+  if ( receptor_params.known( "tau_d_NMDA" ) )
   {
-    tau_d_ = receptor_params->get< double >( "tau_d_NMDA" );
+    tau_d_ = receptor_params.get< double >( "tau_d_NMDA" );
   }
 
   double tp = ( tau_r_ * tau_d_ ) / ( tau_d_ - tau_r_ ) * std::log( tau_d_ / tau_r_ );
@@ -618,29 +618,29 @@ nest::AMPA_NMDA::AMPA_NMDA( const long syn_index, const dictionary& receptor_par
   syn_idx = syn_index;
 
   // update AMPA+NMDA receptor parameters
-  if ( receptor_params->known( "e_AMPA_NMDA" ) )
+  if ( receptor_params.known( "e_AMPA_NMDA" ) )
   {
-    e_rev_ = receptor_params->get< double >( "e_AMPA_NMDA" );
+    e_rev_ = receptor_params.get< double >( "e_AMPA_NMDA" );
   }
-  if ( receptor_params->known( "tau_r_AMPA" ) )
+  if ( receptor_params.known( "tau_r_AMPA" ) )
   {
-    tau_r_AMPA_ = receptor_params->get< double >( "tau_r_AMPA" );
+    tau_r_AMPA_ = receptor_params.get< double >( "tau_r_AMPA" );
   }
-  if ( receptor_params->known( "tau_d_AMPA" ) )
+  if ( receptor_params.known( "tau_d_AMPA" ) )
   {
-    tau_d_AMPA_ = receptor_params->get< double >( "tau_d_AMPA" );
+    tau_d_AMPA_ = receptor_params.get< double >( "tau_d_AMPA" );
   }
-  if ( receptor_params->known( "tau_r_NMDA" ) )
+  if ( receptor_params.known( "tau_r_NMDA" ) )
   {
-    tau_r_NMDA_ = receptor_params->get< double >( "tau_r_NMDA" );
+    tau_r_NMDA_ = receptor_params.get< double >( "tau_r_NMDA" );
   }
-  if ( receptor_params->known( "tau_d_NMDA" ) )
+  if ( receptor_params.known( "tau_d_NMDA" ) )
   {
-    tau_d_NMDA_ = receptor_params->get< double >( "tau_d_NMDA" );
+    tau_d_NMDA_ = receptor_params.get< double >( "tau_d_NMDA" );
   }
-  if ( receptor_params->known( "NMDA_ratio" ) )
+  if ( receptor_params.known( "NMDA_ratio" ) )
   {
-    NMDA_ratio_ = receptor_params->get< double >( "NMDA_ratio" );
+    NMDA_ratio_ = receptor_params.get< double >( "NMDA_ratio" );
   }
 
   // AMPA normalization constant

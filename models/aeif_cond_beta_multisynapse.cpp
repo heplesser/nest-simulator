@@ -216,9 +216,9 @@ aeif_cond_beta_multisynapse::Parameters_::set( const dictionary& d, Node* node )
   update_value_param( d, names::g_L, g_L, node );
 
   const size_t old_n_receptors = n_receptors();
-  bool Erev_flag = d->update_value( names::E_rev, E_rev );
-  bool taur_flag = d->update_value( names::tau_rise, tau_rise );
-  bool taud_flag = d->update_value( names::tau_decay, tau_decay );
+  bool Erev_flag = d.update_value( names::E_rev, E_rev );
+  bool taur_flag = d.update_value( names::tau_rise, tau_rise );
+  bool taud_flag = d.update_value( names::tau_decay, tau_decay );
   if ( Erev_flag || taur_flag || taud_flag )
   { // receptor arrays have been modified
     if ( ( E_rev.size() != old_n_receptors or tau_rise.size() != old_n_receptors

@@ -598,16 +598,16 @@ void
 eprop_synapse_bsshslm_2020< targetidentifierT >::set_status( const dictionary& d, ConnectorModel& cm )
 {
   ConnectionBase::set_status( d, cm );
-  if ( d->known( names::optimizer ) and optimizer_ )
+  if ( d.known( names::optimizer ) and optimizer_ )
   {
     // We must pass here if called by SetDefaults. In that case, the user will get and error
     // message because the parameters for the synapse-specific optimizer have not been accessed.
-    optimizer_->set_status( d->get< dictionary >( names::optimizer ) );
+    optimizer_->set_status( d.get< dictionary >( names::optimizer ) );
   }
 
-  d->update_value( names::weight, weight_ );
+  d.update_value( names::weight, weight_ );
 
-  if ( d->update_value( names::tau_m_readout, tau_m_readout_ ) )
+  if ( d.update_value( names::tau_m_readout, tau_m_readout_ ) )
   {
     if ( tau_m_readout_ <= 0 )
     {

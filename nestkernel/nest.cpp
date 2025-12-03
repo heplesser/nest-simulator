@@ -155,9 +155,9 @@ nc_size( NodeCollectionPTR nc )
 void
 set_kernel_status( const dictionary& dict )
 {
-  dict->init_access_flags();
+  dict.init_access_flags();
   kernel().set_status( dict );
-  dict->all_entries_accessed( "SetKernelStatus", "params" );
+  dict.all_entries_accessed( "SetKernelStatus", "params" );
 }
 
 dictionary
@@ -222,7 +222,7 @@ set_nc_status( NodeCollectionPTR nc, std::vector< dictionary >& params )
     // to do the access checking on the individual local node because we otherwise
     // will falsely claim "non read" if a NC has no member on a given rank.
 
-    // params[ 0 ]->init_access_flags();
+    // params[ 0 ].init_access_flags();
 
     // We must iterate over all nodes here because we otherwise miss "siblings" of devices
     // May consider ways to fix this.
@@ -230,16 +230,16 @@ set_nc_status( NodeCollectionPTR nc, std::vector< dictionary >& params )
     {
       kernel().node_manager.set_status( node.node_id, params[ 0 ] );
     }
-    // params[ 0 ]->all_entries_accessed( "NodeCollection.set()", "params" );
+    // params[ 0 ].all_entries_accessed( "NodeCollection.set()", "params" );
   }
   else if ( nc->size() == params.size() )
   {
     size_t idx = 0;
     for ( auto const& node : *nc )
     {
-      // params[ idx ]->init_access_flags();
+      // params[ idx ].init_access_flags();
       kernel().node_manager.set_status( node.node_id, params[ idx ] );
-      // params[ idx ]->all_entries_accessed( "NodeCollection.set()", "params" );
+      // params[ idx ].all_entries_accessed( "NodeCollection.set()", "params" );
       ++idx;
     }
   }
@@ -254,7 +254,7 @@ set_nc_status( NodeCollectionPTR nc, std::vector< dictionary >& params )
 void
 set_connection_status( const std::deque< ConnectionID >& conns, const dictionary& dict )
 {
-  dict->init_access_flags();
+  dict.init_access_flags();
   for ( auto& conn : conns )
   {
     kernel().connection_manager.set_synapse_status( conn.get_source_node_id(),
@@ -264,7 +264,7 @@ set_connection_status( const std::deque< ConnectionID >& conns, const dictionary
       conn.get_port(),
       dict );
   }
-  dict->all_entries_accessed( "connection.set()", "params" );
+  dict.all_entries_accessed( "connection.set()", "params" );
 }
 
 void
@@ -475,11 +475,11 @@ connect_sonata( const dictionary& graph_specs, const long hyperslab_size )
 std::deque< ConnectionID >
 get_connections( const dictionary& dict )
 {
-  dict->init_access_flags();
+  dict.init_access_flags();
 
   const auto& connectome = kernel().connection_manager.get_connections( dict );
 
-  dict->all_entries_accessed( "GetConnections", "params" );
+  dict.all_entries_accessed( "GetConnections", "params" );
 
   return connectome;
 }
@@ -640,15 +640,15 @@ create_parameter( const dictionary& param_dict )
 {
   // The dictionary should only have a single key, which is the name of
   // the parameter type to create.
-  if ( param_dict->size() != 1 )
+  if ( param_dict.size() != 1 )
   {
     throw BadProperty( "Parameter definition dictionary must contain one single key only." );
   }
-  const string n = param_dict->begin()->first;
-  const dictionary& pdict = param_dict->get< dictionary >( n );
-  pdict->init_access_flags();
+  const string n = param_dict.begin()->first;
+  const dictionary& pdict = param_dict.get< dictionary >( n );
+  pdict.init_access_flags();
   ParameterPTR parameter = create_parameter( n, pdict );
-  pdict->all_entries_accessed( "create_parameter", "param" );
+  pdict.all_entries_accessed( "create_parameter", "param" );
   return parameter;
 }
 
@@ -703,8 +703,8 @@ apply( const ParameterPTR param, const NodeCollectionPTR nc )
 std::vector< double >
 apply( const ParameterPTR param, const dictionary& positions )
 {
-  auto source_nc = positions->get< NodeCollectionPTR >( names::source );
-  auto targets = positions->get< std::vector< std::vector< double > > >( names::targets );
+  auto source_nc = positions.get< NodeCollectionPTR >( names::source );
+  auto targets = positions.get< std::vector< std::vector< double > > >( names::targets );
   return param->apply( source_nc, targets );
 }
 
@@ -751,13 +751,13 @@ create_doughnut( const dictionary& d )
 {
   // The doughnut (actually an annulus) is created using a DifferenceMask
   Position< 2 > center( 0, 0 );
-  if ( d->known( names::anchor ) )
+  if ( d.known( names::anchor ) )
   {
-    center = d->get< std::vector< double > >( names::anchor );
+    center = d.get< std::vector< double > >( names::anchor );
   }
 
-  const double outer = d->get< double >( names::outer_radius );
-  const double inner = d->get< double >( names::inner_radius );
+  const double outer = d.get< double >( names::outer_radius );
+  const double inner = d.get< double >( names::inner_radius );
   if ( inner >= outer )
   {
     throw BadProperty(

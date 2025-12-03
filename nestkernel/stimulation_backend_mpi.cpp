@@ -81,7 +81,7 @@ nest::StimulationBackendMPI::enroll( nest::StimulationDevice& device, const dict
   enrolled_ = true;
 
   // Try to read the mpi_address from the device status
-  params->update_value( names::mpi_address, mpi_address_ );
+  params.update_value( names::mpi_address, mpi_address_ );
 }
 
 

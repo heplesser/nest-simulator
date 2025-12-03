@@ -70,12 +70,12 @@ void
 nest::music_event_out_proxy::Parameters_::set( const dictionary& d, State_& s )
 {
   // TODO: This is not possible, as P_ does not know about get_name()
-  //  if(d->known(names::port_name) and s.published_)
+  //  if(d.known(names::port_name) and s.published_)
   //    throw MUSICPortAlreadyPublished(get_name(), P_.port_name_);
 
   if ( not s.published_ )
   {
-    d->update_value( names::port_name, port_name_ );
+    d.update_value( names::port_name, port_name_ );
   }
 }
 

@@ -600,7 +600,7 @@ def llapi_get_nc_status(NodeCollectionObject nc, object key=None):
     if key is None:
         return dictionary_to_pydict(statuses)
     elif isinstance(key, str):
-        if not statuses->known(pystr_to_string(key)):
+        if not statuses.known(pystr_to_string(key)):
             raise KeyError(key)
         value = any_to_pyobj(statuses[pystr_to_string(key)])
         # PYNEST-NG: This is backwards-compatible, but makes it harder

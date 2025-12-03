@@ -348,9 +348,9 @@ nest::iaf_cond_alpha_mc::Parameters_::set( const dictionary& d, Node* node )
   // extract from sub-dictionaries
   for ( size_t n = 0; n < NCOMP; ++n )
   {
-    if ( d->known( comp_names_[ n ] ) )
+    if ( d.known( comp_names_[ n ] ) )
     {
-      auto dd = d->get< dictionary >( comp_names_[ n ] );
+      auto dd = d.get< dictionary >( comp_names_[ n ] );
 
       update_value_param( dd, names::E_L, E_L[ n ], node );
       update_value_param( dd, names::E_ex, E_ex[ n ], node );
@@ -392,8 +392,8 @@ nest::iaf_cond_alpha_mc::State_::get( dictionary& d ) const
   // Parameters_::get(), so that the per-compartment dictionaries exist
   for ( size_t n = 0; n < NCOMP; ++n )
   {
-    assert( d->known( comp_names_[ n ] ) );
-    auto dd = d->get< dictionary >( comp_names_[ n ] );
+    assert( d.known( comp_names_[ n ] ) );
+    auto dd = d.get< dictionary >( comp_names_[ n ] );
 
     dd[ names::V_m ] = y_[ idx( n, V_M ) ]; // Membrane potential
   }
@@ -405,9 +405,9 @@ nest::iaf_cond_alpha_mc::State_::set( const dictionary& d, const Parameters_&, N
   // extract from sub-dictionaries
   for ( size_t n = 0; n < NCOMP; ++n )
   {
-    if ( d->known( comp_names_[ n ] ) )
+    if ( d.known( comp_names_[ n ] ) )
     {
-      auto dd = d->get< dictionary >( comp_names_[ n ] );
+      auto dd = d.get< dictionary >( comp_names_[ n ] );
       update_value_param( dd, names::V_m, y_[ idx( n, V_M ) ], node );
     }
   }

@@ -317,11 +317,11 @@ void
 urbanczik_synapse< targetidentifierT >::set_status( const dictionary& d, ConnectorModel& cm )
 {
   ConnectionBase::set_status( d, cm );
-  d->update_value( names::weight, weight_ );
-  d->update_value( names::tau_Delta, tau_Delta_ );
-  d->update_value( names::eta, eta_ );
-  d->update_value( names::Wmin, Wmin_ );
-  d->update_value( names::Wmax, Wmax_ );
+  d.update_value( names::weight, weight_ );
+  d.update_value( names::tau_Delta, tau_Delta_ );
+  d.update_value( names::eta, eta_ );
+  d.update_value( names::Wmin, Wmin_ );
+  d.update_value( names::Wmax, Wmax_ );
 
   init_weight_ = weight_;
   // check if weight_ and Wmin_ has the same sign

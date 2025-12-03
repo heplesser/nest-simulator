@@ -215,8 +215,8 @@ aeif_cond_alpha_multisynapse::Parameters_::set( const dictionary& d, Node* node 
   update_value_param( d, names::g_L, g_L, node );
 
   const size_t old_n_receptors = n_receptors();
-  bool Erev_flag = d->update_value( names::E_rev, E_rev );
-  bool tau_flag = d->update_value( names::tau_syn, tau_syn );
+  bool Erev_flag = d.update_value( names::E_rev, E_rev );
+  bool tau_flag = d.update_value( names::tau_syn, tau_syn );
   if ( Erev_flag or tau_flag )
   { // receptor arrays have been modified
     if ( ( E_rev.size() != old_n_receptors or tau_syn.size() != old_n_receptors )

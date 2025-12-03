@@ -351,8 +351,8 @@ tsodyks_synapse_hom< targetidentifierT >::set_status( const dictionary& d, Conne
   // synapse untouched in case of invalid parameter values
   double x = x_;
   double y = y_;
-  d->update_value( names::x, x );
-  d->update_value( names::y, y );
+  d.update_value( names::x, x );
+  d.update_value( names::y, y );
 
   if ( x + y > 1.0 )
   {
@@ -364,7 +364,7 @@ tsodyks_synapse_hom< targetidentifierT >::set_status( const dictionary& d, Conne
 
   ConnectionBase::set_status( d, cm );
 
-  d->update_value( names::u, u_ );
+  d.update_value( names::u, u_ );
 }
 
 } // namespace

@@ -165,9 +165,9 @@ void
 nest::step_current_generator::Parameters_::set( const dictionary& d, Buffers_& b, Node* )
 {
   std::vector< double > new_times;
-  const bool times_changed = d->update_value( names::amplitude_times, new_times );
-  const bool values_changed = d->update_value( names::amplitude_values, amp_values_ );
-  const bool allow_offgrid_changed = d->update_value( names::allow_offgrid_times, allow_offgrid_amp_times_ );
+  const bool times_changed = d.update_value( names::amplitude_times, new_times );
+  const bool values_changed = d.update_value( names::amplitude_values, amp_values_ );
+  const bool allow_offgrid_changed = d.update_value( names::allow_offgrid_times, allow_offgrid_amp_times_ );
 
   if ( times_changed xor values_changed )
   {

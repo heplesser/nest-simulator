@@ -131,9 +131,9 @@ nest::BipartiteConnBuilder::BipartiteConnBuilder( NodeCollectionPTR sources,
   // We only read a subset of rule-related parameters here. The property 'rule'
   // has already been taken care of in ConnectionManager::get_conn_builder() and
   // rule-specific parameters are handled by the subclass constructors.
-  conn_spec->update_value< bool >( names::allow_autapses, allow_autapses_ );
-  conn_spec->update_value< bool >( names::allow_multapses, allow_multapses_ );
-  conn_spec->update_value< bool >( names::make_symmetric, make_symmetric_ );
+  conn_spec.update_value< bool >( names::allow_autapses, allow_autapses_ );
+  conn_spec.update_value< bool >( names::allow_multapses, allow_multapses_ );
+  conn_spec.update_value< bool >( names::make_symmetric, make_symmetric_ );
 
   if ( make_symmetric_ and third_out_ )
   {
@@ -491,8 +491,8 @@ nest::BipartiteConnBuilder::loop_over_targets_() const
 void
 nest::BipartiteConnBuilder::set_synapse_model_( const dictionary& syn_params, size_t synapse_indx )
 {
-  const std::string syn_name = syn_params->known( names::synapse_model )
-    ? syn_params->get< std::string >( names::synapse_model )
+  const std::string syn_name = syn_params.known( names::synapse_model )
+    ? syn_params.get< std::string >( names::synapse_model )
     : std::string( "static_synapse" );
 
   // The following call will throw "UnknownSynapseType" if syn_name is not naming a known model
@@ -511,8 +511,8 @@ nest::BipartiteConnBuilder::set_default_weight_or_delay_( const dictionary& syn_
 
   // All synapse models have the possibility to set the delay (see SynIdDelay), but some have
   // homogeneous weights, hence it should be possible to set the delay without the weight.
-  default_weight_[ synapse_indx ] = not syn_params->known( names::weight );
-  default_delay_[ synapse_indx ] = not syn_params->known( names::delay );
+  default_weight_[ synapse_indx ] = not syn_params.known( names::weight );
+  default_delay_[ synapse_indx ] = not syn_params.known( names::delay );
 
   // If neither weight nor delay are given in the dict, we handle this separately. Important for
   // hom_w synapses, on which weight cannot be set. However, we use default weight and delay for
@@ -521,18 +521,18 @@ nest::BipartiteConnBuilder::set_default_weight_or_delay_( const dictionary& syn_
 
   if ( not default_weight_and_delay_[ synapse_indx ] )
   {
-    weights_[ synapse_indx ] = syn_params->known( names::weight )
+    weights_[ synapse_indx ] = syn_params.known( names::weight )
       ? ConnParameter::create( syn_params.at( names::weight ), kernel().vp_manager.get_num_threads() )
       : ConnParameter::create( syn_defaults[ names::weight ], kernel().vp_manager.get_num_threads() );
     register_parameters_requiring_skipping_( *weights_[ synapse_indx ] );
 
-    delays_[ synapse_indx ] = syn_params->known( names::delay )
+    delays_[ synapse_indx ] = syn_params.known( names::delay )
       ? ConnParameter::create( syn_params.at( names::delay ), kernel().vp_manager.get_num_threads() )
       : ConnParameter::create( syn_defaults[ names::delay ], kernel().vp_manager.get_num_threads() );
   }
   else if ( default_weight_[ synapse_indx ] )
   {
-    delays_[ synapse_indx ] = syn_params->known( names::delay )
+    delays_[ synapse_indx ] = syn_params.known( names::delay )
       ? ConnParameter::create( syn_params.at( names::delay ), kernel().vp_manager.get_num_threads() )
       : ConnParameter::create( syn_defaults[ names::delay ], kernel().vp_manager.get_num_threads() );
   }
@@ -552,7 +552,7 @@ nest::BipartiteConnBuilder::set_synapse_params( const dictionary& syn_defaults,
       continue; // weight, delay or other not-settable parameter
     }
 
-    if ( syn_params->known( param_name ) )
+    if ( syn_params.known( param_name ) )
     {
       synapse_params_[ synapse_indx ][ param_name ] =
         ConnParameter::create( syn_params.at( param_name ), kernel().vp_manager.get_num_threads() );
@@ -587,7 +587,7 @@ nest::BipartiteConnBuilder::set_structural_plasticity_parameters( const std::vec
   bool have_structural_plasticity_parameters = false;
   for ( auto& syn_spec : syn_specs )
   {
-    if ( syn_spec->known( names::pre_synaptic_element ) or syn_spec->known( names::post_synaptic_element ) )
+    if ( syn_spec.known( names::pre_synaptic_element ) or syn_spec.known( names::post_synaptic_element ) )
     {
       have_structural_plasticity_parameters = true;
     }
@@ -608,13 +608,13 @@ nest::BipartiteConnBuilder::set_structural_plasticity_parameters( const std::vec
   // DictionaryAccessFlag scheme relies on the address of the dictionary.
   const dictionary& syn_spec = syn_specs[ 0 ];
 
-  if ( syn_spec->known( names::pre_synaptic_element ) xor syn_spec->known( names::post_synaptic_element ) )
+  if ( syn_spec.known( names::pre_synaptic_element ) xor syn_spec.known( names::post_synaptic_element ) )
   {
     throw BadProperty( "Structural plasticity requires both a pre- and postsynaptic element." );
   }
 
-  pre_synaptic_element_name_ = syn_spec->get< std::string >( names::pre_synaptic_element );
-  post_synaptic_element_name_ = syn_spec->get< std::string >( names::post_synaptic_element );
+  pre_synaptic_element_name_ = syn_spec.get< std::string >( names::pre_synaptic_element );
+  post_synaptic_element_name_ = syn_spec.get< std::string >( names::post_synaptic_element );
 
   use_structural_plasticity_ = true;
 }
@@ -794,11 +794,11 @@ nest::ThirdBernoulliWithPoolBuilder::ThirdBernoulliWithPoolBuilder( const NodeCo
   , targets_per_third_( targets->size() / third->size() )
   , pools_( kernel().vp_manager.get_num_threads(), nullptr )
 {
-  conn_spec->update_value( names::p, p_ );
+  conn_spec.update_value( names::p, p_ );
 
   // PYTEST-NG: Consider cleaner scheme for handling size_t vs long
   long pool_size_tmp = static_cast< long >( pool_size_ );
-  conn_spec->update_value( names::pool_size, pool_size_tmp );
+  conn_spec.update_value( names::pool_size, pool_size_tmp );
   if ( pool_size_tmp < 1 or third->size() < pool_size_tmp )
   {
     throw BadProperty( "Pool size 1 ≤ pool_size ≤ size of third-factor population required" );
@@ -806,7 +806,7 @@ nest::ThirdBernoulliWithPoolBuilder::ThirdBernoulliWithPoolBuilder( const NodeCo
   pool_size_ = static_cast< size_t >( pool_size_tmp );
 
   std::string pool_type;
-  if ( conn_spec->update_value( names::pool_type, pool_type ) )
+  if ( conn_spec.update_value( names::pool_type, pool_type ) )
   {
     if ( pool_type == "random" )
     {
@@ -1409,7 +1409,7 @@ nest::FixedInDegreeBuilder::FixedInDegreeBuilder( NodeCollectionPTR sources,
   else
   {
     // Assume indegree is a scalar
-    const long value = conn_spec->get< long >( names::indegree );
+    const long value = conn_spec.get< long >( names::indegree );
     indegree_ = ParameterPTR( new ConstantParameter( value ) );
 
     // verify that indegree is not larger than source population if multapses are disabled
@@ -1573,7 +1573,7 @@ nest::FixedOutDegreeBuilder::FixedOutDegreeBuilder( NodeCollectionPTR sources,
   else
   {
     // Assume outdegree is a scalar
-    const long value = conn_spec->get< long >( names::outdegree );
+    const long value = conn_spec.get< long >( names::outdegree );
     outdegree_ = ParameterPTR( new ConstantParameter( value ) );
 
     // verify that outdegree is not larger than target population if multapses
@@ -1866,7 +1866,7 @@ nest::BernoulliBuilder::BernoulliBuilder( NodeCollectionPTR sources,
   else
   {
     // Assume p is a scalar
-    const double value = conn_spec->get< double >( names::p );
+    const double value = conn_spec.get< double >( names::p );
     if ( value < 0 or 1 < value )
     {
       throw BadProperty( "Connection probability 0 <= p <= 1 required." );
@@ -1981,7 +1981,7 @@ nest::PoissonBuilder::PoissonBuilder( NodeCollectionPTR sources,
   else
   {
     // Assume pairwise_avg_num_conns is a scalar
-    const double value = conn_spec->get< double >( names::pairwise_avg_num_conns );
+    const double value = conn_spec.get< double >( names::pairwise_avg_num_conns );
     if ( value < 0 )
     {
       throw BadProperty( "Connection parameter 0 ≤ pairwise_avg_num_conns required." );
@@ -2089,7 +2089,7 @@ nest::SymmetricBernoulliBuilder::SymmetricBernoulliBuilder( NodeCollectionPTR so
   const dictionary& conn_spec,
   const std::vector< dictionary >& syn_specs )
   : BipartiteConnBuilder( sources, targets, third_out, conn_spec, syn_specs )
-  , p_( conn_spec->get< double >( names::p ) )
+  , p_( conn_spec.get< double >( names::p ) )
 {
   // This connector takes care of symmetric connections on its own
   creates_symmetric_connections_ = true;
@@ -2230,7 +2230,7 @@ nest::SPBuilder::update_delay( long& d ) const
   if ( get_default_delay() )
   {
     dictionary syn_defaults = kernel().model_manager.get_connector_defaults( get_synapse_model() );
-    const double delay = syn_defaults->get< double >( "delay" );
+    const double delay = syn_defaults.get< double >( "delay" );
     d = Time( Time::ms( delay ) ).get_steps();
   }
 }

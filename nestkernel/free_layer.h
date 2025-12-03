@@ -133,7 +133,7 @@ FreeLayer< D >::set_status( const dictionary& d )
     } );
 
   // Read positions from dictionary
-  if ( d->known( names::positions ) )
+  if ( d.known( names::positions ) )
   {
     const auto positions = d.at( names::positions );
     if ( std::holds_alternative< std::vector< std::vector< double > > >( positions ) )
@@ -171,7 +171,7 @@ FreeLayer< D >::set_status( const dictionary& d )
     }
     else if ( std::holds_alternative< std::shared_ptr< nest::Parameter > >( positions ) )
     {
-      auto pd = d->get< ParameterPTR >( names::positions );
+      auto pd = d.get< ParameterPTR >( names::positions );
       auto pos = dynamic_cast< DimensionParameter* >( pd.get() );
       positions_.clear();
       positions_.reserve( num_local_nodes_ );
@@ -211,9 +211,9 @@ FreeLayer< D >::set_status( const dictionary& d )
       throw KernelException( "'positions' must be an array or a DimensionParameter." );
     }
   }
-  if ( d->known( names::extent ) )
+  if ( d.known( names::extent ) )
   {
-    this->extent_ = d->get< std::vector< double > >( names::extent );
+    this->extent_ = d.get< std::vector< double > >( names::extent );
 
     Position< D > center = ( max_point + this->lower_left_ ) / 2;
     auto lower_left_point = this->lower_left_; // save lower-left-most point

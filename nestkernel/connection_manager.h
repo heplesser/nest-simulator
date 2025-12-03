@@ -716,7 +716,7 @@ private:
 inline bool
 ConnectionManager::valid_connection_rule( std::string rule_name )
 {
-  return connruledict_->known( rule_name );
+  return connruledict_.known( rule_name );
 }
 
 inline long

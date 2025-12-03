@@ -65,25 +65,25 @@ TsodyksHomCommonProperties::set_status( const dictionary& d, ConnectorModel& cm 
 {
   CommonPropertiesHomW::set_status( d, cm );
 
-  d->update_value( names::U, U_ );
+  d.update_value( names::U, U_ );
   if ( U_ > 1.0 or U_ < 0.0 )
   {
     throw BadProperty( "U must be in [0,1]." );
   }
 
-  d->update_value( names::tau_psc, tau_psc_ );
+  d.update_value( names::tau_psc, tau_psc_ );
   if ( tau_psc_ <= 0.0 )
   {
     throw BadProperty( "tau_psc must be > 0." );
   }
 
-  d->update_value( names::tau_rec, tau_rec_ );
+  d.update_value( names::tau_rec, tau_rec_ );
   if ( tau_rec_ <= 0.0 )
   {
     throw BadProperty( "tau_rec must be > 0." );
   }
 
-  d->update_value( names::tau_fac, tau_fac_ );
+  d.update_value( names::tau_fac, tau_fac_ );
   if ( tau_fac_ < 0.0 )
   {
     throw BadProperty( "tau_fac must be >= 0." );

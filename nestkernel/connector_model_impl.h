@@ -112,10 +112,10 @@ template < typename ConnectionT >
 void
 GenericConnectorModel< ConnectionT >::set_status( const dictionary& d )
 {
-  d->update_integer_value( names::receptor_type, receptor_type_ );
+  d.update_integer_value( names::receptor_type, receptor_type_ );
 #ifdef HAVE_MUSIC
   // We allow music_channel as alias for receptor_type during connection setup
-  d->update_integer_value( names::music_channel, receptor_type_ );
+  d.update_integer_value( names::music_channel, receptor_type_ );
 #endif
 
   // If the parameter dict d contains /delay, this should set the delay
@@ -147,7 +147,7 @@ GenericConnectorModel< ConnectionT >::check_synapse_params( const dictionary& sy
 
   for ( [[maybe_unused]] const auto& [ key, val ] : syn_spec )
   {
-    if ( dummy->known( key ) )
+    if ( dummy.known( key ) )
     {
       throw NotImplemented(
         String::compose( "Synapse parameter \"%1\" can only be set via SetDefaults() or CopyModel().", key ) );
@@ -232,7 +232,7 @@ GenericConnectorModel< ConnectionT >::add_connection( Node& src,
       kernel().connection_manager.get_delay_checker().assert_valid_delay_ms( delay );
     }
 
-    if ( p->known( names::delay ) )
+    if ( p.known( names::delay ) )
     {
       throw BadParameter(
         "Parameter dictionary must not contain delay if delay is given "
@@ -244,7 +244,7 @@ GenericConnectorModel< ConnectionT >::add_connection( Node& src,
     // check delay
     double delay = 0.0;
 
-    if ( p->update_value( names::delay, delay ) )
+    if ( p.update_value( names::delay, delay ) )
     {
       if ( has_property( ConnectionModelProperties::HAS_DELAY ) )
       {
@@ -283,9 +283,9 @@ GenericConnectorModel< ConnectionT >::add_connection( Node& src,
   size_t actual_receptor_type = receptor_type_;
 #ifdef HAVE_MUSIC
   // We allow music_channel as alias for receptor_type during connection setup
-  p->update_integer_value( names::music_channel, actual_receptor_type );
+  p.update_integer_value( names::music_channel, actual_receptor_type );
 #endif
-  p->update_integer_value( names::receptor_type, actual_receptor_type );
+  p.update_integer_value( names::receptor_type, actual_receptor_type );
 
   add_connection_( src, tgt, thread_local_connectors, syn_id, connection, actual_receptor_type );
 }

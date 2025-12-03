@@ -71,17 +71,17 @@ nest::Compartment::Compartment( const long compartment_index,
   , n_passed( 0 )
   , compartment_currents( v_comp )
 {
-  compartment_params->init_access_flags();
+  compartment_params.init_access_flags();
 
-  compartment_params->update_value( names::C_m, ca );
-  compartment_params->update_value( names::g_C, gc );
-  compartment_params->update_value( names::g_L, gl );
-  compartment_params->update_value( names::e_L, el );
-  compartment_params->update_value( names::v_comp, v_comp );
+  compartment_params.update_value( names::C_m, ca );
+  compartment_params.update_value( names::g_C, gc );
+  compartment_params.update_value( names::g_L, gl );
+  compartment_params.update_value( names::e_L, el );
+  compartment_params.update_value( names::v_comp, v_comp );
 
   compartment_currents = CompartmentCurrents( v_comp, compartment_params );
 
-  compartment_params->all_entries_accessed( "compartment_params", "Unread dictionary entries: " );
+  compartment_params.all_entries_accessed( "compartment_params", "Unread dictionary entries: " );
 }
 
 void

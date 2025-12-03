@@ -63,9 +63,9 @@ nest::StructuralPlasticityNode::get_status( dictionary& d ) const
   {
     dictionary synaptic_element_d;
     it->second.get( synaptic_element_d );
-    synaptic_elements_d[ it->first ] = std::make_shared< dictionary >( synaptic_element_d );
+    synaptic_elements_d[ it->first ] = synaptic_element_d;
   }
-  d[ names::synaptic_elements ] = std::make_shared< dictionary >( synaptic_elements_d );
+  d[ names::synaptic_elements ] = synaptic_elements_d;
 }
 
 void
@@ -75,9 +75,9 @@ nest::StructuralPlasticityNode::set_status( const dictionary& d )
   double new_Ca_ = Ca_minus_;
   double new_tau_Ca = tau_Ca_;
   double new_beta_Ca = beta_Ca_;
-  d->update_value( names::Ca, new_Ca_ );
-  d->update_value( names::tau_Ca, new_tau_Ca );
-  d->update_value( names::beta_Ca, new_beta_Ca );
+  d.update_value( names::Ca, new_Ca_ );
+  d.update_value( names::tau_Ca, new_tau_Ca );
+  d.update_value( names::beta_Ca, new_beta_Ca );
 
   if ( new_Ca_ < 0.0 )
   {
@@ -101,41 +101,42 @@ nest::StructuralPlasticityNode::set_status( const dictionary& d )
 
   // check, if to clear spike history and K_minus
   bool clear = false;
-  d->update_value( names::clear, clear );
+  d.update_value( names::clear, clear );
   if ( clear )
   {
     clear_history();
   }
 
-  if ( d->known( names::synaptic_elements_param ) )
+  if ( d.known( names::synaptic_elements_param ) )
   {
-    dictionary synaptic_elements_dict = d->get< dictionary >( names::synaptic_elements_param );
+    const dictionary synaptic_elements_dict = d.get< dictionary >( names::synaptic_elements_param );
 
     for ( std::map< std::string, SynapticElement >::iterator it = synaptic_elements_map_.begin();
           it != synaptic_elements_map_.end();
           ++it )
     {
-      if ( synaptic_elements_dict->known( it->first ) )
+      if ( synaptic_elements_dict.known( it->first ) )
       {
-        dictionary synaptic_elements_a = synaptic_elements_dict->get< dictionary >( it->first );
-        it->second.set( *synaptic_elements_a );
+        const dictionary synaptic_elements_a = synaptic_elements_dict.get< dictionary >( it->first );
+        it->second.set( synaptic_elements_a );
       }
     }
   }
-  if ( not d->known( names::synaptic_elements ) )
+  if ( not d.known( names::synaptic_elements ) )
   {
     return;
   }
   // we replace the existing synaptic_elements_map_ by the new one
+  dictionary synaptic_elements_d;
   std::pair< std::map< std::string, SynapticElement >::iterator, bool > insert_result;
 
   synaptic_elements_map_ = std::map< std::string, SynapticElement >();
-  dictionary synaptic_elements_d = d->get< dictionary >( names::synaptic_elements );
+  synaptic_elements_d = d.get< dictionary >( names::synaptic_elements );
 
-  for ( auto& syn_element : *synaptic_elements_d )
+  for ( auto& syn_element : synaptic_elements_d )
   {
     SynapticElement se;
-    se.set( *synaptic_elements_d->get< dictionary >( syn_element.first ) );
+    se.set( synaptic_elements_d.get< dictionary >( syn_element.first ) );
     synaptic_elements_map_.insert( std::pair< std::string, SynapticElement >( syn_element.first, se ) );
   }
 }

@@ -536,17 +536,17 @@ void
 eprop_synapse< targetidentifierT >::set_status( const dictionary& d, ConnectorModel& cm )
 {
   ConnectionBase::set_status( d, cm );
-  if ( d->known( names::optimizer ) )
+  if ( d.known( names::optimizer ) )
   {
     // We must pass here if called by SetDefaults. In that case, the user will get and error
     // message because the parameters for the synapse-specific optimizer have not been accessed.
     if ( optimizer_ )
     {
-      optimizer_->set_status( d->get< dictionary >( names::optimizer ) );
+      optimizer_->set_status( d.get< dictionary >( names::optimizer ) );
     }
   }
 
-  d->update_value( names::weight, weight_ );
+  d.update_value( names::weight, weight_ );
 
   const auto& gcm = dynamic_cast< const GenericConnectorModel< eprop_synapse< targetidentifierT > >& >( cm );
   const CommonPropertiesType& epcp = gcm.get_common_properties();

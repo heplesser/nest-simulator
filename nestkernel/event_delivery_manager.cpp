@@ -142,10 +142,10 @@ EventDeliveryManager::finalize( const bool )
 void
 EventDeliveryManager::set_status( const dictionary& dict )
 {
-  dict->update_value( names::off_grid_spiking, off_grid_spiking_ );
+  dict.update_value( names::off_grid_spiking, off_grid_spiking_ );
 
   double bsl = send_recv_buffer_shrink_limit_;
-  if ( dict->update_value( names::spike_buffer_shrink_limit, bsl ) )
+  if ( dict.update_value( names::spike_buffer_shrink_limit, bsl ) )
   {
     if ( bsl < 0 )
     {
@@ -155,7 +155,7 @@ EventDeliveryManager::set_status( const dictionary& dict )
   }
 
   double bss = send_recv_buffer_shrink_spare_;
-  if ( dict->update_value( names::spike_buffer_shrink_spare, bss ) )
+  if ( dict.update_value( names::spike_buffer_shrink_spare, bss ) )
   {
     if ( bss < 0 or bss > 1 )
     {
@@ -165,7 +165,7 @@ EventDeliveryManager::set_status( const dictionary& dict )
   }
 
   double bge = send_recv_buffer_grow_extra_;
-  if ( dict->update_value( names::spike_buffer_grow_extra, bge ) )
+  if ( dict.update_value( names::spike_buffer_grow_extra, bge ) )
   {
     if ( bge < 0 )
     {

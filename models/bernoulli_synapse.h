@@ -208,8 +208,8 @@ void
 bernoulli_synapse< targetidentifierT >::set_status( const dictionary& d, ConnectorModel& cm )
 {
   ConnectionBase::set_status( d, cm );
-  d->update_value( names::weight, weight_ );
-  d->update_value( names::p_transmit, p_transmit_ );
+  d.update_value( names::weight, weight_ );
+  d.update_value( names::p_transmit, p_transmit_ );
 
   if ( p_transmit_ < 0 or p_transmit_ > 1 )
   {

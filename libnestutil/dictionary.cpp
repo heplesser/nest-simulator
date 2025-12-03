@@ -66,12 +66,12 @@ dictionary::operator[]( std::string&& key ) const
 any_type&
 dictionary::at( const std::string& key )
 {
-  return ( *this )->at( key );
+  return ( **this ).at( key );
 }
 const any_type&
 dictionary::at( const std::string& key ) const
 {
-  return ( *this )->at( key );
+  return ( **this ).at( key );
 }
 
 template <>
@@ -159,11 +159,29 @@ debug_dict_types( const dictionary& dict )
   return s;
 }
 
-// TODO-PYNEST-NG: Check if we can remove this somehow
+// TODO-PYNEST-NG: Check if we can remove these somehow
+std::ostream&
+operator<<( std::ostream& os, const std::vector< std::vector< long > >& )
+{
+  os << "vector<vector<long>>";
+  return os;
+}
 std::ostream&
 operator<<( std::ostream& os, const std::vector< std::vector< double > >& )
 {
   os << "vector<vector<double>>";
+  return os;
+}
+std::ostream&
+operator<<( std::ostream& os, const std::vector< std::vector< std::vector< long > > >& )
+{
+  os << "vector<vector<vector<long>>>";
+  return os;
+}
+std::ostream&
+operator<<( std::ostream& os, const std::vector< std::vector< std::vector< double > > >& )
+{
+  os << "vector<vector<vector<double>>>";
   return os;
 }
 std::ostream&
@@ -182,8 +200,8 @@ operator<<( std::ostream& os, const nest::VerbosityLevel& )
 std::ostream&
 operator<<( std::ostream& os, const dictionary& dict )
 {
-  const auto max_key_length = std::max_element( dict->begin(),
-    dict->end(),
+  const auto max_key_length = std::max_element( ( *dict ).begin(),
+    ( *dict ).end(),
     []( const dictionary_::value_type s1, const dictionary_::value_type s2 ) {
       return s1.first.length() < s2.first.length();
     } )->first.length();

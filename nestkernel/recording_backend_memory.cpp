@@ -219,14 +219,14 @@ nest::RecordingBackendMemory::DeviceData::get_status( dictionary& d ) const
 {
   dictionary events;
 
-  if ( d->known( names::events ) )
+  if ( d.known( names::events ) )
   {
-    events = d->get< dictionary >( names::events );
+    events = d.get< dictionary >( names::events );
   }
 
   auto init_intvector = [ &events ]( std::string key ) -> std::vector< int >
   {
-    if ( not events->known( key ) )
+    if ( not events.known( key ) )
     {
       ( *events )[ key ] = std::vector< int >();
     }
@@ -234,7 +234,7 @@ nest::RecordingBackendMemory::DeviceData::get_status( dictionary& d ) const
   };
   auto init_doublevector = [ &events ]( std::string key ) -> std::vector< double >
   {
-    if ( not events->known( key ) )
+    if ( not events.known( key ) )
     {
       ( *events )[ key ] = std::vector< double >();
     }
@@ -278,7 +278,7 @@ void
 nest::RecordingBackendMemory::DeviceData::set_status( const dictionary& d )
 {
   bool time_in_steps = false;
-  if ( d->update_value( names::time_in_steps, time_in_steps ) )
+  if ( d.update_value( names::time_in_steps, time_in_steps ) )
   {
     if ( kernel().simulation_manager.has_been_simulated() )
     {
@@ -289,7 +289,7 @@ nest::RecordingBackendMemory::DeviceData::set_status( const dictionary& d )
   }
 
   long n_events = 1;
-  if ( d->update_value( names::n_events, n_events ) and n_events == 0 )
+  if ( d.update_value( names::n_events, n_events ) and n_events == 0 )
   {
     clear();
   }

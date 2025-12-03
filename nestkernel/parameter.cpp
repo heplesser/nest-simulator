@@ -81,8 +81,8 @@ NormalParameter::NormalParameter( const dictionary& d )
   : mean_( 0.0 )
   , std_( 1.0 )
 {
-  d->update_value( names::mean, mean_ );
-  d->update_value( names::std, std_ );
+  d.update_value( names::mean, mean_ );
+  d.update_value( names::std, std_ );
   if ( std_ <= 0 )
   {
     throw BadProperty( "nest::NormalParameter: std > 0 required." );
@@ -107,8 +107,8 @@ LognormalParameter::LognormalParameter( const dictionary& d )
   : mean_( 0.0 )
   , std_( 1.0 )
 {
-  d->update_value( names::mean, mean_ );
-  d->update_value( names::std, std_ );
+  d.update_value( names::mean, mean_ );
+  d.update_value( names::std, std_ );
   if ( std_ <= 0 )
   {
     throw BadProperty( "nest::LognormalParameter: std > 0 required." );
@@ -256,10 +256,10 @@ RedrawParameter::value( RngPtr rng,
 
 ExpDistParameter::ExpDistParameter( const dictionary& d )
   : Parameter( true )
-  , p_( d->get< ParameterPTR >( "x" ) )
-  , inv_beta_( 1.0 / d->get< double >( "beta" ) )
+  , p_( d.get< ParameterPTR >( "x" ) )
+  , inv_beta_( 1.0 / d.get< double >( "beta" ) )
 {
-  const auto beta = d->get< double >( "beta" );
+  const auto beta = d.get< double >( "beta" );
   if ( beta <= 0 )
   {
     throw BadProperty( "beta > 0 required for exponential distribution parameter, got beta=" + std::to_string( beta ) );
@@ -278,11 +278,11 @@ ExpDistParameter::value( RngPtr rng,
 
 GaussianParameter::GaussianParameter( const dictionary& d )
   : Parameter( true )
-  , p_( d->get< ParameterPTR >( "x" ) )
-  , mean_( d->get< double >( "mean" ) )
-  , inv_two_std2_( 1.0 / ( 2 * d->get< double >( "std" ) * d->get< double >( "std" ) ) )
+  , p_( d.get< ParameterPTR >( "x" ) )
+  , mean_( d.get< double >( "mean" ) )
+  , inv_two_std2_( 1.0 / ( 2 * d.get< double >( "std" ) * d.get< double >( "std" ) ) )
 {
-  const auto std = d->get< double >( "std" );
+  const auto std = d.get< double >( "std" );
   if ( std <= 0 )
   {
     throw BadProperty( "std > 0 required for gaussian distribution parameter, got std=" + std::to_string( std ) );
@@ -303,23 +303,23 @@ GaussianParameter::value( RngPtr rng,
 
 Gaussian2DParameter::Gaussian2DParameter( const dictionary& d )
   : Parameter( true )
-  , px_( d->get< ParameterPTR >( "x" ) )
-  , py_( d->get< ParameterPTR >( "y" ) )
-  , mean_x_( d->get< double >( "mean_x" ) )
-  , mean_y_( d->get< double >( "mean_y" ) )
+  , px_( d.get< ParameterPTR >( "x" ) )
+  , py_( d.get< ParameterPTR >( "y" ) )
+  , mean_x_( d.get< double >( "mean_x" ) )
+  , mean_y_( d.get< double >( "mean_y" ) )
   , x_term_const_( 1.
-      / ( 2. * ( 1. - d->get< double >( "rho" ) * d->get< double >( "rho" ) ) * d->get< double >( "std_x" )
-        * d->get< double >( "std_x" ) ) )
+      / ( 2. * ( 1. - d.get< double >( "rho" ) * d.get< double >( "rho" ) ) * d.get< double >( "std_x" )
+        * d.get< double >( "std_x" ) ) )
   , y_term_const_( 1.
-      / ( 2. * ( 1. - d->get< double >( "rho" ) * d->get< double >( "rho" ) ) * d->get< double >( "std_y" )
-        * d->get< double >( "std_y" ) ) )
-  , xy_term_const_( d->get< double >( "rho" )
-      / ( ( 1. - d->get< double >( "rho" ) * d->get< double >( "rho" ) ) * d->get< double >( "std_x" )
-        * d->get< double >( "std_y" ) ) )
+      / ( 2. * ( 1. - d.get< double >( "rho" ) * d.get< double >( "rho" ) ) * d.get< double >( "std_y" )
+        * d.get< double >( "std_y" ) ) )
+  , xy_term_const_( d.get< double >( "rho" )
+      / ( ( 1. - d.get< double >( "rho" ) * d.get< double >( "rho" ) ) * d.get< double >( "std_x" )
+        * d.get< double >( "std_y" ) ) )
 {
-  const auto rho = d->get< double >( "rho" );
-  const auto std_x = d->get< double >( "std_x" );
-  const auto std_y = d->get< double >( "std_y" );
+  const auto rho = d.get< double >( "rho" );
+  const auto std_x = d.get< double >( "std_x" );
+  const auto std_y = d.get< double >( "std_y" );
   if ( rho >= 1 or rho <= -1 )
   {
     throw BadProperty(
@@ -352,17 +352,17 @@ Gaussian2DParameter::value( RngPtr rng,
 
 GaborParameter::GaborParameter( const dictionary& d )
   : Parameter( true )
-  , px_( d->get< ParameterPTR >( "x" ) )
-  , py_( d->get< ParameterPTR >( "y" ) )
-  , cos_( std::cos( d->get< double >( "theta" ) * numerics::pi / 180. ) )
-  , sin_( std::sin( d->get< double >( "theta" ) * numerics::pi / 180. ) )
-  , gamma_( d->get< double >( "gamma" ) )
-  , inv_two_std2_( 1.0 / ( 2 * d->get< double >( "std" ) * d->get< double >( "std" ) ) )
-  , lambda_( d->get< double >( "lam" ) )
-  , psi_( d->get< double >( "psi" ) )
+  , px_( d.get< ParameterPTR >( "x" ) )
+  , py_( d.get< ParameterPTR >( "y" ) )
+  , cos_( std::cos( d.get< double >( "theta" ) * numerics::pi / 180. ) )
+  , sin_( std::sin( d.get< double >( "theta" ) * numerics::pi / 180. ) )
+  , gamma_( d.get< double >( "gamma" ) )
+  , inv_two_std2_( 1.0 / ( 2 * d.get< double >( "std" ) * d.get< double >( "std" ) ) )
+  , lambda_( d.get< double >( "lam" ) )
+  , psi_( d.get< double >( "psi" ) )
 {
-  const auto gamma = d->get< double >( "gamma" );
-  const auto std = d->get< double >( "std" );
+  const auto gamma = d.get< double >( "gamma" );
+  const auto std = d.get< double >( "std" );
   if ( std <= 0 )
   {
     throw BadProperty( String::compose( "std > 0 required for gabor function parameter, got std=%1", std ) );
@@ -396,16 +396,16 @@ GaborParameter::value( RngPtr rng,
 
 GammaParameter::GammaParameter( const dictionary& d )
   : Parameter( true )
-  , p_( d->get< ParameterPTR >( "x" ) )
-  , kappa_( d->get< double >( "kappa" ) )
-  , inv_theta_( 1.0 / d->get< double >( "theta" ) )
+  , p_( d.get< ParameterPTR >( "x" ) )
+  , kappa_( d.get< double >( "kappa" ) )
+  , inv_theta_( 1.0 / d.get< double >( "theta" ) )
   , delta_( std::pow( inv_theta_, kappa_ ) / std::tgamma( kappa_ ) )
 {
   if ( kappa_ <= 0 )
   {
     throw BadProperty( "kappa > 0 required for gamma distribution parameter, got kappa=" + std::to_string( kappa_ ) );
   }
-  const auto theta = d->get< double >( "theta" );
+  const auto theta = d.get< double >( "theta" );
   if ( theta <= 0 )
   {
     throw BadProperty( "theta > 0 required for gamma distribution parameter, got theta=" + std::to_string( theta ) );

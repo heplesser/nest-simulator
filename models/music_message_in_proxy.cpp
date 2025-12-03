@@ -74,7 +74,7 @@ nest::music_message_in_proxy::Parameters_::set( const dictionary& d, State_& s, 
 {
   if ( not s.published_ )
   {
-    d->update_value( names::port_name, port_name_ );
+    d.update_value( names::port_name, port_name_ );
     update_value_param( d, names::acceptable_latency, acceptable_latency_, node );
   }
 }

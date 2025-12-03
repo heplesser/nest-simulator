@@ -237,8 +237,8 @@ nest::ArchivingNode::set_status( const dictionary& d )
   // We need to preserve values in case invalid values are set
   double new_tau_minus = tau_minus_;
   double new_tau_minus_triplet = tau_minus_triplet_;
-  d->update_value( names::tau_minus, new_tau_minus );
-  d->update_value( names::tau_minus_triplet, new_tau_minus_triplet );
+  d.update_value( names::tau_minus, new_tau_minus );
+  d.update_value( names::tau_minus_triplet, new_tau_minus_triplet );
 
   if ( new_tau_minus <= 0.0 or new_tau_minus_triplet <= 0.0 )
   {
@@ -255,7 +255,7 @@ nest::ArchivingNode::set_status( const dictionary& d )
 
   // check, if to clear spike history and K_minus
   bool clear = false;
-  d->update_value( names::clear, clear );
+  d.update_value( names::clear, clear );
   if ( clear )
   {
     clear_history();

@@ -91,7 +91,7 @@ nest::Device::Parameters_::update_( const dictionary& d, const std::string& name
   // or be infinite. Infinite values are handled gracefully.
 
   double val;
-  if ( d->update_value( name, val ) )
+  if ( d.update_value( name, val ) )
   {
     const Time t = Time::ms( val );
     if ( t.is_finite() and not t.is_grid_time() )

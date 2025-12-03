@@ -79,9 +79,9 @@ template < int D >
 void
 Layer< D >::set_status( const dictionary& d )
 {
-  if ( d->known( names::edge_wrap ) )
+  if ( d.known( names::edge_wrap ) )
   {
-    if ( d->get< bool >( names::edge_wrap ) )
+    if ( d.get< bool >( names::edge_wrap ) )
     {
       periodic_ = ( 1 << D ) - 1; // All dimensions periodic
     }
@@ -344,9 +344,9 @@ Layer< D >::dump_connections( std::ostream& out,
       conn.get_synapse_model_id(),
       conn.get_port() );
 
-    const auto target_node_id = result_dict->get< size_t >( names::target );
-    const auto weight = result_dict->get< double >( names::weight );
-    const auto delay = result_dict->get< double >( names::delay );
+    const auto target_node_id = result_dict.get< size_t >( names::target );
+    const auto weight = result_dict.get< double >( names::weight );
+    const auto delay = result_dict.get< double >( names::delay );
 
     const Layer< D >* const tgt_layer = dynamic_cast< Layer< D >* >( target_layer.get() );
     const long tnode_lid = tgt_layer->node_collection_->get_nc_index( target_node_id );

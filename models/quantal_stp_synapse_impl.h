@@ -68,14 +68,14 @@ quantal_stp_synapse< targetidentifierT >::set_status( const dictionary& d, Conne
 {
   ConnectionBase::set_status( d, cm );
 
-  d->update_value( names::weight, weight_ );
+  d.update_value( names::weight, weight_ );
 
-  d->update_value( names::dU, U_ );
-  d->update_value( names::u, u_ );
-  d->update_value( names::tau_rec, tau_rec_ );
-  d->update_value( names::tau_fac, tau_fac_ );
-  d->update_integer_value( names::n, n_ );
-  d->update_integer_value( names::a, a_ );
+  d.update_value( names::dU, U_ );
+  d.update_value( names::u, u_ );
+  d.update_value( names::tau_rec, tau_rec_ );
+  d.update_value( names::tau_fac, tau_fac_ );
+  d.update_integer_value( names::n, n_ );
+  d.update_integer_value( names::a, a_ );
 
   if ( U_ > 1.0 or U_ < 0.0 )
   {

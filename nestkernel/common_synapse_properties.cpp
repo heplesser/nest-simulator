@@ -53,7 +53,7 @@ void
 CommonSynapseProperties::set_status( const dictionary& d, ConnectorModel& )
 {
   NodeCollectionPTR wr_nc;
-  if ( d->update_value( names::weight_recorder, wr_nc ) )
+  if ( d.update_value( names::weight_recorder, wr_nc ) )
   {
     if ( wr_nc->size() != 1 )
     {

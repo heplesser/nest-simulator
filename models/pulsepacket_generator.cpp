@@ -89,7 +89,7 @@ nest::pulsepacket_generator::Parameters_::set( const dictionary& d, pulsepacket_
   }
 
 
-  if ( d->update_value( "pulse_times", pulse_times_ ) or neednewpulse )
+  if ( d.update_value( "pulse_times", pulse_times_ ) or neednewpulse )
   {
     std::sort( pulse_times_.begin(), pulse_times_.end() );
     ppg.B_.spiketimes_.clear();

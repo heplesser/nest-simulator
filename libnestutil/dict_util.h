@@ -42,7 +42,7 @@ update_value_param( dictionary const& d, const std::string& key, T& value, nest:
     {
       throw BadParameter( "Cannot use Parameter with this model." );
     }
-    const auto param = d->get< ParameterPTR >( key );
+    const auto param = d.get< ParameterPTR >( key );
     const auto vp = kernel().vp_manager.node_id_to_vp( node->get_node_id() );
     const auto tid = kernel().vp_manager.vp_to_thread( vp );
     const auto rng = get_vp_specific_rng( tid );
@@ -51,7 +51,7 @@ update_value_param( dictionary const& d, const std::string& key, T& value, nest:
   }
   else
   {
-    return d->update_value( key, value );
+    return d.update_value( key, value );
   }
 }
 

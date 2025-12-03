@@ -227,7 +227,7 @@ nest::glif_cond::Parameters_::set( const dictionary& d, Node* node )
   // if E_L_ is changed, we need to adjust all variables defined relative to
   // E_L_
   const double ELold = E_L_;
-  d->update_value( names::E_L, E_L_ );
+  d.update_value( names::E_L, E_L_ );
   const double delta_EL = E_L_ - ELold;
 
   if ( update_value_param( d, names::V_reset, V_reset_, node ) )
@@ -260,15 +260,15 @@ nest::glif_cond::Parameters_::set( const dictionary& d, Node* node )
   update_value_param( d, names::th_voltage_index, th_voltage_index_, node );
   update_value_param( d, names::th_voltage_decay, th_voltage_decay_, node );
 
-  d->update_value( names::asc_init, asc_init_ );
-  d->update_value( names::asc_decay, asc_decay_ );
-  d->update_value( names::asc_amps, asc_amps_ );
-  d->update_value( names::asc_r, asc_r_ );
+  d.update_value( names::asc_init, asc_init_ );
+  d.update_value( names::asc_decay, asc_decay_ );
+  d.update_value( names::asc_amps, asc_amps_ );
+  d.update_value( names::asc_r, asc_r_ );
 
   // set model mechanisms
-  d->update_value( names::spike_dependent_threshold, has_theta_spike_ );
-  d->update_value( names::after_spike_currents, has_asc_ );
-  d->update_value( names::adapting_threshold, has_theta_voltage_ );
+  d.update_value( names::spike_dependent_threshold, has_theta_spike_ );
+  d.update_value( names::after_spike_currents, has_asc_ );
+  d.update_value( names::adapting_threshold, has_theta_voltage_ );
 
   // check model mechanisms parameter
   if ( not( ( not has_theta_spike_ and not has_asc_ and not has_theta_voltage_ ) or // glif1
@@ -355,8 +355,8 @@ nest::glif_cond::Parameters_::set( const dictionary& d, Node* node )
   }
 
   const size_t old_n_receptors = this->n_receptors_();
-  bool tau_flag = d->update_value( names::tau_syn, tau_syn_ );
-  bool Erev_flag = d->update_value( names::E_rev, E_rev_ );
+  bool tau_flag = d.update_value( names::tau_syn, tau_syn_ );
+  bool Erev_flag = d.update_value( names::E_rev, E_rev_ );
 
   // receptor arrays have been modified
   if ( tau_flag or Erev_flag )
@@ -424,7 +424,7 @@ nest::glif_cond::State_::set( const dictionary& d, const Parameters_& p, double 
     y_[ V_M ] -= delta_EL;
   }
 
-  bool asc_flag = d->update_value( names::ASCurrents, ASCurrents_ );
+  bool asc_flag = d.update_value( names::ASCurrents, ASCurrents_ );
   if ( asc_flag and not p.has_asc_ )
   {
     throw BadProperty( "After spike currents are not supported or settable in the current model mechanisms." );

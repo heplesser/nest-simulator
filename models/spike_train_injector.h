@@ -356,7 +356,7 @@ spike_train_injector::set_status( const dictionary& d )
   // it is set in this call, we need to extract it explicitly here.
   Time origin;
   double v;
-  if ( d->update_value( names::origin, v ) )
+  if ( d.update_value( names::origin, v ) )
   {
     origin = Time::ms( v );
   }

@@ -334,13 +334,13 @@ void
 stdp_nn_symm_synapse< targetidentifierT >::set_status( const dictionary& d, ConnectorModel& cm )
 {
   ConnectionBase::set_status( d, cm );
-  d->update_value( names::weight, weight_ );
-  d->update_value( names::tau_plus, tau_plus_ );
-  d->update_value( names::lambda, lambda_ );
-  d->update_value( names::alpha, alpha_ );
-  d->update_value( names::mu_plus, mu_plus_ );
-  d->update_value( names::mu_minus, mu_minus_ );
-  d->update_value( names::Wmax, Wmax_ );
+  d.update_value( names::weight, weight_ );
+  d.update_value( names::tau_plus, tau_plus_ );
+  d.update_value( names::lambda, lambda_ );
+  d.update_value( names::alpha, alpha_ );
+  d.update_value( names::mu_plus, mu_plus_ );
+  d.update_value( names::mu_minus, mu_minus_ );
+  d.update_value( names::Wmax, Wmax_ );
 
   // check if weight_ and Wmax_ have the same sign
   if ( std::signbit( weight_ ) != std::signbit( Wmax_ ) )

@@ -192,10 +192,10 @@ nest::glif_psc_double_alpha::Parameters_::set( const dictionary& d, Node* node )
   update_value_param( d, names::th_voltage_index, th_voltage_index_, node );
   update_value_param( d, names::th_voltage_decay, th_voltage_decay_, node );
 
-  d->update_value( names::asc_init, asc_init_ );
-  d->update_value( names::asc_decay, asc_decay_ );
-  d->update_value( names::asc_amps, asc_amps_ );
-  d->update_value( names::asc_r, asc_r_ );
+  d.update_value( names::asc_init, asc_init_ );
+  d.update_value( names::asc_decay, asc_decay_ );
+  d.update_value( names::asc_amps, asc_amps_ );
+  d.update_value( names::asc_r, asc_r_ );
 
   // set model mechanisms
   update_value_param( d, names::spike_dependent_threshold, has_theta_spike_, node );
@@ -287,7 +287,7 @@ nest::glif_psc_double_alpha::Parameters_::set( const dictionary& d, Node* node )
   }
 
   const size_t old_n_receptors = this->n_receptors_();
-  if ( d->update_value( names::tau_syn_fast, tau_syn_fast_ ) )
+  if ( d.update_value( names::tau_syn_fast, tau_syn_fast_ ) )
   {
     if ( this->n_receptors_() != old_n_receptors and has_connections_ )
     {
@@ -303,7 +303,7 @@ nest::glif_psc_double_alpha::Parameters_::set( const dictionary& d, Node* node )
       }
     }
   }
-  if ( d->update_value( names::tau_syn_slow, tau_syn_slow_ ) )
+  if ( d.update_value( names::tau_syn_slow, tau_syn_slow_ ) )
   {
     for ( size_t i = 0; i < tau_syn_slow_.size(); ++i )
     {
@@ -314,7 +314,7 @@ nest::glif_psc_double_alpha::Parameters_::set( const dictionary& d, Node* node )
     }
   }
   // for amp_slow
-  if ( d->update_value( names::amp_slow, amp_slow_ ) )
+  if ( d.update_value( names::amp_slow, amp_slow_ ) )
   {
     for ( size_t i = 0; i < amp_slow_.size(); ++i )
     {
@@ -349,7 +349,7 @@ nest::glif_psc_double_alpha::State_::set( const dictionary& d, const Parameters_
     U_ -= delta_EL;
   }
 
-  bool asc_flag = d->update_value( names::ASCurrents, ASCurrents_ );
+  bool asc_flag = d.update_value( names::ASCurrents, ASCurrents_ );
   if ( asc_flag and not p.has_asc_ )
   {
     throw BadProperty( "After spike currents are not supported or settable in the current model mechanisms." );

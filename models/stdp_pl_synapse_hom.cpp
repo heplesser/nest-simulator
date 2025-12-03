@@ -67,7 +67,7 @@ STDPPLHomCommonProperties::set_status( const dictionary& d, ConnectorModel& cm )
 {
   CommonSynapseProperties::set_status( d, cm );
 
-  d->update_value( names::tau_plus, tau_plus_ );
+  d.update_value( names::tau_plus, tau_plus_ );
   if ( tau_plus_ > 0. )
   {
     tau_plus_inv_ = 1. / tau_plus_;
@@ -76,9 +76,9 @@ STDPPLHomCommonProperties::set_status( const dictionary& d, ConnectorModel& cm )
   {
     throw BadProperty( "tau_plus > 0. required." );
   }
-  d->update_value( names::lambda, lambda_ );
-  d->update_value( names::alpha, alpha_ );
-  d->update_value( names::mu, mu_ );
+  d.update_value( names::lambda, lambda_ );
+  d.update_value( names::alpha, alpha_ );
+  d.update_value( names::mu, mu_ );
 }
 
 } // of namespace nest

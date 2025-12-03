@@ -575,7 +575,7 @@ SonataConnector::set_synapse_params_( dictionary syn_dict, size_t synapse_model_
       continue; // weight, delay or other not-settable parameter
     }
 
-    if ( syn_dict->known( param_name ) )
+    if ( syn_dict.known( param_name ) )
     {
       synapse_params[ param_name ] = std::shared_ptr< ConnParameter >(
         ConnParameter::create( syn_dict.at( param_name ), kernel().vp_manager.get_num_threads() ) );
@@ -643,7 +643,7 @@ SonataConnector::get_syn_property_( const dictionary& syn_spec,
   {
     return data[ index ];
   }
-  else if ( syn_spec->known( name ) )
+  else if ( syn_spec.known( name ) )
   {
     return std::get< double >( syn_spec.at( name ) );
   }

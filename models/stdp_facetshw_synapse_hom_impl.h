@@ -152,33 +152,33 @@ STDPFACETSHWHomCommonProperties< targetidentifierT >::set_status( const dictiona
 {
   CommonSynapseProperties::set_status( d, cm );
 
-  d->update_value( names::tau_plus, tau_plus_ );
-  d->update_value( names::tau_minus_stdp, tau_minus_ );
-  if ( d->update_value( names::Wmax, Wmax_ ) )
+  d.update_value( names::tau_plus, tau_plus_ );
+  d.update_value( names::tau_minus_stdp, tau_minus_ );
+  if ( d.update_value( names::Wmax, Wmax_ ) )
   {
     weight_per_lut_entry_ = Wmax_ / ( lookuptable_0_.size() - 1 );
   }
 
   // TP: they should not be allowed to be changed! But needed for CopyModel ...
-  d->update_value( names::weight_per_lut_entry, weight_per_lut_entry_ );
-  d->update_value( names::readout_cycle_duration, readout_cycle_duration_ );
-  if ( d->update_value( names::no_synapses, no_synapses_ ) )
+  d.update_value( names::weight_per_lut_entry, weight_per_lut_entry_ );
+  d.update_value( names::readout_cycle_duration, readout_cycle_duration_ );
+  if ( d.update_value( names::no_synapses, no_synapses_ ) )
   {
     calc_readout_cycle_duration_();
   }
 
-  if ( d->update_value( names::synapses_per_driver, synapses_per_driver_ ) )
+  if ( d.update_value( names::synapses_per_driver, synapses_per_driver_ ) )
   {
     calc_readout_cycle_duration_();
   }
-  if ( d->update_value( names::driver_readout_time, driver_readout_time_ ) )
+  if ( d.update_value( names::driver_readout_time, driver_readout_time_ ) )
   {
     calc_readout_cycle_duration_();
   }
 
-  if ( d->known( names::lookuptable_0 ) )
+  if ( d.known( names::lookuptable_0 ) )
   {
-    d->update_value( names::lookuptable_0, lookuptable_0_ );
+    d.update_value( names::lookuptable_0, lookuptable_0_ );
 
     // right size?
     if ( lookuptable_0_.size() != lookuptable_1_.size() )
@@ -195,9 +195,9 @@ STDPFACETSHWHomCommonProperties< targetidentifierT >::set_status( const dictiona
       }
     }
   }
-  if ( d->known( names::lookuptable_1 ) )
+  if ( d.known( names::lookuptable_1 ) )
   {
-    d->update_value( names::lookuptable_1, lookuptable_1_ );
+    d.update_value( names::lookuptable_1, lookuptable_1_ );
 
     // right size?
     if ( lookuptable_1_.size() != lookuptable_0_.size() )
@@ -214,9 +214,9 @@ STDPFACETSHWHomCommonProperties< targetidentifierT >::set_status( const dictiona
       }
     }
   }
-  if ( d->known( names::lookuptable_2 ) )
+  if ( d.known( names::lookuptable_2 ) )
   {
-    d->update_value( names::lookuptable_2, lookuptable_2_ );
+    d.update_value( names::lookuptable_2, lookuptable_2_ );
 
     // right size?
     if ( lookuptable_2_.size() != lookuptable_0_.size() )
@@ -234,9 +234,9 @@ STDPFACETSHWHomCommonProperties< targetidentifierT >::set_status( const dictiona
     }
   }
 
-  if ( d->known( names::configbit_0 ) )
+  if ( d.known( names::configbit_0 ) )
   {
-    d->update_value( names::configbit_0, configbit_0_ );
+    d.update_value( names::configbit_0, configbit_0_ );
 
     // right size?
     if ( configbit_0_.size() != 4 )
@@ -244,9 +244,9 @@ STDPFACETSHWHomCommonProperties< targetidentifierT >::set_status( const dictiona
       throw BadProperty( "Wrong number of configuration bits (!=4)." );
     }
   }
-  if ( d->known( names::configbit_1 ) )
+  if ( d.known( names::configbit_1 ) )
   {
-    d->update_value( names::configbit_1, configbit_1_ );
+    d.update_value( names::configbit_1, configbit_1_ );
 
     // right size?
     if ( configbit_1_.size() != 4 )
@@ -254,9 +254,9 @@ STDPFACETSHWHomCommonProperties< targetidentifierT >::set_status( const dictiona
       throw BadProperty( "Wrong number of configuration bits (!=4)." );
     }
   }
-  if ( d->known( names::reset_pattern ) )
+  if ( d.known( names::reset_pattern ) )
   {
-    d->update_value( names::reset_pattern, reset_pattern_ );
+    d.update_value( names::reset_pattern, reset_pattern_ );
 
     // right size?
     if ( reset_pattern_.size() != 6 )
@@ -315,18 +315,18 @@ stdp_facetshw_synapse_hom< targetidentifierT >::set_status( const dictionary& d,
 {
   // base class properties
   ConnectionBase::set_status( d, cm );
-  d->update_value( names::weight, weight_ );
+  d.update_value( names::weight, weight_ );
 
-  d->update_value( names::a_causal, a_causal_ );
-  d->update_value( names::a_acausal, a_acausal_ );
-  d->update_value( names::a_thresh_th, a_thresh_th_ );
-  d->update_value( names::a_thresh_tl, a_thresh_tl_ );
+  d.update_value( names::a_causal, a_causal_ );
+  d.update_value( names::a_acausal, a_acausal_ );
+  d.update_value( names::a_thresh_th, a_thresh_th_ );
+  d.update_value( names::a_thresh_tl, a_thresh_tl_ );
 
-  d->update_value( names::synapse_id, synapse_id_ );
+  d.update_value( names::synapse_id, synapse_id_ );
 
   // TP: they should not be allowed to be changed! But needed for CopyModel ...
-  d->update_value( names::init_flag, init_flag_ );
-  d->update_value( names::next_readout_time, next_readout_time_ );
+  d.update_value( names::init_flag, init_flag_ );
+  d.update_value( names::next_readout_time, next_readout_time_ );
 
   // setting discrete_weight_ does not make sense, is temporary variable
 }

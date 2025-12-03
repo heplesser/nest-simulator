@@ -167,7 +167,7 @@ iaf_psc_exp_multisynapse::Parameters_::set( const dictionary& d, Node* node )
     throw BadProperty( "Membrane time constant must be strictly positive." );
   }
   const size_t old_n_receptors = this->n_receptors_();
-  if ( d->update_value( "tau_syn", tau_syn_ ) )
+  if ( d.update_value( "tau_syn", tau_syn_ ) )
   {
     if ( this->n_receptors_() != old_n_receptors and has_connections_ )
     {

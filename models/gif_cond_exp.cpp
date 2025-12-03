@@ -243,10 +243,10 @@ nest::gif_cond_exp::Parameters_::set( const dictionary& d, Node* node )
   update_value_param( d, names::E_in, E_in_, node );
   update_value_param( d, names::gsl_error_tol, gsl_error_tol, node );
 
-  d->update_value( names::tau_sfa, tau_sfa_ );
-  d->update_value( names::q_sfa, q_sfa_ );
-  d->update_value( names::tau_stc, tau_stc_ );
-  d->update_value( names::q_stc, q_stc_ );
+  d.update_value( names::tau_sfa, tau_sfa_ );
+  d.update_value( names::q_sfa, q_sfa_ );
+  d.update_value( names::tau_stc, tau_stc_ );
+  d.update_value( names::q_stc, q_stc_ );
 
   if ( tau_sfa_.size() != q_sfa_.size() )
   {

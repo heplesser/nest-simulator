@@ -65,7 +65,7 @@ void
 WeightOptimizerCommonProperties::set_status( const dictionary& d )
 {
   long new_batch_size = batch_size_;
-  d->update_value( names::batch_size, new_batch_size );
+  d.update_value( names::batch_size, new_batch_size );
   if ( new_batch_size <= 0 )
   {
     throw BadProperty( "Optimization batch_size > 0 required." );
@@ -73,7 +73,7 @@ WeightOptimizerCommonProperties::set_status( const dictionary& d )
   batch_size_ = new_batch_size;
 
   double eta_new = eta_;
-  d->update_value( names::eta, eta_new );
+  d.update_value( names::eta, eta_new );
   if ( eta_new < 0 )
   {
     throw BadProperty( "Learning rate eta ≥ 0 required." );
@@ -91,8 +91,8 @@ WeightOptimizerCommonProperties::set_status( const dictionary& d )
 
   double new_Wmin = Wmin_;
   double new_Wmax = Wmax_;
-  d->update_value( names::Wmin, new_Wmin );
-  d->update_value( names::Wmax, new_Wmax );
+  d.update_value( names::Wmin, new_Wmin );
+  d.update_value( names::Wmax, new_Wmax );
   if ( new_Wmin > new_Wmax )
   {
     throw BadProperty( "Minimal weight Wmin ≤ maximal weight Wmax required." );
@@ -100,7 +100,7 @@ WeightOptimizerCommonProperties::set_status( const dictionary& d )
   Wmin_ = new_Wmin;
   Wmax_ = new_Wmax;
 
-  d->update_value( names::optimize_each_step, optimize_each_step_ );
+  d.update_value( names::optimize_each_step, optimize_each_step_ );
 }
 
 WeightOptimizer::WeightOptimizer()
@@ -211,9 +211,9 @@ WeightOptimizerCommonPropertiesAdam::set_status( const dictionary& d )
 {
   WeightOptimizerCommonProperties::set_status( d );
 
-  d->update_value( names::beta_1, beta_1_ );
-  d->update_value( names::beta_2, beta_2_ );
-  d->update_value( names::epsilon, epsilon_ );
+  d.update_value( names::beta_1, beta_1_ );
+  d.update_value( names::beta_2, beta_2_ );
+  d.update_value( names::epsilon, epsilon_ );
 
   if ( beta_1_ < 0.0 or 1.0 <= beta_1_ )
   {
@@ -252,8 +252,8 @@ void
 WeightOptimizerAdam::set_status( const dictionary& d )
 {
   WeightOptimizer::set_status( d );
-  d->update_value( names::m, m_ );
-  d->update_value( names::v, v_ );
+  d.update_value( names::m, m_ );
+  d.update_value( names::v, v_ );
 }
 
 

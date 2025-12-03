@@ -114,7 +114,7 @@ nest::izhikevich::Parameters_::set( const dictionary& d, Node* node )
   update_value_param( d, names::c, c_, node );
   update_value_param( d, names::d, d_, node );
 
-  d->update_value( names::consistent_integration, consistent_integration_ );
+  d.update_value( names::consistent_integration, consistent_integration_ );
 
   const double h = Time::get_resolution().get_ms();
   if ( not consistent_integration_ and h != 1.0 )

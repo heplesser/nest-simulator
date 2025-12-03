@@ -68,14 +68,14 @@ nest::music_cont_in_proxy::Parameters_::get( dictionary& d ) const
 void
 nest::music_cont_in_proxy::Parameters_::set( const dictionary& d, State_& s, Node* node )
 {
-  if ( d->known( names::port_name ) and s.published_ )
+  if ( d.known( names::port_name ) and s.published_ )
   {
     throw MUSICPortAlreadyPublished( node->get_name(), port_name_ );
   }
 
   if ( not s.published_ )
   {
-    d->update_value( names::port_name, port_name_ );
+    d.update_value( names::port_name, port_name_ );
   }
 }
 

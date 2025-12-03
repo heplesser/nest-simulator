@@ -624,11 +624,11 @@ nest::RecordingBackendSIONlib::Parameters_::get( const RecordingBackendSIONlib&,
 void
 nest::RecordingBackendSIONlib::Parameters_::set( const RecordingBackendSIONlib&, const dictionary& d )
 {
-  d->update_value( names::filename, filename_ );
-  d->update_value( names::buffer_size, buffer_size_ );
-  d->update_value( names::sion_chunksize, sion_chunksize_ );
-  d->update_value( names::sion_collective, sion_collective_ );
-  d->update_value( names::sion_n_files, sion_n_files_ );
+  d.update_value( names::filename, filename_ );
+  d.update_value( names::buffer_size, buffer_size_ );
+  d.update_value( names::sion_chunksize, sion_chunksize_ );
+  d.update_value( names::sion_collective, sion_collective_ );
+  d.update_value( names::sion_n_files, sion_n_files_ );
 }
 
 void

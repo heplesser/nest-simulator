@@ -293,33 +293,33 @@ void
 tsodyks2_synapse< targetidentifierT >::set_status( const dictionary& d, ConnectorModel& cm )
 {
   ConnectionBase::set_status( d, cm );
-  d->update_value( names::weight, weight_ );
+  d.update_value( names::weight, weight_ );
 
-  d->update_value( names::dU, U_ );
+  d.update_value( names::dU, U_ );
   if ( U_ > 1.0 or U_ < 0.0 )
   {
     throw BadProperty( "'U' must be in [0,1]." );
   }
 
-  d->update_value( names::u, u_ );
+  d.update_value( names::u, u_ );
   if ( u_ > 1.0 or u_ < 0.0 )
   {
     throw BadProperty( "'u' must be in [0,1]." );
   }
 
-  d->update_value( names::tau_rec, tau_rec_ );
+  d.update_value( names::tau_rec, tau_rec_ );
   if ( tau_rec_ <= 0.0 )
   {
     throw BadProperty( "'tau_rec' must be > 0." );
   }
 
-  d->update_value( names::tau_fac, tau_fac_ );
+  d.update_value( names::tau_fac, tau_fac_ );
   if ( tau_fac_ < 0.0 )
   {
     throw BadProperty( "'tau_fac' must be >= 0." );
   }
 
-  d->update_value( names::x, x_ );
+  d.update_value( names::x, x_ );
 }
 
 } // namespace

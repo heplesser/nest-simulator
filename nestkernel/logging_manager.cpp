@@ -61,8 +61,8 @@ nest::LoggingManager::finalize( const bool )
 void
 nest::LoggingManager::set_status( const dictionary& dict )
 {
-  dict->update_value( names::dict_miss_is_error, dict_miss_is_error_ );
-  dict->update_value( names::verbosity, logging_level_ ); // safe, because entry must be VerbosityLevel
+  dict.update_value( names::dict_miss_is_error, dict_miss_is_error_ );
+  dict.update_value( names::verbosity, logging_level_ ); // safe, because entry must be VerbosityLevel
 }
 
 void

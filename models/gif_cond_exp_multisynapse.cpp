@@ -190,14 +190,14 @@ nest::gif_cond_exp_multisynapse::Parameters_::set( const dictionary& d, Node* no
   update_value_param( d, names::t_ref, t_ref_, node );
   update_value_param( d, names::gsl_error_tol, gsl_error_tol, node );
 
-  d->update_value( names::tau_sfa, tau_sfa_ );
-  d->update_value( names::q_sfa, q_sfa_ );
-  d->update_value( names::tau_stc, tau_stc_ );
-  d->update_value( names::q_stc, q_stc_ );
+  d.update_value( names::tau_sfa, tau_sfa_ );
+  d.update_value( names::q_sfa, q_sfa_ );
+  d.update_value( names::tau_stc, tau_stc_ );
+  d.update_value( names::q_stc, q_stc_ );
 
   const size_t old_n_receptors = n_receptors();
-  bool Erev_flag = d->update_value( names::E_rev, E_rev_ );
-  bool tau_flag = d->update_value( names::tau_syn, tau_syn_ );
+  bool Erev_flag = d.update_value( names::E_rev, E_rev_ );
+  bool tau_flag = d.update_value( names::tau_syn, tau_syn_ );
   if ( Erev_flag or tau_flag )
   { // receptor arrays have been modified
     if ( ( E_rev_.size() != old_n_receptors or tau_syn_.size() != old_n_receptors )
