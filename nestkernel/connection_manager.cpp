@@ -50,6 +50,7 @@
 #include "exceptions.h"
 #include "kernel_manager.h"
 #include "nest_names.h"
+#include "nest_types.h"
 #include "node.h"
 #include "stopwatch_impl.h"
 #include "target_table_devices_impl.h"
@@ -174,7 +175,7 @@ nest::ConnectionManager::finalize( const bool adjust_number_of_threads_or_rng_on
 }
 
 void
-nest::ConnectionManager::set_status( const dictionary& d )
+nest::ConnectionManager::set_status( const Dictionary& d )
 {
   for ( size_t i = 0; i < delay_checkers_.size(); ++i )
   {
@@ -205,7 +206,7 @@ nest::ConnectionManager::get_delay_checker()
 }
 
 void
-nest::ConnectionManager::get_status( dictionary& dict )
+nest::ConnectionManager::get_status( Dictionary& dict )
 {
   update_delay_extrema_();
   dict[ names::min_delay ] = Time( Time::step( min_delay_ ) ).get_ms();
@@ -226,7 +227,7 @@ nest::ConnectionManager::get_status( dictionary& dict )
   dict[ names::connection_rules ] = connection_rules;
 }
 
-dictionary
+Dictionary
 nest::ConnectionManager::get_synapse_status( const size_t source_node_id,
   const size_t target_node_id,
   const size_t tid,
@@ -235,7 +236,7 @@ nest::ConnectionManager::get_synapse_status( const size_t source_node_id,
 {
   kernel().model_manager.assert_valid_syn_id( syn_id, kernel().vp_manager.get_thread_id() );
 
-  dictionary dict;
+  Dictionary dict;
   dict[ names::source ] = source_node_id;
   dict[ names::synapse_model ] = kernel().model_manager.get_connection_model( syn_id, /* thread */ 0 ).get_name();
   dict[ names::target_thread ] = tid;
@@ -276,7 +277,7 @@ nest::ConnectionManager::set_synapse_status( const size_t source_node_id,
   const size_t tid,
   const synindex syn_id,
   const size_t lcid,
-  const dictionary& dict )
+  const Dictionary& dict )
 {
   kernel().model_manager.assert_valid_syn_id( syn_id, kernel().vp_manager.get_thread_id() );
 
@@ -379,8 +380,8 @@ nest::ConnectionManager::get_conn_builder( const std::string& name,
   NodeCollectionPTR sources,
   NodeCollectionPTR targets,
   ThirdOutBuilder* third_out,
-  const dictionary& conn_spec,
-  const std::vector< dictionary >& syn_specs )
+  const Dictionary& conn_spec,
+  const std::vector< Dictionary >& syn_specs )
 {
   if ( not connruledict_.known( name ) )
   {
@@ -399,8 +400,8 @@ nest::ConnectionManager::get_third_conn_builder( const std::string& name,
   NodeCollectionPTR sources,
   NodeCollectionPTR targets,
   ThirdInBuilder* third_in,
-  const dictionary& conn_spec,
-  const std::vector< dictionary >& syn_specs )
+  const Dictionary& conn_spec,
+  const std::vector< Dictionary >& syn_specs )
 {
   if ( not thirdconnruledict_.known( name ) )
   {
@@ -426,8 +427,8 @@ nest::ConnectionManager::calibrate( const TimeConverter& tc )
 void
 nest::ConnectionManager::connect( NodeCollectionPTR sources,
   NodeCollectionPTR targets,
-  const dictionary& conn_spec,
-  const std::vector< dictionary >& syn_specs )
+  const Dictionary& conn_spec,
+  const std::vector< Dictionary >& syn_specs )
 {
   kernel().node_manager.update_thread_local_node_data();
 
@@ -525,7 +526,7 @@ nest::ConnectionManager::connect( const size_t snode_id,
   Node* target,
   size_t target_thread,
   const synindex syn_id,
-  const dictionary& params,
+  const Dictionary& params,
   const double delay,
   const double weight )
 {
@@ -555,7 +556,7 @@ nest::ConnectionManager::connect( const size_t snode_id,
 bool
 nest::ConnectionManager::connect( const size_t snode_id,
   const size_t tnode_id,
-  const dictionary& params,
+  const Dictionary& params,
   const synindex syn_id )
 {
   kernel().model_manager.assert_valid_syn_id( syn_id, kernel().vp_manager.get_thread_id() );
@@ -628,7 +629,7 @@ nest::ConnectionManager::connect_arrays( long* sources,
   const auto syn_model_defaults = kernel().model_manager.get_connector_defaults( synapse_model_id );
 
   // Dictionary holding additional synapse parameters, passed to the connect call.
-  std::vector< dictionary > param_dicts;
+  std::vector< Dictionary > param_dicts;
   param_dicts.reserve( kernel().vp_manager.get_num_threads() );
   for ( size_t i = 0; i < kernel().vp_manager.get_num_threads(); ++i )
   {
@@ -636,6 +637,8 @@ nest::ConnectionManager::connect_arrays( long* sources,
     for ( auto& param_key : p_keys )
     {
       // Check that the parameter exists for the synapse model.
+      // This also takes care of dictionary access checking—any parameter given in params
+      // that is not known will be flagged here.
       const auto syn_model_default_it = syn_model_defaults.find( param_key );
       if ( syn_model_default_it == syn_model_defaults.end() )
       {
@@ -742,13 +745,7 @@ nest::ConnectionManager::connect_arrays( long* sources,
           }
         }
 
-        // PYNEST-NG: Possible performance bottleneck
-        param_dicts[ tid ].init_access_flags( /* thread_local_dict */ true );
-
         connect( *s, target_node, tid, synapse_model_id, param_dicts[ tid ], delay_buffer, weight_buffer );
-
-        // PYNEST-NG: Possible performance bottleneck
-        param_dicts[ tid ].all_entries_accessed( "connect_arrays", "params", /* thread_local_dict */ true );
 
         increment_wd( w, d );
       }
@@ -773,7 +770,7 @@ nest::ConnectionManager::connect_arrays( long* sources,
 }
 
 void
-nest::ConnectionManager::connect_sonata( const dictionary& graph_specs, const long hyberslab_size )
+nest::ConnectionManager::connect_sonata( const Dictionary& graph_specs, const long hyberslab_size )
 {
 #ifdef HAVE_HDF5
   kernel().node_manager.update_thread_local_node_data();
@@ -793,9 +790,9 @@ void
 nest::ConnectionManager::connect_tripartite( NodeCollectionPTR sources,
   NodeCollectionPTR targets,
   NodeCollectionPTR third,
-  const dictionary& conn_spec,
-  const dictionary& third_conn_spec,
-  const std::map< std::string, std::vector< dictionary > >& syn_specs )
+  const Dictionary& conn_spec,
+  const Dictionary& third_conn_spec,
+  const std::map< std::string, std::vector< Dictionary > >& syn_specs )
 {
   if ( sources->empty() )
   {
@@ -858,7 +855,7 @@ nest::ConnectionManager::connect_( Node& source,
   const size_t s_node_id,
   const size_t tid,
   const synindex syn_id,
-  const dictionary& params,
+  const Dictionary& params,
   const double delay,
   const double weight )
 {
@@ -914,7 +911,7 @@ nest::ConnectionManager::connect_to_device_( Node& source,
   const size_t s_node_id,
   const size_t tid,
   const synindex syn_id,
-  const dictionary& params,
+  const Dictionary& params,
   const double delay,
   const double weight )
 {
@@ -929,7 +926,7 @@ nest::ConnectionManager::connect_from_device_( Node& source,
   Node& target,
   const size_t tid,
   const synindex syn_id,
-  const dictionary& params,
+  const Dictionary& params,
   const double delay,
   const double weight )
 {
@@ -963,23 +960,25 @@ nest::ConnectionManager::find_connection( const size_t tid,
   const size_t snode_id,
   const size_t tnode_id )
 {
-  // lcid will hold the position of the /first/ connection from node
-  // snode_id to any local node, or be invalid
-  size_t lcid = source_table_.find_first_source( tid, syn_id, snode_id );
-  if ( lcid == invalid_index )
+  if ( use_compressed_spikes_ )
   {
-    return invalid_index;
-  }
+    const size_t source_index = source_table_.find_first_source( tid, syn_id, snode_id );
+    if ( source_index == invalid_index )
+    {
+      return invalid_index;
+    }
 
-  // lcid will hold the position of the /first/ connection from node
-  // snode_id to node tnode_id, or be invalid
-  lcid = connections_[ tid ][ syn_id ]->find_first_target( tid, lcid, tnode_id );
-  if ( lcid != invalid_index )
-  {
+    // lcid will hold the position of the /first/ enabled connection from node
+    // snode_id to node tnode_id, or be invalid
+    const size_t lcid = connections_[ tid ][ syn_id ]->find_first_target( tid, source_index, tnode_id );
+
     return lcid;
   }
-
-  return lcid;
+  else
+  {
+    return connections_[ tid ][ syn_id ]->find_enabled_connection( tid, syn_id, snode_id, tnode_id, source_table_ );
+  }
+  return invalid_index;
 }
 
 void
@@ -990,7 +989,7 @@ nest::ConnectionManager::disconnect( const size_t tid,
 {
   assert( syn_id != invalid_synindex );
 
-  const size_t lcid = find_connection( tid, syn_id, snode_id, tnode_id );
+  const auto lcid = find_connection( tid, syn_id, snode_id, tnode_id );
 
   if ( lcid == invalid_index ) // this function should only be called
                                // with a valid connection
@@ -1067,7 +1066,7 @@ nest::ConnectionManager::get_num_connections( const synindex syn_id ) const
 }
 
 std::deque< nest::ConnectionID >
-nest::ConnectionManager::get_connections( const dictionary& params )
+nest::ConnectionManager::get_connections( const Dictionary& params )
 {
   std::deque< ConnectionID > connectome;
   NodeCollectionPTR source_a = NodeCollectionPTR( nullptr );
@@ -1424,7 +1423,7 @@ nest::ConnectionManager::sort_connections( const size_t tid )
         connections_[ tid ][ syn_id ]->sort_connections( source_table_.get_thread_local_sources( tid )[ syn_id ] );
       }
     }
-    remove_disabled_connections( tid );
+    remove_disabled_connections_( tid );
   }
 }
 
@@ -1674,8 +1673,10 @@ nest::ConnectionManager::compress_secondary_send_buffer_pos( const size_t tid )
 }
 
 void
-nest::ConnectionManager::remove_disabled_connections( const size_t tid )
+nest::ConnectionManager::remove_disabled_connections_( const size_t tid )
 {
+  assert( use_compressed_spikes_ );
+
   std::vector< ConnectorBase* >& connectors = connections_[ tid ];
 
   for ( synindex syn_id = 0; syn_id < connectors.size(); ++syn_id )

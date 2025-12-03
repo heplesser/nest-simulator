@@ -77,7 +77,7 @@ Layer< D >::compute_displacement( const std::vector< double >& from_pos,
 
 template < int D >
 void
-Layer< D >::set_status( const dictionary& d )
+Layer< D >::set_status( const Dictionary& d )
 {
   if ( d.known( names::edge_wrap ) )
   {
@@ -90,7 +90,7 @@ Layer< D >::set_status( const dictionary& d )
 
 template < int D >
 void
-Layer< D >::get_status( dictionary& d, NodeCollection const* const nc ) const
+Layer< D >::get_status( Dictionary& d, NodeCollection const* const nc ) const
 {
   d[ names::extent ] = std::vector< double >( extent_.get_vector() );
   d[ names::center ] = std::vector< double >( ( lower_left_ + extent_ / 2 ).get_vector() );
@@ -191,19 +191,10 @@ Layer< D >::do_get_global_positions_ntree_( NodeCollectionPTR node_collection )
   if ( cached_vector_md_ == node_collection->get_metadata() )
   {
     // Convert from vector to Ntree
-    // PYNEST-NG: Why different from Master?
-    typename std::back_insert_iterator< Ntree< D, size_t > > to = std::back_inserter( *cached_ntree_ );
-
-    for ( typename std::vector< std::pair< Position< D >, size_t > >::iterator from = cached_vector_->begin();
-          from != cached_vector_->end();
-          ++from )
-    {
-      *to = *from;
-    }
+    std::copy( cached_vector_->begin(), cached_vector_->end(), std::back_inserter( *cached_ntree_ ) );
   }
   else
   {
-
     insert_global_positions_ntree_( *cached_ntree_, node_collection );
   }
 
@@ -309,7 +300,7 @@ Layer< D >::dump_connections( std::ostream& out,
   const std::string& syn_model )
 {
   // Find all connections for given sources, targets and synapse model
-  dictionary conn_filter;
+  Dictionary conn_filter;
   conn_filter[ names::source ] = node_collection;
   conn_filter[ names::target ] = NodeCollectionPTR( target_layer->get_node_collection() );
   conn_filter[ names::synapse_model ] = syn_model;
@@ -338,7 +329,7 @@ Layer< D >::dump_connections( std::ostream& out,
       previous_source_node_id = source_node_id;
     }
 
-    const dictionary& result_dict = kernel().connection_manager.get_synapse_status( source_node_id,
+    const Dictionary& result_dict = kernel().connection_manager.get_synapse_status( source_node_id,
       conn.get_target_node_id(),
       conn.get_target_thread(),
       conn.get_synapse_model_id(),

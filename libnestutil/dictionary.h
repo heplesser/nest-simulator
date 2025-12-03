@@ -36,7 +36,7 @@
 #include <memory>
 
 class dictionary_;
-class dictionary;
+class Dictionary;
 
 namespace nest
 {
@@ -126,7 +126,7 @@ class NodeCollection;
  */
 std::string debug_type( const any_type& operand );
 
-std::string debug_dict_types( const dictionary_& dict );
+std::string debug_dict_types( const Dictionary_& dict );
 
 /**
  * @brief Check whether two any_type values are equal.
@@ -162,7 +162,7 @@ struct DictEntry_
 
 class dictionary_ : public std::map< std::string, DictEntry_ >
 {
-  // TODO-PYNEST-NG: Meta-information about entries:
+  // PYNEST-NG-FUTURE: Meta-information about entries:
   //                   * Value type (enum?)
   //                   * Whether value is writable
   //                   * Docstring for each entry
@@ -177,7 +177,7 @@ class dictionary_ : public std::map< std::string, DictEntry_ >
    *
    * @tparam T Type of element. If the value is not of the specified type, a TypeMismatch error is thrown.
    * @param value the any object to cast.
-   * @param key key where the value is located in the dictionary_, for information upon cast errors.
+   * @param key key where the value is located in the Dictionary, for information upon cast errors.
    * @throws TypeMismatch if the value is not of specified type T.
    * @return value cast to the specified type.
    */
@@ -201,7 +201,7 @@ class dictionary_ : public std::map< std::string, DictEntry_ >
    * @brief Cast the specified value to an integer.
    *
    * @param value the any object to cast.
-   * @param key key where the value is located in the dictionary_, for information upon cast errors.
+   * @param key key where the value is located in the dictionary, for information upon cast errors.
    * @throws TypeMismatch if the value is not an integer.
    * @return value cast to an integer.
    */
@@ -210,7 +210,14 @@ class dictionary_ : public std::map< std::string, DictEntry_ >
   {
     if ( std::holds_alternative< size_t >( value ) )
     {
-      return cast_value_< size_t >( value, key );
+      const size_t val = cast_value_< size_t >( value, key );
+      if ( val < std::numeric_limits< long >::min() or val > std::numeric_limits< long >::max() )
+      {
+        const std::string msg =
+          String::compose( "Failed to cast '%1' because %2 is too large to be stored as long.", key, val );
+        throw nest::BadProperty( msg );
+      }
+      return static_cast< long >( val );
     }
     else if ( std::holds_alternative< long >( value ) )
     {
@@ -221,7 +228,7 @@ class dictionary_ : public std::map< std::string, DictEntry_ >
       return cast_value_< int >( value, key );
     }
     // Not an integer type
-    std::string msg =
+    const std::string msg =
       std::string( "Failed to cast '" ) + key + "' from " + debug_type( at( key ) ) + " to an integer type ";
     throw nest::TypeMismatch( msg );
   }
@@ -233,7 +240,7 @@ public:
    * @brief Get the value at key in the specified type.
    *
    * @tparam T Type of the value. If the value is not of the specified type, a TypeMismatch error is thrown.
-   * @param key key where the value is located in the dictionary_.
+   * @param key key where the value is located in the dictionary.
    * @throws TypeMismatch if the value is not of specified type T.
    * @return the value at key cast to the specified type.
    */
@@ -245,25 +252,34 @@ public:
   }
 
   /**
-   * @brief Get the value at key as an integer.
+   * Return reference to vector of type T stored under key.
    *
-   * @param key key where the value is located in the dictionary_.
-   * @throws TypeMismatch if the value is not an integer.
-   * @return the value at key cast to the specified type.
+   * * If key does not exist in dict, create empty vector<T> and return it.
    */
-  size_t // TODO: or template?
-  get_integer( const std::string& key ) const
+  template < typename T >
+  std::vector< T >&
+  get_vector( const std::string& key )
   {
-    return cast_to_integer_( at( key ), key );
-  }
+    if ( not this->known( key ) )
+    {
+      // We need to insert empty vector explicitly. Relying on dict/map access
+      // to create a new element would result in an empty boost::any, not an
+      // empty vector<T>.
+      ( *this )[ key ] = std::vector< T >();
+    }
+    return boost::any_cast< std::vector< T >& >( ( *this )[ key ] );
+  };
 
   /**
    * @brief Update the specified non-vector value if there exists a value at key.
    *
-   * @param key key where the value may be located in the dictionary_.
+   * @param key key where the value may be located in the dictionary.
    * @param value object to update if there exists a value at key.
    * @throws TypeMismatch if the value at key is not the same type as the value argument.
    * @return Whether value was updated.
+   *
+   * @note Only use this where the user is not allowed to use random or spatial parameters.
+   *       Otherwise, use update_value_param().
    */
   template < typename T >
   bool
@@ -281,7 +297,7 @@ public:
   /**
    * @brief Update the specified value if there exists an integer value at key.
    *
-   * @param key key where the value may be located in the dictionary_.
+   * @param key key where the value may be located in the dictionary.
    * @param value object to update if there exists a value at key.
    * @throws TypeMismatch if the value at key is not an integer.
    * @return Whether the value was updated.
@@ -300,13 +316,13 @@ public:
   }
 
   /**
-   * @brief Check whether there exists a value with specified key in the dictionary_.
+   * @brief Check whether there exists a value with specified key in the dictionary.
    *
-   * @param key key where the value may be located in the dictionary_.
+   * @param key key where the value may be located in the dictionary.
    * @return true if there is a value with the specified key, false if not.
    *
    * @note This does **not** mark the entry, because we sometimes need to confirm
-   * that a certain key is not in a dictionary_.
+   * that a certain key is not in a dictionary.
    */
   bool
   known( const std::string& key ) const
@@ -334,47 +350,47 @@ public:
   }
 
   /**
-   * @brief Check whether the dictionary_ is equal to another dictionary_.
+   * @brief Check whether the dictionary is equal to another dictionary.
    *
    * Two dictionaries are equal only if they contain the exact same entries with the same values.
    *
-   * @param other dictionary_ to check against.
-   * @return true if the dictionary_ is equal to the other dictionary_, false if not.
+   * @param other dictionary to check against.
+   * @return true if the dictionary is equal to the other dictionary, false if not.
    */
-  bool operator==( const dictionary_& other ) const;
+  bool operator==( const dictionary& other ) const;
 
   /**
-   * @brief Check whether the dictionary_ is unequal to another dictionary_.
+   * @brief Check whether the dictionary is unequal to another dictionary.
    *
    * Two dictionaries are unequal if they do not contain the exact same entries with the same values.
    *
-   * @param other dictionary_ to check against.
-   * @return true if the dictionary_ is unequal to the other dictionary_, false if not.
+   * @param other dictionary to check against.
+   * @return true if the dictionary is unequal to the other dictionary, false if not.
    */
   bool
-  operator!=( const dictionary_& other ) const
+  operator!=( const dictionary& other ) const
   {
     return not( *this == other );
   }
 
   /**
-   * @brief Initializes or resets access flags for the current dictionary_.
+   * @brief Initializes or resets access flags for the current dictionary.
    *
-   * @note The method assumes that the dictionary_ was defined in global scope, whence it should
+   * @note The method assumes that the dictionary was defined in global scope, whence it should
    * only be called from a serial context. If the dict is in thread-specific, pass `true` to
    * allow call in parallel context.
    */
   void init_access_flags( const bool thread_local_dict = false ) const;
 
   /**
-   * @brief Check that all elements in the dictionary_ have been accessed.
+   * @brief Check that all elements in the dictionary have been accessed.
    *
    * @param where Which function the error occurs in.
    * @param what Which parameter triggers the error.
    * @param thread_local_dict See note below.
-   * @throws Unaccesseddictionary_Entry if there are unaccessed dictionary_ entries.
+   * @throws UnaccessedDictionaryEntry if there are unaccessed dictionary entries.
    *
-   * @note The method assumes that the dictionary_ was defined in global scope, whence it should
+   * @note The method assumes that the dictionary was defined in global scope, whence it should
    * only be called from a serial context. If the dict is in thread-specific, pass `true` to
    * allow call in parallel context.
    */
@@ -395,6 +411,7 @@ std::ostream& operator<<( std::ostream& os, const dictionary_& dict );
 template <>
 double dictionary_::cast_value_< double >( const any_type& value, const std::string& key ) const;
 
+//! Specialization that allows passing long where double is expected
 template <>
 std::vector< double > dictionary_::cast_value_< std::vector< double > >( const any_type& value,
   const std::string& key ) const;
@@ -411,6 +428,12 @@ dictionary::end() const
   return ( **this ).end();
 }
 
+/**
+ * Specialization that allows passing long vectors where double vectors are expected.
+ *
+ * @note This specialization forwards to cast_vector_value_<double>, but is required explicitly,
+ *       because, e.g., get(), calls cast_value_() directly even if the argument is a vector.
+ */
 template <>
 std::vector< double > dictionary_::cast_value_< std::vector< double > >( const any_type& value,
   const std::string& key ) const;

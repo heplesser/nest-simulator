@@ -110,6 +110,16 @@ template <>
 std::vector< double >
 dictionary_::cast_value_< std::vector< double > >( const any_type& value, const std::string& key ) const
 {
+  // PyNEST passes vector with element type any if and only if it needs to pass
+  // and empty vector, because the element type of empty lists cannot be inferred
+  // at the Python level. The assertion just double-checks that we never get a
+  // non-empty vector-of-any.
+  if ( value.type() == typeid( std::vector< boost::any > ) )
+  {
+    assert( boost::any_cast< std::vector< boost::any > >( value ).empty() );
+    return std::vector< double >();
+  }
+
   try
   {
     if ( const std::vector< double >* v = std::get_if< std::vector< double > >( &value ) )
@@ -133,7 +143,6 @@ dictionary_::cast_value_< std::vector< double > >( const any_type& value, const 
 }
 
 
-// debug
 std::string
 debug_type( const any_type& operand )
 {
@@ -147,9 +156,9 @@ debug_type( const any_type& operand )
 }
 
 std::string
-debug_dict_types( const dictionary& dict )
+debug_dict_types( const Dictionary& dict )
 {
-  std::string s = "[dictionary]\n";
+  std::string s = "[Dictionary]\n";
 
   for ( auto& kv : dict )
   {
@@ -198,7 +207,7 @@ operator<<( std::ostream& os, const nest::VerbosityLevel& )
 }
 
 std::ostream&
-operator<<( std::ostream& os, const dictionary& dict )
+operator<<( std::ostream& os, const Dictionary& dict )
 {
   const auto max_key_length = std::max_element( dict.begin(),
     dict.end(),
@@ -206,7 +215,7 @@ operator<<( std::ostream& os, const dictionary& dict )
       return s1.first.length() < s2.first.length();
     } )->first.length();
   const std::string pre_padding = "    ";
-  os << "dictionary{\n";
+  os << "Dictionary{\n";
   for ( auto& kv : dict )
   {
     std::string type;
@@ -396,7 +405,7 @@ value_equal( const any_type& first, const any_type& second )
   }
   else
   {
-    std::string msg = std::string( "Unsupported type in dictionary_::value_equal(): " ) + debug_type( first );
+    std::string msg = std::string( "Unsupported type in Dictionary::value_equal(): " ) + debug_type( first );
     throw nest::TypeMismatch( msg );
   }
   return true;
@@ -410,10 +419,10 @@ dictionary_::operator==( const dictionary_& other ) const
   {
     return false;
   }
-  // Iterate elements in the other dictionary
+  // Iterate elements in the other Dictionary
   for ( const auto& [ other_key, other_entry ] : other )
   {
-    // Check if it exists in this dictionary
+    // Check if it exists in this Dictionary
     if ( not known( other_key ) )
     {
       return false;
@@ -544,5 +553,3 @@ dictionary_::all_entries_accessed( const std::string& where,
     throw nest::UnaccessedDictionaryEntry( what, where, missed );
   }
 }
-
-// TODO-PYNEST-NG: Convenience function for accessed()?

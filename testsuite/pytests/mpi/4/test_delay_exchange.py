@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# testsimulation.py
+# test_delay_exchange.py
 #
 # This file is part of NEST.
 #
@@ -19,33 +19,25 @@
 # You should have received a copy of the GNU General Public License
 # along with NEST.  If not, see <http://www.gnu.org/licenses/>.
 
-import dataclasses
-
 import nest
-import numpy as np
-import testutil
 
 
-@dataclasses.dataclass
-class Simulation:
-    local_num_threads: int = 1
-    resolution: float = 0.1
-    duration: float = 8.0
-    weight: float = 100.0
-    delay: float = 1.0
+def test_delay_exchange():
+    """
+    Confirm that creating a single connection on a single rank will set delay extrema on all ranks.
 
-    def setup(self):
-        pass
+    @note This test must be run on multiple MPI ranks to be meaningful.
+    """
 
-    def simulate(self):
-        nest.Simulate(self.duration)
-        if hasattr(self, "voltmeter"):
-            return np.column_stack((self.voltmeter.events["times"], self.voltmeter.events["V_m"]))
+    assert nest.num_processes == 4
 
-    def run(self):
-        self.setup()
-        return self.simulate()
+    min_delay = 0.5
+    max_delay = 2.5
 
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        testutil.create_dataclass_fixtures(cls)
+    n = nest.Create("parrot_neuron")
+    nest.Connect(n, n, "one_to_one", {"synapse_model": "static_synapse", "delay": min_delay})
+    nest.Connect(n, n, "one_to_one", {"synapse_model": "static_synapse", "delay": max_delay})
+
+    # Accessing kernel attributes forces GetKernelStatus with exchange of delay info
+    assert nest.min_delay == min_delay
+    assert nest.max_delay == max_delay

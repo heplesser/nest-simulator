@@ -51,7 +51,7 @@ template < class BaseT >
 class GenericFactory
 {
 public:
-  typedef BaseT* ( *CreatorFunction )( const dictionary& d );
+  typedef BaseT* ( *CreatorFunction )( const Dictionary& d );
   typedef std::map< std::string, CreatorFunction > AssocMap;
 
   /**
@@ -60,14 +60,14 @@ public:
    * @param d    Dictionary containing parameters for this subtype.
    * @returns dynamically allocated new object.
    */
-  BaseT* create( const std::string& name, const dictionary& d ) const;
+  BaseT* create( const std::string& name, const Dictionary& d ) const;
 
   /**
    * Register a new subtype.
    *
    * The type name must not already exist. The
    * class for the subtype is supplied via the template argument. This
-   * class should have a constructor taking a const dictionary& as
+   * class should have a constructor taking a const Dictionary& as
    * parameter.
    * @param name subtype name.
    * @returns true if subtype was successfully registered.
@@ -79,21 +79,21 @@ public:
    * Register a new subtype. The type name must not already exist.
    * @param name    Subtype name.
    * @param creator A factory function creating objects of this subtype
-   *                from a const dictionary& containing parameters
+   *                from a const Dictionary& containing parameters
    * @returns true if mask was successfully registered.
    */
   bool register_subtype( const std::string& name, CreatorFunction creator );
 
 private:
   template < class T >
-  static BaseT* new_from_dict_( const dictionary& d );
+  static BaseT* new_from_dict_( const Dictionary& d );
 
   AssocMap associations_;
 };
 
 template < class BaseT >
 inline BaseT*
-GenericFactory< BaseT >::create( const std::string& name, const dictionary& d ) const
+GenericFactory< BaseT >::create( const std::string& name, const Dictionary& d ) const
 {
   typename AssocMap::const_iterator i = associations_.find( name );
   if ( i != associations_.end() )
@@ -121,7 +121,7 @@ GenericFactory< BaseT >::register_subtype( const std::string& name, CreatorFunct
 template < class BaseT >
 template < class T >
 BaseT*
-GenericFactory< BaseT >::new_from_dict_( const dictionary& d )
+GenericFactory< BaseT >::new_from_dict_( const Dictionary& d )
 {
   return new T( d );
 }

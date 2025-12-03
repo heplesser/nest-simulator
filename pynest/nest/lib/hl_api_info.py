@@ -110,14 +110,36 @@ def help(obj=None, return_text=False):
         print(nest.__doc__)
 
 
-@deprecated("get", "Instead of GetStatus(nrns|conns, args), use nrns|conns.get(args).")
+@deprecated(
+    "get",
+    " ".join(
+        (
+            "GetStatus() is deprecated and will be removed in a future version of NEST.",
+            "Instead of GetStatus(nrns|conns, args), use nrns|conns.get(args).",
+        )
+    ),
+)
 def GetStatus(nodes_or_conns, keys=None, output=""):
+    if len(nodes_or_conns) == 0:
+        return "[]" if output == "json" else tuple()
+
     if keys:
-        return nodes_or_conns.get(keys, output=output)
+        result = nodes_or_conns.get(keys, output=output)
     else:
-        return nodes_or_conns.get(output=output)
+        result = nodes_or_conns.get(output=output)
+
+    # ensure consistency with SLI-based NEST
+    return result if len(nodes_or_conns) > 1 else (result,)
 
 
-@deprecated("set", "Instead of SetStatus(nrns|conns, args), use nrns|conns.set(args).")
+@deprecated(
+    "set",
+    " ".join(
+        (
+            "SetStatus() is deprecated and will be removed in a future version of NEST.",
+            "Instead of SetStatus(nrns|conns, args), use nrns|conns.set(args).",
+        )
+    ),
+)
 def SetStatus(nodes_or_conns, params, val=None):
     nodes_or_conns.set(params if val is None else {params: val})

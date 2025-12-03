@@ -30,7 +30,6 @@
 
 // Includes from libnestuil:
 #include "dictionary.h"
-#include "lockptr.h"
 
 // Includes from nestkernel:
 #include "exceptions.h"
@@ -62,7 +61,7 @@ public:
   NodeCollectionMetadata() = default;
   virtual ~NodeCollectionMetadata() = default;
 
-  virtual void set_status( const dictionary&, bool ) = 0;
+  virtual void set_status( const Dictionary&, bool ) = 0;
 
   /**
    * Retrieve status information sliced according to slicing of node collection
@@ -73,8 +72,8 @@ public:
    * @note This method is provided both accepting a naked pointer and a NodeCollectionPTR to allow calling
    * from node collection itself, passing this, and with pointer provided from outside.
    */
-  virtual void get_status( dictionary&, NodeCollection const* const ) const = 0;
-  virtual void get_status( dictionary&, const NodeCollectionPTR ) const = 0;
+  virtual void get_status( Dictionary&, NodeCollection const* const ) const = 0;
+  virtual void get_status( Dictionary&, const NodeCollectionPTR ) const = 0;
 
   virtual void set_first_node_id( size_t ) = 0;
   virtual size_t get_first_node_id() const = 0;
@@ -766,7 +765,7 @@ public:
   /**
    * Collect metadata into dictionary.
    */
-  void get_metadata_status( dictionary& ) const;
+  void get_metadata_status( Dictionary& ) const;
 
   /**
    * return the first stored ID (i.e, ID at index zero) inside the NodeCollection

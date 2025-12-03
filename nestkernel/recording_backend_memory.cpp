@@ -47,7 +47,7 @@ nest::RecordingBackendMemory::finalize()
 }
 
 void
-nest::RecordingBackendMemory::enroll( const RecordingDevice& device, const dictionary& params )
+nest::RecordingBackendMemory::enroll( const RecordingDevice& device, const Dictionary& params )
 {
   size_t t = device.get_thread();
   size_t node_id = device.get_node_id();
@@ -113,21 +113,21 @@ nest::RecordingBackendMemory::write( const RecordingDevice& device,
 }
 
 void
-nest::RecordingBackendMemory::check_device_status( const dictionary& params ) const
+nest::RecordingBackendMemory::check_device_status( const Dictionary& params ) const
 {
   DeviceData dd;
   dd.set_status( params ); // throws if params contains invalid entries
 }
 
 void
-nest::RecordingBackendMemory::get_device_defaults( dictionary& params ) const
+nest::RecordingBackendMemory::get_device_defaults( Dictionary& params ) const
 {
   DeviceData dd;
   dd.get_status( params );
 }
 
 void
-nest::RecordingBackendMemory::get_device_status( const RecordingDevice& device, dictionary& d ) const
+nest::RecordingBackendMemory::get_device_status( const RecordingDevice& device, Dictionary& d ) const
 {
   const size_t t = device.get_thread();
   const size_t node_id = device.get_node_id();
@@ -152,13 +152,13 @@ nest::RecordingBackendMemory::post_step_hook()
 }
 
 void
-nest::RecordingBackendMemory::get_status( dictionary& ) const
+nest::RecordingBackendMemory::get_status( Dictionary& ) const
 {
   // nothing to do
 }
 
 void
-nest::RecordingBackendMemory::set_status( const dictionary& )
+nest::RecordingBackendMemory::set_status( const Dictionary& )
 {
   // nothing to do
 }
@@ -215,58 +215,40 @@ nest::RecordingBackendMemory::DeviceData::push_back( const Event& event,
 }
 
 void
-nest::RecordingBackendMemory::DeviceData::get_status( dictionary& d ) const
+nest::RecordingBackendMemory::DeviceData::get_status( Dictionary& d ) const
 {
-  dictionary events;
+  Dictionary events;
 
   if ( d.known( names::events ) )
   {
-    events = d.get< dictionary >( names::events );
+    events = d.get< Dictionary >( names::events );
   }
 
-  auto init_intvector = [ &events ]( std::string key ) -> std::vector< int >
-  {
-    if ( not events.known( key ) )
-    {
-      ( *events )[ key ] = std::vector< int >();
-    }
-    return std::get< std::vector< int > >( ( *events )[ key ] );
-  };
-  auto init_doublevector = [ &events ]( std::string key ) -> std::vector< double >
-  {
-    if ( not events.known( key ) )
-    {
-      ( *events )[ key ] = std::vector< double >();
-    }
-    return std::get< std::vector< double > >( ( *events )[ key ] );
-  };
-
-  // TODO-PYNEST-NG: check that the vector in events is appended correctly
-  std::vector< int > senders = init_intvector( names::senders );
+  auto& senders = events.get_vector< int >( names::senders );
   senders.insert( senders.end(), senders_.begin(), senders_.end() );
 
   if ( time_in_steps_ )
   {
-    std::vector< int > times = init_intvector( names::times );
+    auto& times = events.get_vector< int >( names::times );
     times.insert( times.end(), times_steps_.begin(), times_steps_.end() );
 
-    std::vector< double > offsets = init_doublevector( names::offsets );
+    auto& offsets = events.get_vector< double >( names::offsets );
     offsets.insert( offsets.end(), times_offset_.begin(), times_offset_.end() );
   }
   else
   {
-    std::vector< double > times = init_doublevector( names::times );
+    auto& times = events.get_vector< double >( names::times );
     times.insert( times.end(), times_ms_.begin(), times_ms_.end() );
   }
 
   for ( size_t i = 0; i < double_values_.size(); ++i )
   {
-    std::vector< double > double_name = init_doublevector( double_value_names_[ i ] );
+    auto& double_name = events.get_vector< double >( double_value_names_[ i ] );
     double_name.insert( double_name.end(), double_values_[ i ].begin(), double_values_[ i ].end() );
   }
   for ( size_t i = 0; i < long_values_.size(); ++i )
   {
-    std::vector< int > long_name = init_intvector( long_value_names_[ i ] );
+    auto& long_name = events.get_vector< int >( long_value_names_[ i ] );
     long_name.insert( long_name.end(), long_values_[ i ].begin(), long_values_[ i ].end() );
   }
 
@@ -275,7 +257,7 @@ nest::RecordingBackendMemory::DeviceData::get_status( dictionary& d ) const
 }
 
 void
-nest::RecordingBackendMemory::DeviceData::set_status( const dictionary& d )
+nest::RecordingBackendMemory::DeviceData::set_status( const Dictionary& d )
 {
   bool time_in_steps = false;
   if ( d.update_value( names::time_in_steps, time_in_steps ) )
