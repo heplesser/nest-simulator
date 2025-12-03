@@ -595,7 +595,7 @@ create_parameter( const any_type& value )
       {
         return val;
       }
-      else if constexpr ( std::is_same_v< T, double > or std::is_same_v< T, long > or std::is_same_v< T, dictionary& >
+      else if constexpr ( std::is_same_v< T, double > or std::is_same_v< T, long > or std::is_same_v< T, Dictionary& >
         or std::is_same_v< T, int > )
       {
         // Convert int to long, otherwise keep the type (T) as is

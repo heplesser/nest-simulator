@@ -52,7 +52,7 @@ typedef std::variant< size_t,
   bool,
   nest::VerbosityLevel,
   std::string,
-  dictionary,
+  Dictionary,
   std::shared_ptr< nest::Parameter >,
   std::shared_ptr< nest::NodeCollection >,
   std::vector< size_t >,
@@ -64,13 +64,13 @@ typedef std::variant< size_t,
   std::vector< std::vector< std::vector< long > > >,
   std::vector< std::vector< std::vector< double > > >,
   std::vector< std::string >,
-  std::vector< dictionary > >
+  std::vector< Dictionary > >
   any_type;
 
-class dictionary : public std::shared_ptr< dictionary_ >
+class Dictionary : public std::shared_ptr< dictionary_ >
 {
 public:
-  dictionary()
+  Dictionary()
     : std::shared_ptr< dictionary_ >( std::make_shared< dictionary_ >() )
   {
   }
@@ -103,8 +103,6 @@ public:
   template < typename T >
   T get( const std::string& key ) const;
 
-  size_t get_integer( const std::string& key ) const;
-
   template < typename T >
   bool update_value( const std::string& key, T& value ) const;
 
@@ -126,7 +124,7 @@ class NodeCollection;
  */
 std::string debug_type( const any_type& operand );
 
-std::string debug_dict_types( const Dictionary_& dict );
+std::string debug_dict_types( const Dictionary& dict );
 
 /**
  * @brief Check whether two any_type values are equal.
@@ -267,7 +265,7 @@ public:
       // empty vector<T>.
       ( *this )[ key ] = std::vector< T >();
     }
-    return boost::any_cast< std::vector< T >& >( ( *this )[ key ] );
+    return std::get< std::vector< T >& >( ( *this )[ key ] );
   };
 
   /**
@@ -357,7 +355,7 @@ public:
    * @param other dictionary to check against.
    * @return true if the dictionary is equal to the other dictionary, false if not.
    */
-  bool operator==( const dictionary& other ) const;
+  bool operator==( const dictionary_& other ) const;
 
   /**
    * @brief Check whether the dictionary is unequal to another dictionary.
@@ -368,7 +366,7 @@ public:
    * @return true if the dictionary is unequal to the other dictionary, false if not.
    */
   bool
-  operator!=( const dictionary& other ) const
+  operator!=( const Dictionary& other ) const
   {
     return not( *this == other );
   }
@@ -417,13 +415,13 @@ std::vector< double > dictionary_::cast_value_< std::vector< double > >( const a
   const std::string& key ) const;
 
 inline auto
-dictionary::begin() const
+Dictionary::begin() const
 {
   return ( **this ).begin();
 }
 
 inline auto
-dictionary::end() const
+Dictionary::end() const
 {
   return ( **this ).end();
 }
@@ -439,55 +437,55 @@ std::vector< double > dictionary_::cast_value_< std::vector< double > >( const a
   const std::string& key ) const;
 
 inline auto
-dictionary::size() const
+Dictionary::size() const
 {
   return ( **this ).size();
 }
 
 inline auto
-dictionary::empty() const
+Dictionary::empty() const
 {
   return ( **this ).empty();
 }
 
 inline void
-dictionary::clear() const
+Dictionary::clear() const
 {
   ( **this ).clear();
 }
 
 inline auto
-dictionary::find( const std::string& key ) const
+Dictionary::find( const std::string& key ) const
 {
   return ( **this ).find( key );
 }
 
 inline bool
-dictionary::known( const std::string& key ) const
+Dictionary::known( const std::string& key ) const
 {
   return ( **this ).known( key );
 }
 
 inline void
-dictionary::mark_as_accessed( const std::string& key ) const
+Dictionary::mark_as_accessed( const std::string& key ) const
 {
   ( **this ).mark_as_accessed( key );
 }
 
 inline bool
-dictionary::has_been_accessed( const std::string& key ) const
+Dictionary::has_been_accessed( const std::string& key ) const
 {
   return ( **this ).has_been_accessed( key );
 }
 
 inline void
-dictionary::init_access_flags( const bool thread_local_dict ) const
+Dictionary::init_access_flags( const bool thread_local_dict ) const
 {
   ( **this ).init_access_flags( thread_local_dict );
 }
 
 inline void
-dictionary::all_entries_accessed( const std::string& where,
+Dictionary::all_entries_accessed( const std::string& where,
   const std::string& what,
   const bool thread_local_dict ) const
 {
@@ -496,27 +494,21 @@ dictionary::all_entries_accessed( const std::string& where,
 
 template < typename T >
 inline T
-dictionary::get( const std::string& key ) const
+Dictionary::get( const std::string& key ) const
 {
   return ( **this ).get< T >( key );
 }
 
-inline size_t
-dictionary::get_integer( const std::string& key ) const
-{
-  return ( **this ).get_integer( key );
-}
-
 template < typename T >
 inline bool
-dictionary::update_value( const std::string& key, T& value ) const
+Dictionary::update_value( const std::string& key, T& value ) const
 {
   return ( **this ).update_value( key, value );
 }
 
 template < typename T >
 inline bool
-dictionary::update_integer_value( const std::string& key, T& value ) const
+Dictionary::update_integer_value( const std::string& key, T& value ) const
 {
   return ( **this ).update_integer_value( key, value );
 }

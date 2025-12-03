@@ -53,8 +53,8 @@ cdef extern from "dictionary.h" namespace "std":
     cbool holds_alternative[T](const any_type&)
 
 cdef extern from "dictionary.h":
-    cppclass dictionary:
-        dictionary()
+    cppclass Dictionary:
+        Dictionary()
         any_type& operator[](const string&)
         cppclass const_iterator:
             pair[string, DictEntry_]& operator*()
@@ -65,7 +65,7 @@ cdef extern from "dictionary.h":
         const_iterator end()
         cbool known(const string&)
     string debug_type(const any_type&)
-    string debug_dict_types(const dictionary&)
+    string debug_dict_types(const Dictionary&)
 
 
 cdef extern from "logging.h" namespace "nest":

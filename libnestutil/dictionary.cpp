@@ -54,22 +54,22 @@ operator<<( std::ostream& os, const std::vector< T >& vec )
 }
 
 any_type&
-dictionary::operator[]( const std::string& key ) const
+Dictionary::operator[]( const std::string& key ) const
 {
   return ( **this )[ key ];
 }
 any_type&
-dictionary::operator[]( std::string&& key ) const
+Dictionary::operator[]( std::string&& key ) const
 {
   return ( **this )[ std::move( key ) ];
 }
 any_type&
-dictionary::at( const std::string& key )
+Dictionary::at( const std::string& key )
 {
   return ( **this ).at( key );
 }
 const any_type&
-dictionary::at( const std::string& key ) const
+Dictionary::at( const std::string& key ) const
 {
   return ( **this ).at( key );
 }
@@ -377,14 +377,14 @@ value_equal( const any_type& first, const any_type& second )
       return false;
     }
   }
-  else if ( std::holds_alternative< dictionary >( first ) )
+  else if ( std::holds_alternative< Dictionary >( first ) )
   {
-    if ( not std::holds_alternative< dictionary >( second ) )
+    if ( not std::holds_alternative< Dictionary >( second ) )
     {
       return false;
     }
-    const auto this_value = std::get< dictionary >( first );
-    const auto other_value = std::get< dictionary >( second );
+    const auto this_value = std::get< Dictionary >( first );
+    const auto other_value = std::get< Dictionary >( second );
     if ( this_value != other_value )
     {
       return false;
