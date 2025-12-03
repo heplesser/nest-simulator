@@ -152,7 +152,7 @@ GridMask< D >::get_dict() const
     long shape_z = lower_right_[ 2 ] - upper_left_[ 2 ];
     shape_dim.push_back( shape_z );
   }
-  ( *maskd )[ names::shape ] = shape_dim;
+  maskd[ names::shape ] = shape_dim;
 
   return d;
 }

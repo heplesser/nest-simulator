@@ -143,7 +143,7 @@ nest::RecordingDevice::set_status( const dictionary& d )
     dictionary backend_params;
 
     // copy all properties not previously accessed from d to backend_params
-    for ( auto& [ key, entry ] : *d )
+    for ( auto& [ key, entry ] : d )
     {
       if ( not d.has_been_accessed( key ) )
       {
@@ -155,7 +155,7 @@ nest::RecordingDevice::set_status( const dictionary& d )
 
     // cache all properties accessed by the backend in private member
     backend_params_.clear();
-    for ( auto& [ key, entry ] : *backend_params )
+    for ( auto& [ key, entry ] : backend_params )
     {
       if ( backend_params.has_been_accessed( key ) )
       {

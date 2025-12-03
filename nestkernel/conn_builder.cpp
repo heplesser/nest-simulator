@@ -544,7 +544,7 @@ nest::BipartiteConnBuilder::set_synapse_params( const dictionary& syn_defaults,
   const dictionary& syn_params,
   size_t synapse_indx )
 {
-  for ( auto& syn_kv_pair : *syn_defaults )
+  for ( auto& syn_kv_pair : syn_defaults )
   {
     const std::string param_name = syn_kv_pair.first;
     if ( skip_syn_params_.find( param_name ) != skip_syn_params_.end() )

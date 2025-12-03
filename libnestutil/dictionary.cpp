@@ -151,7 +151,7 @@ debug_dict_types( const dictionary& dict )
 {
   std::string s = "[dictionary]\n";
 
-  for ( auto& kv : *dict )
+  for ( auto& kv : dict )
   {
     s += kv.first + ": ";
     s += debug_type( kv.second.item ) + "\n";
@@ -200,14 +200,14 @@ operator<<( std::ostream& os, const nest::VerbosityLevel& )
 std::ostream&
 operator<<( std::ostream& os, const dictionary& dict )
 {
-  const auto max_key_length = std::max_element( ( *dict ).begin(),
-    ( *dict ).end(),
+  const auto max_key_length = std::max_element( dict.begin(),
+    dict.end(),
     []( const dictionary_::value_type s1, const dictionary_::value_type s2 ) {
       return s1.first.length() < s2.first.length();
     } )->first.length();
   const std::string pre_padding = "    ";
   os << "dictionary{\n";
-  for ( auto& kv : *dict )
+  for ( auto& kv : dict )
   {
     std::string type;
     std::stringstream value_stream;

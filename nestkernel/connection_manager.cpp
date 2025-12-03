@@ -219,7 +219,7 @@ nest::ConnectionManager::get_status( dictionary& dict )
   sw_construction_connect.get_status( dict, names::time_construction_connect, names::time_construction_connect_cpu );
 
   std::vector< std::string > connection_rules;
-  for ( auto const& element : *connruledict_ )
+  for ( auto const& element : connruledict_ )
   {
     connection_rules.push_back( element.first );
   }

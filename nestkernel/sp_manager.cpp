@@ -138,7 +138,7 @@ SPManager::set_status( const dictionary& d )
   sp_conn_builders_.clear();
 
   d.update_value< dictionary >( names::structural_plasticity_synapses, syn_specs );
-  for ( auto& [ key, entry ] : *syn_specs )
+  for ( auto& [ key, entry ] : syn_specs )
   {
     // TODO-PYNEST-NG: We could get the dictionary here directly by std::get< dictionary >(entry.item),
     // but using the proper get() methods seems cleaner.
