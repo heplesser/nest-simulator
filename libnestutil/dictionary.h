@@ -48,7 +48,7 @@ class Parameter;
 class NodeCollection;
 }
 
-// PyNEST passes vector with element type any if and only if it needs to pass and empty vector, because the element type
+// PyNEST passes vector with element type any if and only if it needs to pass an empty vector, because the element type
 // of empty lists cannot be inferred at the Python level.
 struct EmptyList
 {
@@ -60,29 +60,32 @@ struct EmptyList
   bool operator==( const EmptyList& ) const = default;
 };
 
-typedef std::variant< size_t,
-  long,
-  int,
-  unsigned int,
-  double,
-  bool,
-  nest::VerbosityLevel,
-  std::string,
-  Dictionary,
+template < typename... Scalars >
+struct DictionarySchemaBuilder
+{
+  template < typename T >
+  static constexpr bool is_defined_scalar = ( std::is_same_v< T, Scalars > or ... );
+  ;
+
+  template < typename... Extras >
+  using VariantType = std::variant< Scalars..., // scalar types
+    std::vector< Scalars >...,                  // vector variants of the scalar types
+    Extras...                                   // any extra types
+    >;
+};
+
+using DictionarySchema =
+  DictionarySchemaBuilder< size_t, long, int, unsigned int, double, bool, std::string, Dictionary >;
+
+using any_type = DictionarySchema::VariantType< std::shared_ptr< nest::NodeCollection >,
   std::shared_ptr< nest::Parameter >,
-  std::shared_ptr< nest::NodeCollection >,
-  std::vector< size_t >,
-  std::vector< int >,
-  std::vector< long >,
-  std::vector< double >,
+  nest::VerbosityLevel,
+  EmptyList,
   std::vector< std::vector< long > >,
   std::vector< std::vector< double > >,
   std::vector< std::vector< std::vector< long > > >,
-  std::vector< std::vector< std::vector< double > > >,
-  std::vector< std::string >,
-  std::vector< Dictionary >,
-  EmptyList >
-  any_type;
+  std::vector< std::vector< std::vector< double > > > >;
+
 
 // Define a simple Concept for "Integer Integers" (excluding bool and char)
 template < typename T >

@@ -42,11 +42,21 @@ cdef extern from "dictionary.h":
         any_type()
         any_type& operator=[T](T&)
 
+    cppclass EmptyList:
+        EmptyList()
+
     cppclass DictEntry_:
         DictEntry_()
         DictEntry_(const any_type&)
-        any item
+        any_type item
         cbool accessed
+
+    cppclass dictionary_:
+        cppclass const_iterator:
+            pair[string, DictEntry_]& operator*()
+            const_iterator operator++()
+            bint operator==(const_iterator&)
+            bint operator!=(const_iterator&)
 
 cdef extern from "dictionary.h" namespace "std":
     T get[T](any_type& operand)
@@ -56,13 +66,8 @@ cdef extern from "dictionary.h":
     cppclass Dictionary:
         Dictionary()
         any_type& operator[](const string&)
-        cppclass const_iterator:
-            pair[string, DictEntry_]& operator*()
-            const_iterator operator++()
-            bint operator==(const const_iterator&)
-            bint operator!=(const const_iterator&)
-        const_iterator begin()
-        const_iterator end()
+        dictionary_.const_iterator begin()
+        dictionary_.const_iterator end()
         cbool known(const string&)
     string debug_type(const any_type&)
     string debug_dict_types(const Dictionary&)

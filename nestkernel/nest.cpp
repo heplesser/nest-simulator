@@ -164,32 +164,97 @@ get_kernel_status()
   return d;
 }
 
+// TODO: Add the possibility to filter for specific keys
 Dictionary
 get_nc_status( NodeCollectionPTR nc )
 {
   Dictionary result;
+  const size_t num_nodes = nc->size();
+
   size_t node_index = 0;
-  for ( NodeCollection::const_iterator it = nc->begin(); it < nc->end(); ++it, ++node_index )
+  for ( auto it = nc->begin(); it < nc->end(); ++it, ++node_index )
   {
     const auto node_status = get_node_status( ( *it ).node_id );
-    for ( auto& kv_pair : node_status )
+
+    if ( node_index == 0 ) // schema definition step
     {
-      auto p = result.find( kv_pair.first );
-      if ( p != result.end() )
+      for ( const auto& [ key, value_wrapper ] : node_status )
       {
-        // key exists
-        auto& v = std::get< std::vector< boost::any >& >( p->second.item );
-        v[ node_index ] = kv_pair.second.item;
+        // Visit the variant to determine type T
+        std::visit(
+          [ &result, key, num_nodes ]( const auto& val )
+          {
+            using T = std::decay_t< decltype( val ) >;
+
+            if constexpr ( not DictionarySchema::is_defined_scalar< T > )
+            {
+              // Logic for Vectors: Explicitly forbidden
+              throw std::runtime_error(
+                std::format( "Invalid Schema: Key '{}' contains a vector, but only scalar values are allowed.", key ) );
+            }
+            else
+            {
+              // Create vector<T> of size N
+              std::vector< T > vec( num_nodes );
+
+              // Assign the first value
+              vec[ 0 ] = val;
+
+              // Store in result
+              result[ key ] = std::move( vec );
+            }
+          },
+          value_wrapper.item );
       }
-      else
+    }
+    else // Fill step (including validation)
+    {
+      for ( const auto& [ key, value_wrapper ] : node_status )
       {
-        // key does not exist yet
-        auto new_entry = std::vector< boost::any >( nc->size(), nullptr );
-        new_entry[ node_index ] = kv_pair.second.item;
-        result[ kv_pair.first ] = new_entry;
+        auto map_it = result.find( key );
+
+        // Strict Key Existence Check
+        if ( map_it == result.end() )
+        {
+          throw std::runtime_error( std::format(
+            "Sparse data detected: New key '{}' found late at index {}.", key, std::to_string( node_index ) ) );
+        }
+
+        // We visit the input value and try to cast the existing vector to matching type.
+        std::visit(
+          [ &map_it, node_index, key ]( const auto& val )
+          {
+            using T = std::decay_t< decltype( val ) >;
+
+            if constexpr ( not DictionarySchema::is_defined_scalar< T > )
+            {
+              // Logic for Vectors: Explicitly forbidden
+              throw std::runtime_error(
+                std::format( "Invalid Schema: Key '{}' contains a vector, but only scalar values are allowed.", key ) );
+            }
+            else
+            {
+              try
+              {
+                // Throws std::bad_variant_access if Node N has a different type than Node 0 (e.g., int vs double)
+                auto& vec = std::get< std::vector< T > >( map_it->second.item );
+                vec[ node_index ] = val;
+              }
+              catch ( const std::bad_variant_access& )
+              {
+                throw std::runtime_error( std::format(
+                  "Type mismatch detected for key '{}' at index {}. Retrieving node collection status data "
+                  "only works for homogeneous neuron models.",
+                  key,
+                  std::to_string( node_index ) ) );
+              }
+            }
+          },
+          value_wrapper.item );
       }
     }
   }
+
   return result;
 }
 
