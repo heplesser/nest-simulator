@@ -178,19 +178,19 @@ get_nc_status( NodeCollectionPTR nc )
 
     if ( node_index == 0 ) // schema definition step
     {
-      for ( const auto& [ key, value_wrapper ] : node_status )
+      for ( const auto& kv_pair : node_status )
       {
         // Visit the variant to determine type T
         std::visit(
-          [ &result, key, num_nodes ]( const auto& val )
+          [ &result, &kv_pair, num_nodes ]( const auto& val )
           {
             using T = std::decay_t< decltype( val ) >;
 
             if constexpr ( not DictionarySchema::is_defined_scalar< T > )
             {
               // Logic for Vectors: Explicitly forbidden
-              throw std::runtime_error(
-                std::format( "Invalid Schema: Key '{}' contains a vector, but only scalar values are allowed.", key ) );
+              throw std::runtime_error( std::format(
+                "Invalid Schema: Key '{}' contains a vector, but only scalar values are allowed.", kv_pair.first ) );
             }
             else
             {
@@ -201,28 +201,29 @@ get_nc_status( NodeCollectionPTR nc )
               vec[ 0 ] = val;
 
               // Store in result
-              result[ key ] = std::move( vec );
+              result[ kv_pair.first ] = std::move( vec );
             }
           },
-          value_wrapper.item );
+          kv_pair.second.item );
       }
     }
     else // Fill step (including validation)
     {
-      for ( const auto& [ key, value_wrapper ] : node_status )
+      for ( const auto& kv_pair : node_status )
       {
-        auto map_it = result.find( key );
+        auto map_it = result.find( kv_pair.first );
 
         // Strict Key Existence Check
         if ( map_it == result.end() )
         {
-          throw std::runtime_error( std::format(
-            "Sparse data detected: New key '{}' found late at index {}.", key, std::to_string( node_index ) ) );
+          throw std::runtime_error( std::format( "Sparse data detected: New key '{}' found late at index {}.",
+            kv_pair.first,
+            std::to_string( node_index ) ) );
         }
 
         // We visit the input value and try to cast the existing vector to matching type.
         std::visit(
-          [ &map_it, node_index, key ]( const auto& val )
+          [ &map_it, node_index, key = kv_pair.first ]( const auto& val )
           {
             using T = std::decay_t< decltype( val ) >;
 
@@ -250,7 +251,7 @@ get_nc_status( NodeCollectionPTR nc )
               }
             }
           },
-          value_wrapper.item );
+          kv_pair.second.item );
       }
     }
   }

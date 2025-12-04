@@ -548,7 +548,7 @@ SonataConnector::create_edge_type_id_2_syn_spec_( Dictionary edge_params )
 {
   for ( auto& syn_kv_pair : edge_params )
   {
-    const auto type_id = std::stoi( std::get< std::string >( syn_kv_pair.first ) );
+    const auto type_id = std::stoi( syn_kv_pair.first );
     auto d = std::get< Dictionary >( syn_kv_pair.second.item );
 
     const auto syn_name = std::get< std::string >( d.at( "synapse_model" ) );

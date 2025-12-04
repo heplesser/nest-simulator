@@ -55,6 +55,10 @@
 #include "stopwatch_impl.h"
 #include "target_table_devices_impl.h"
 
+#ifdef HAVE_HDF5
+#include "sonata_connector.h"
+#endif
+
 
 nest::ConnectionManager::ConnectionManager()
   : connruledict_()
