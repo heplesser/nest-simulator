@@ -66,12 +66,12 @@ Dictionary::operator[]( std::string&& key ) const
 any_type&
 Dictionary::at( const std::string& key )
 {
-  return ( **this ).at( key );
+  return ( *this )->at( key );
 }
 const any_type&
 Dictionary::at( const std::string& key ) const
 {
-  return ( **this ).at( key );
+  return ( *this )->at( key );
 }
 
 template <>
@@ -234,9 +234,9 @@ operator<<( std::ostream& os, const Dictionary& dict )
 bool
 value_equal( const any_type& first, const any_type& second )
 {
-  if ( std::holds_alternative< int >( first ) )
+  if ( is_type< int >( first ) )
   {
-    if ( not std::holds_alternative< int >( second ) )
+    if ( not is_type< int >( second ) )
     {
       return false;
     }
@@ -247,9 +247,9 @@ value_equal( const any_type& first, const any_type& second )
       return false;
     }
   }
-  else if ( std::holds_alternative< long >( first ) )
+  else if ( is_type< long >( first ) )
   {
-    if ( not std::holds_alternative< long >( second ) )
+    if ( not is_type< long >( second ) )
     {
       return false;
     }
@@ -260,9 +260,9 @@ value_equal( const any_type& first, const any_type& second )
       return false;
     }
   }
-  else if ( std::holds_alternative< size_t >( first ) )
+  else if ( is_type< size_t >( first ) )
   {
-    if ( not std::holds_alternative< size_t >( second ) )
+    if ( not is_type< size_t >( second ) )
     {
       return false;
     }
@@ -273,9 +273,9 @@ value_equal( const any_type& first, const any_type& second )
       return false;
     }
   }
-  else if ( std::holds_alternative< double >( first ) )
+  else if ( is_type< double >( first ) )
   {
-    if ( not std::holds_alternative< double >( second ) )
+    if ( not is_type< double >( second ) )
     {
       return false;
     }
@@ -286,9 +286,9 @@ value_equal( const any_type& first, const any_type& second )
       return false;
     }
   }
-  else if ( std::holds_alternative< bool >( first ) )
+  else if ( is_type< bool >( first ) )
   {
-    if ( not std::holds_alternative< bool >( second ) )
+    if ( not is_type< bool >( second ) )
     {
       return false;
     }
@@ -299,9 +299,9 @@ value_equal( const any_type& first, const any_type& second )
       return false;
     }
   }
-  else if ( std::holds_alternative< std::string >( first ) )
+  else if ( is_type< std::string >( first ) )
   {
-    if ( not std::holds_alternative< std::string >( second ) )
+    if ( not is_type< std::string >( second ) )
     {
       return false;
     }
@@ -312,9 +312,9 @@ value_equal( const any_type& first, const any_type& second )
       return false;
     }
   }
-  else if ( std::holds_alternative< std::vector< int > >( first ) )
+  else if ( is_type< std::vector< int > >( first ) )
   {
-    if ( not std::holds_alternative< std::vector< int > >( second ) )
+    if ( not is_type< std::vector< int > >( second ) )
     {
       return false;
     }
@@ -325,9 +325,9 @@ value_equal( const any_type& first, const any_type& second )
       return false;
     }
   }
-  else if ( std::holds_alternative< std::vector< double > >( first ) )
+  else if ( is_type< std::vector< double > >( first ) )
   {
-    if ( not std::holds_alternative< std::vector< double > >( second ) )
+    if ( not is_type< std::vector< double > >( second ) )
     {
       return false;
     }
@@ -338,9 +338,9 @@ value_equal( const any_type& first, const any_type& second )
       return false;
     }
   }
-  else if ( std::holds_alternative< std::vector< std::vector< double > > >( first ) )
+  else if ( is_type< std::vector< std::vector< double > > >( first ) )
   {
-    if ( not std::holds_alternative< std::vector< std::vector< double > > >( second ) )
+    if ( not is_type< std::vector< std::vector< double > > >( second ) )
     {
       return false;
     }
@@ -351,9 +351,9 @@ value_equal( const any_type& first, const any_type& second )
       return false;
     }
   }
-  else if ( std::holds_alternative< std::vector< std::string > >( first ) )
+  else if ( is_type< std::vector< std::string > >( first ) )
   {
-    if ( not std::holds_alternative< std::vector< std::string > >( second ) )
+    if ( not is_type< std::vector< std::string > >( second ) )
     {
       return false;
     }
@@ -364,9 +364,9 @@ value_equal( const any_type& first, const any_type& second )
       return false;
     }
   }
-  else if ( std::holds_alternative< std::vector< size_t > >( first ) )
+  else if ( is_type< std::vector< size_t > >( first ) )
   {
-    if ( not std::holds_alternative< std::vector< size_t > >( second ) )
+    if ( not is_type< std::vector< size_t > >( second ) )
     {
       return false;
     }
@@ -377,9 +377,9 @@ value_equal( const any_type& first, const any_type& second )
       return false;
     }
   }
-  else if ( std::holds_alternative< Dictionary >( first ) )
+  else if ( is_type< Dictionary >( first ) )
   {
-    if ( not std::holds_alternative< Dictionary >( second ) )
+    if ( not is_type< Dictionary >( second ) )
     {
       return false;
     }
@@ -390,9 +390,9 @@ value_equal( const any_type& first, const any_type& second )
       return false;
     }
   }
-  else if ( std::holds_alternative< std::shared_ptr< nest::Parameter > >( first ) )
+  else if ( is_type< std::shared_ptr< nest::Parameter > >( first ) )
   {
-    if ( not std::holds_alternative< std::shared_ptr< nest::Parameter > >( second ) )
+    if ( not is_type< std::shared_ptr< nest::Parameter > >( second ) )
     {
       return false;
     }

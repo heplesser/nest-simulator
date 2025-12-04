@@ -75,7 +75,7 @@ nest::weight_recorder::Parameters_::set( const Dictionary& d )
     if ( not d.empty() and d.known( key ) )
     {
       const auto value = d.at( key );
-      if ( std::holds_alternative< NodeCollectionPTR >( value ) )
+      if ( is_type< NodeCollectionPTR >( value ) )
       {
         nc = d.get< NodeCollectionPTR >( key );
       }

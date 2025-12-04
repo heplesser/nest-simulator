@@ -67,6 +67,13 @@ typedef std::variant< size_t,
   std::vector< Dictionary > >
   any_type;
 
+template < typename T >
+bool
+is_type( const any_type& operand )
+{
+  return std::holds_alternative< T >( operand );
+}
+
 class Dictionary : public std::shared_ptr< dictionary_ >
 {
 public:
@@ -108,6 +115,8 @@ public:
 
   template < typename T >
   bool update_integer_value( const std::string& key, T& value ) const;
+
+  bool update_dictionary( dictionary_& dict_out ) const;
 };
 
 namespace nest
@@ -203,10 +212,35 @@ class dictionary_ : public std::map< std::string, DictEntry_ >
    * @throws TypeMismatch if the value is not an integer.
    * @return value cast to an integer.
    */
-  size_t // TODO: or template?
+  // TODO: This could be solved more elegantly using C++20 concepts: "template< std::integral T >"
+  template < typename T >
+  typename std::enable_if_t< std::is_integral_v< T >, void >
   cast_to_integer_( const any_type& value, const std::string& key ) const
   {
-    if ( std::holds_alternative< size_t >( value ) )
+    std::visit(
+      [ &value ]( auto&& val ) -> size_t
+      {
+        using T = std::decay_t< decltype( val ) >;
+        if constexpr ( std::is_same_v< T, ParameterPTR > )
+        {
+          return val;
+        }
+        else if constexpr ( std::is_same_v< T, double > or std::is_same_v< T, long > or std::is_same_v< T, Dictionary& >
+          or std::is_same_v< T, int > )
+        {
+          // Convert int to long, otherwise keep the type (T) as is
+          using ArgT = std::conditional_t< std::is_same_v< T, int >, long, T >;
+          return create_parameter( static_cast< const ArgT& >( val ) );
+        }
+        else
+        {
+          throw BadProperty(
+            std::string( "Parameter must be parametertype, constant or dictionary, got " ) + debug_type( value ) );
+        }
+      },
+      value );
+
+    if ( is_type< size_t >( value ) )
     {
       const size_t val = cast_value_< size_t >( value, key );
       if ( val < std::numeric_limits< long >::min() or val > std::numeric_limits< long >::max() )
@@ -217,11 +251,11 @@ class dictionary_ : public std::map< std::string, DictEntry_ >
       }
       return static_cast< long >( val );
     }
-    else if ( std::holds_alternative< long >( value ) )
+    else if ( is_type< long >( value ) )
     {
       return cast_value_< long >( value, key );
     }
-    else if ( std::holds_alternative< int >( value ) )
+    else if ( is_type< int >( value ) )
     {
       return cast_value_< int >( value, key );
     }
@@ -311,6 +345,22 @@ public:
       return true;
     }
     return false;
+  }
+
+  /**
+   * @brief Update the provided dictionary with all key-value pairs in this dictionary.
+   *
+   * @param dict_out the dictionary to be updated.
+   * @return Whether any values were updated or added to the provided dictionary.
+   */
+  bool
+  update_dictionary( dictionary_& dict_out ) const
+  {
+    for ( auto [ key, value ] : *this )
+    {
+      dict_out[ key ] = value.item;
+    }
+    return size() > 0;
   }
 
   /**
@@ -417,13 +467,13 @@ std::vector< double > dictionary_::cast_value_< std::vector< double > >( const a
 inline auto
 Dictionary::begin() const
 {
-  return ( **this ).begin();
+  return ( *this )->begin();
 }
 
 inline auto
 Dictionary::end() const
 {
-  return ( **this ).end();
+  return ( *this )->end();
 }
 
 /**
@@ -439,49 +489,49 @@ std::vector< double > dictionary_::cast_value_< std::vector< double > >( const a
 inline auto
 Dictionary::size() const
 {
-  return ( **this ).size();
+  return ( *this )->size();
 }
 
 inline auto
 Dictionary::empty() const
 {
-  return ( **this ).empty();
+  return ( *this )->empty();
 }
 
 inline void
 Dictionary::clear() const
 {
-  ( **this ).clear();
+  ( *this )->clear();
 }
 
 inline auto
 Dictionary::find( const std::string& key ) const
 {
-  return ( **this ).find( key );
+  return ( *this )->find( key );
 }
 
 inline bool
 Dictionary::known( const std::string& key ) const
 {
-  return ( **this ).known( key );
+  return ( *this )->known( key );
 }
 
 inline void
 Dictionary::mark_as_accessed( const std::string& key ) const
 {
-  ( **this ).mark_as_accessed( key );
+  ( *this )->mark_as_accessed( key );
 }
 
 inline bool
 Dictionary::has_been_accessed( const std::string& key ) const
 {
-  return ( **this ).has_been_accessed( key );
+  return ( *this )->has_been_accessed( key );
 }
 
 inline void
 Dictionary::init_access_flags( const bool thread_local_dict ) const
 {
-  ( **this ).init_access_flags( thread_local_dict );
+  ( *this )->init_access_flags( thread_local_dict );
 }
 
 inline void
@@ -489,28 +539,34 @@ Dictionary::all_entries_accessed( const std::string& where,
   const std::string& what,
   const bool thread_local_dict ) const
 {
-  ( **this ).all_entries_accessed( where, what, thread_local_dict );
+  ( *this )->all_entries_accessed( where, what, thread_local_dict );
 }
 
 template < typename T >
 inline T
 Dictionary::get( const std::string& key ) const
 {
-  return ( **this ).get< T >( key );
+  return ( *this )->get< T >( key );
 }
 
 template < typename T >
 inline bool
 Dictionary::update_value( const std::string& key, T& value ) const
 {
-  return ( **this ).update_value( key, value );
+  return ( *this )->update_value( key, value );
 }
 
 template < typename T >
 inline bool
 Dictionary::update_integer_value( const std::string& key, T& value ) const
 {
-  return ( **this ).update_integer_value( key, value );
+  return ( *this )->update_integer_value( key, value );
+}
+
+inline bool
+Dictionary::update_dictionary( dictionary_& out_dict ) const
+{
+  return ( *this )->update_dictionary( out_dict );
 }
 
 #endif /* DICTIONARY_H */

@@ -143,11 +143,11 @@ SPManager::set_status( const Dictionary& d )
     const auto syn_spec = syn_specs.get< Dictionary >( key );
     if ( syn_spec.known( names::allow_autapses ) )
     {
-      ( *conn_spec )[ names::allow_autapses ] = syn_spec.get< bool >( names::allow_autapses );
+      conn_spec[ names::allow_autapses ] = syn_spec.get< bool >( names::allow_autapses );
     }
     if ( syn_spec.known( names::allow_multapses ) )
     {
-      ( *conn_spec )[ names::allow_multapses ] = syn_spec.get< bool >( names::allow_multapses );
+      conn_spec[ names::allow_multapses ] = syn_spec.get< bool >( names::allow_multapses );
     }
 
     // We use a ConnBuilder with dummy values to check the synapse parameters

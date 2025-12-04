@@ -30,31 +30,31 @@ nest::ConnParameter*
 nest::ConnParameter::create( const any_type& value, const size_t nthreads )
 {
   // single double
-  if ( std::holds_alternative< double >( value ) )
+  if ( is_type< double >( value ) )
   {
     return new ScalarDoubleParameter( std::get< double >( value ), nthreads );
   }
 
   // single integer
-  if ( std::holds_alternative< long >( value ) )
+  if ( is_type< long >( value ) )
   {
     return new ScalarIntegerParameter( std::get< long >( value ), nthreads );
   }
 
   // array of doubles
-  if ( std::holds_alternative< std::vector< double > >( value ) )
+  if ( is_type< std::vector< double > >( value ) )
   {
     return new ArrayDoubleParameter( std::get< std::vector< double > >( value ), nthreads );
   }
 
   // Parameter
-  if ( std::holds_alternative< std::shared_ptr< nest::Parameter > >( value ) )
+  if ( is_type< std::shared_ptr< nest::Parameter > >( value ) )
   {
     return new ParameterConnParameterWrapper( std::get< ParameterPTR >( value ), nthreads );
   }
 
   // array of longs
-  if ( std::holds_alternative< std::vector< long > >( value ) )
+  if ( is_type< std::vector< long > >( value ) )
   {
     return new ArrayLongParameter( std::get< std::vector< long > >( value ), nthreads );
   }

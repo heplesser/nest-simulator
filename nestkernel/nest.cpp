@@ -190,7 +190,7 @@ get_nc_status( NodeCollectionPTR nc )
       }
     }
   }
-  * / return result;
+  return result;
 }
 
 void
