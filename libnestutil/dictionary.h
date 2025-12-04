@@ -23,8 +23,11 @@
 #ifndef DICTIONARY_H
 #define DICTIONARY_H
 
+#include <concepts>
 #include <map>
+#include <memory>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -32,8 +35,9 @@
 
 #include "exceptions.h"
 
-#include <logging.h>
-#include <memory>
+#include "logging.h"
+
+#include <format>
 
 class dictionary_;
 class Dictionary;
@@ -43,6 +47,18 @@ namespace nest
 class Parameter;
 class NodeCollection;
 }
+
+// PyNEST passes vector with element type any if and only if it needs to pass and empty vector, because the element type
+// of empty lists cannot be inferred at the Python level.
+struct EmptyList
+{
+  friend std::ostream&
+  operator<<( std::ostream& os, const EmptyList& )
+  {
+    return os << "[]";
+  }
+  bool operator==( const EmptyList& ) const = default;
+};
 
 typedef std::variant< size_t,
   long,
@@ -64,8 +80,17 @@ typedef std::variant< size_t,
   std::vector< std::vector< std::vector< long > > >,
   std::vector< std::vector< std::vector< double > > >,
   std::vector< std::string >,
-  std::vector< Dictionary > >
+  std::vector< Dictionary >,
+  EmptyList >
   any_type;
+
+// Define a simple Concept for "Integer Integers" (excluding bool and char)
+template < typename T >
+concept Integer = std::integral< T > and not std::same_as< T, bool > and not std::same_as< T, char >;
+
+// Define a concept that T must be holdable by any_type
+template < typename T >
+concept DictionaryType = std::is_constructible_v< any_type, T >;
 
 template < typename T >
 bool
@@ -107,13 +132,16 @@ public:
   void
   all_entries_accessed( const std::string& where, const std::string& what, const bool thread_local_dict = false ) const;
 
-  template < typename T >
+  template < DictionaryType T >
   T get( const std::string& key ) const;
+
+  template < typename T >
+  std::vector< T >& get_vector( const std::string& key );
 
   template < typename T >
   bool update_value( const std::string& key, T& value ) const;
 
-  template < typename T >
+  template < Integer T >
   bool update_integer_value( const std::string& key, T& value ) const;
 
   bool update_dictionary( dictionary_& dict_out ) const;
@@ -136,15 +164,6 @@ std::string debug_type( const any_type& operand );
 std::string debug_dict_types( const Dictionary& dict );
 
 /**
- * @brief Check whether two any_type values are equal.
- *
- * @param first The first value.
- * @param second The other value.
- * @return Whether the values are equal, both in type and value.
- */
-bool value_equal( const any_type& first, const any_type& second );
-
-/**
  * @brief A Python-like dictionary_, based on std::map.
  *
  * Values are stored as any_type objects, with std::string keys.
@@ -161,6 +180,12 @@ struct DictEntry_
     : item( item )
     , accessed( false )
   {
+  }
+
+  bool
+  operator==( const DictEntry_& other ) const
+  {
+    return item == other.item;
   }
 
   any_type item;         //!< actual item stored
@@ -198,8 +223,10 @@ class dictionary_ : public std::map< std::string, DictEntry_ >
     }
     catch ( const std::bad_variant_access& )
     {
-      std::string msg = std::string( "Failed to cast '" ) + key + "' from " + debug_type( value ) + " to type "
-        + boost::typeindex::type_id< T >().pretty_name();
+      std::string msg = std::format( "Failed to cast '{}' from {} to type {}",
+        key,
+        debug_type( value ),
+        boost::typeindex::type_id< T >().pretty_name() );
       throw nest::TypeMismatch( msg );
     }
   }
@@ -212,57 +239,33 @@ class dictionary_ : public std::map< std::string, DictEntry_ >
    * @throws TypeMismatch if the value is not an integer.
    * @return value cast to an integer.
    */
-  // TODO: This could be solved more elegantly using C++20 concepts: "template< std::integral T >"
-  template < typename T >
-  typename std::enable_if_t< std::is_integral_v< T >, void >
+  template < Integer RetT >
+  RetT
   cast_to_integer_( const any_type& value, const std::string& key ) const
   {
-    std::visit(
-      [ &value ]( auto&& val ) -> size_t
+    return std::visit(
+      [ key ]( auto&& arg ) -> RetT
       {
-        using T = std::decay_t< decltype( val ) >;
-        if constexpr ( std::is_same_v< T, ParameterPTR > )
+        using T = std::decay_t< decltype( arg ) >;
+
+        // Compile-time check: Is it an Integer?
+        if constexpr ( Integer< T > )
         {
-          return val;
-        }
-        else if constexpr ( std::is_same_v< T, double > or std::is_same_v< T, long > or std::is_same_v< T, Dictionary& >
-          or std::is_same_v< T, int > )
-        {
-          // Convert int to long, otherwise keep the type (T) as is
-          using ArgT = std::conditional_t< std::is_same_v< T, int >, long, T >;
-          return create_parameter( static_cast< const ArgT& >( val ) );
+          // Runtime check: Does the value fit safely?
+          if ( std::in_range< RetT >( arg ) )
+          {
+            return static_cast< RetT >( arg );
+          }
+
+          throw std::out_of_range( "Value causes data loss or overflow." );
         }
         else
         {
-          throw BadProperty(
-            std::string( "Parameter must be parametertype, constant or dictionary, got " ) + debug_type( value ) );
+          throw std::runtime_error(
+            std::format( "The dictionary value with key {} does not hold a numeric integer type.", key ) );
         }
       },
       value );
-
-    if ( is_type< size_t >( value ) )
-    {
-      const size_t val = cast_value_< size_t >( value, key );
-      if ( val < std::numeric_limits< long >::min() or val > std::numeric_limits< long >::max() )
-      {
-        const std::string msg =
-          String::compose( "Failed to cast '%1' because %2 is too large to be stored as long.", key, val );
-        throw nest::BadProperty( msg );
-      }
-      return static_cast< long >( val );
-    }
-    else if ( is_type< long >( value ) )
-    {
-      return cast_value_< long >( value, key );
-    }
-    else if ( is_type< int >( value ) )
-    {
-      return cast_value_< int >( value, key );
-    }
-    // Not an integer type
-    const std::string msg =
-      std::string( "Failed to cast '" ) + key + "' from " + debug_type( at( key ) ) + " to an integer type ";
-    throw nest::TypeMismatch( msg );
   }
 
   void register_access_( const DictEntry_& entry ) const;
@@ -276,7 +279,7 @@ public:
    * @throws TypeMismatch if the value is not of specified type T.
    * @return the value at key cast to the specified type.
    */
-  template < typename T >
+  template < DictionaryType T >
   T
   get( const std::string& key ) const
   {
@@ -292,14 +295,10 @@ public:
   std::vector< T >&
   get_vector( const std::string& key )
   {
-    if ( not this->known( key ) )
-    {
-      // We need to insert empty vector explicitly. Relying on dict/map access
-      // to create a new element would result in an empty boost::any, not an
-      // empty vector<T>.
-      ( *this )[ key ] = std::vector< T >();
-    }
-    return std::get< std::vector< T >& >( ( *this )[ key ] );
+    // try_emplace will only insert if key doesn't exist.
+    auto [ iter, success ] = maptype_::try_emplace( key, std::vector< T >() );
+
+    return std::get< std::vector< T > >( iter->second.item );
   };
 
   /**
@@ -334,14 +333,14 @@ public:
    * @throws TypeMismatch if the value at key is not an integer.
    * @return Whether the value was updated.
    */
-  template < typename T >
+  template < Integer T >
   bool
   update_integer_value( const std::string& key, T& value ) const
   {
     auto it = find( key );
     if ( it != end() )
     {
-      value = cast_to_integer_( it->second.item, key );
+      value = cast_to_integer_< T >( it->second.item, key );
       return true;
     }
     return false;
@@ -375,8 +374,7 @@ public:
   bool
   known( const std::string& key ) const
   {
-    // Bypass find() function to not set access flag
-    return maptype_::find( key ) != end();
+    return maptype_::contains( key );
   }
 
   /**
@@ -542,11 +540,17 @@ Dictionary::all_entries_accessed( const std::string& where,
   ( *this )->all_entries_accessed( where, what, thread_local_dict );
 }
 
-template < typename T >
+template < DictionaryType T >
 inline T
 Dictionary::get( const std::string& key ) const
 {
   return ( *this )->get< T >( key );
+}
+template < typename T >
+std::vector< T >&
+Dictionary::get_vector( const std::string& key )
+{
+  return ( *this )->get_vector< T >( key );
 }
 
 template < typename T >
@@ -556,7 +560,7 @@ Dictionary::update_value( const std::string& key, T& value ) const
   return ( *this )->update_value( key, value );
 }
 
-template < typename T >
+template < Integer T >
 inline bool
 Dictionary::update_integer_value( const std::string& key, T& value ) const
 {

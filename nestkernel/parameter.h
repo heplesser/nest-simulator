@@ -235,7 +235,7 @@ public:
    */
   UniformIntParameter( const Dictionary& d )
     : Parameter( false, true )
-    , max_( 1.0 )
+    , max_( 1 )
   {
     d.update_integer_value( names::max, max_ );
     if ( max_ <= 0 )
@@ -251,7 +251,7 @@ public:
   }
 
 private:
-  double max_;
+  long max_;
 };
 
 
