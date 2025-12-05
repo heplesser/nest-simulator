@@ -110,6 +110,13 @@ class NestModule(types.ModuleType):
         type(self).visualization = _lazy_module_property("visualization")  # noqa: F821
         type(self).voltage_trace = _lazy_module_property("voltage_trace")  # noqa: F821
 
+        # Set version using the low-level API
+        try:
+            self.__version__ = ll_api.sli_func("statusdict /version get")  # noqa: F821
+        except Exception:
+            # Fallback version if sli_func is not available
+            self.__version__ = "PYNEST-NG"
+
         # Finalize the nest module with a public API.
         _api = list(k for k in self.__dict__ if not k.startswith("_"))
         _api.extend(k for k in dir(type(self)) if not k.startswith("_"))
@@ -535,4 +542,7 @@ globals().update(_module.__dict__)
 # Since these references are deleted, flake8 complains with an error
 # `F821 undefined name` where these variables are used. Hence we mark all those
 # lines with a `# noqa`
-del _rel_import_star, _lazy_module_property, _module, _original_module_attrs
+del _rel_import_star, _lazy_module_property, _original_module_attrs
+
+
+del _module
