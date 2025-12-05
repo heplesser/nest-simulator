@@ -226,7 +226,7 @@ class dictionary_ : public std::map< std::string, DictEntry_ >
     }
     catch ( const std::bad_variant_access& )
     {
-      std::string msg = std::format( "Failed to cast '{}' from {} to type {}",
+      std::string msg = String::compose( "Failed to cast '%1' from %2 to type %3",
         key,
         debug_type( value ),
         boost::typeindex::type_id< T >().pretty_name() );
@@ -265,7 +265,7 @@ class dictionary_ : public std::map< std::string, DictEntry_ >
         else
         {
           throw std::runtime_error(
-            std::format( "The dictionary value with key {} does not hold a numeric integer type.", key ) );
+            String::compose( "The dictionary value with key %1 does not hold a numeric integer type.", key ) );
         }
       },
       value );

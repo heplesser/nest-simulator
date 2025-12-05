@@ -189,8 +189,8 @@ get_nc_status( NodeCollectionPTR nc )
             if constexpr ( not DictionarySchema::is_defined_scalar< T > )
             {
               // Logic for Vectors: Explicitly forbidden
-              throw std::runtime_error( std::format(
-                "Invalid Schema: Key '{}' contains a vector, but only scalar values are allowed.", kv_pair.first ) );
+              throw std::runtime_error( String::compose(
+                "Invalid Schema: Key '%1' contains a vector, but only scalar values are allowed.", kv_pair.first ) );
             }
             else
             {
@@ -216,7 +216,7 @@ get_nc_status( NodeCollectionPTR nc )
         // Strict Key Existence Check
         if ( map_it == result.end() )
         {
-          throw std::runtime_error( std::format( "Sparse data detected: New key '{}' found late at index {}.",
+          throw std::runtime_error( String::compose( "Sparse data detected: New key '%1' found late at index %2.",
             kv_pair.first,
             std::to_string( node_index ) ) );
         }
@@ -230,8 +230,8 @@ get_nc_status( NodeCollectionPTR nc )
             if constexpr ( not DictionarySchema::is_defined_scalar< T > )
             {
               // Logic for Vectors: Explicitly forbidden
-              throw std::runtime_error(
-                std::format( "Invalid Schema: Key '{}' contains a vector, but only scalar values are allowed.", key ) );
+              throw std::runtime_error( String::compose(
+                "Invalid Schema: Key '%1' contains a vector, but only scalar values are allowed.", key ) );
             }
             else
             {
@@ -243,8 +243,8 @@ get_nc_status( NodeCollectionPTR nc )
               }
               catch ( const std::bad_variant_access& )
               {
-                throw std::runtime_error( std::format(
-                  "Type mismatch detected for key '{}' at index {}. Retrieving node collection status data "
+                throw std::runtime_error( String::compose(
+                  "Type mismatch detected for key '%1' at index %2. Retrieving node collection status data "
                   "only works for homogeneous neuron models.",
                   key,
                   std::to_string( node_index ) ) );

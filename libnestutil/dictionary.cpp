@@ -88,7 +88,7 @@ dictionary_::cast_value_< double >( const any_type& value, const std::string& ke
       }
       else
       {
-        const std::string msg = std::format( "Failed to cast '{}' from {} to type double.", key, debug_name );
+        const std::string msg = String::compose( "Failed to cast '%1' from %2 to type double.", key, debug_name );
         throw nest::TypeMismatch( msg );
       }
     },
@@ -121,7 +121,7 @@ dictionary_::cast_value_< std::vector< double > >( const any_type& value, const 
   catch ( const std::bad_variant_access& )
   {
     const std::string msg =
-      std::format( "Failed to cast '{}' from {} to type std::vector<double>", key, debug_type( value ) );
+      String::compose( "Failed to cast '%1' from %2 to type std::vector<double>", key, debug_type( value ) );
     throw nest::TypeMismatch( msg );
   }
 }
