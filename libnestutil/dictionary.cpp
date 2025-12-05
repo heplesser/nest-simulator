@@ -319,26 +319,23 @@ dictionary_::all_entries_accessed( const std::string& where,
     nest::kernel().vp_manager.assert_single_threaded();
   }
 
-  std::vector< std::string > missed_keys;
+  // Vector of elements in the Dictionary that are not accessed
+  std::vector< key_type > not_accessed_keys;
+
   for ( const auto& [ key, entry ] : *this )
   {
     if ( not entry.accessed )
     {
-      missed_keys.push_back( key );
+      not_accessed_keys.emplace_back( key );
     }
   }
 
-  if ( not missed_keys.empty() )
+  if ( not_accessed_keys.size() > 0 )
   {
-    std::string missed;
-    for ( const auto& k : missed_keys )
-    {
-      missed += k + " ";
-    }
-    if ( not missed.empty() )
-    {
-      missed.pop_back(); // remove trailing space
-    }
+    const auto missed = std::accumulate( not_accessed_keys.begin(),
+      not_accessed_keys.end(),
+      key_type(), // creates empty instance of key type (string)
+      []( const key_type& a, const key_type& b ) { return a + " " + b; } );
 
     throw nest::UnaccessedDictionaryEntry( what, where, missed );
   }
