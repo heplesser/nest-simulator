@@ -185,6 +185,17 @@ public:
   void connect_sonata( const Dictionary& graph_specs, const long hyberslab_size );
 
   /**
+   * @brief Connect nodes from SIONLib file.
+   *
+   * This function instantiates the `SIONConnector` class and calls the class member
+   * function `connect`.
+   *
+   * @param filename Name of SIONLib file to read.
+   * @param syn_spec Synapse specification; weight/delay will be ignored, collocated synapses not supported.
+   */
+  void connect_sion( const std::string& filename, const Dictionary& syn_spec );
+
+  /**
    * @brief Create tripartite connections
    *
    * @note `synapse_specs` is dictionary `{"primary": <syn_spec>, "third_in": <syn_spec>, "third_out": <syn_spec>}`; all

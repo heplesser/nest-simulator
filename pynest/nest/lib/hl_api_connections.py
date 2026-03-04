@@ -47,6 +47,7 @@ from .hl_api_types import (
 __all__ = [
     "Connect",
     "TripartiteConnect",
+    "SionConnect",
     "Disconnect",
     "GetConnections",
 ]
@@ -399,6 +400,17 @@ def TripartiteConnect(pre, post, third, conn_spec, third_factor_conn_spec, syn_s
     nestkernel.llapi_connect_tripartite(
         pre._datum, post._datum, third._datum, conn_spec, third_factor_conn_spec, syn_specs
     )
+
+
+def SionConnect(sion_file, syn_spec=None):
+    syn_spec = syn_spec or {"synapse_model": "static_synapse"}
+    for entry, value in syn_spec.items():
+        if isinstance(value, (list, tuple, numpy.ndarray)):
+            raise ValueError(
+                f"SionConnecti does not accept parameter lists," f"but 'syn_spec[{entry}]' is an iterable."
+            )
+
+    nestkernel.llapi_connect_sion(sion_file, syn_spec)
 
 
 def Disconnect(*args, conn_spec=None, syn_spec=None):

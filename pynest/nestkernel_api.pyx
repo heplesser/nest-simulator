@@ -467,6 +467,10 @@ def llapi_connect_sonata(object graph_specs, long hyperslab_size):
     connect_sonata(pydict_to_Dictionary(graph_specs), hyperslab_size)
 
 
+def llapi_connect_sion(object filename, object syn_spec):
+    connect_sion(pystr_to_string(filename), pydict_to_Dictionary(syn_spec))
+
+
 def llapi_create_mask(object specs):
     cdef Dictionary specs_Dictionary = pydict_to_Dictionary(specs)
     cdef MaskPTR mask

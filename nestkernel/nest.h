@@ -169,6 +169,8 @@ void connect_arrays( long* sources,
 
 void connect_sonata( const Dictionary& graph_specs, const long hyperslab_size );
 
+void connect_sion( const std::string& filename, const Dictionary& syn_spec );
+
 std::deque< ConnectionID > get_connections( const Dictionary& dict );
 
 void disconnect( const std::deque< ConnectionID >& conns );

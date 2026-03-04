@@ -802,6 +802,51 @@ nest::ConnectionManager::connect_sonata( const Dictionary& graph_specs, const lo
 }
 
 void
+nest::ConnectionManager::connect_sion( const std::string& filename, const Dictionary& syn_spec )
+{
+  syn_spec.init_access_flags();
+  kernel().node_manager.update_thread_local_node_data();
+  const std::string synmodel_name = syn_spec.get< std::string >( names::synapse_model );
+  // The following throws UnknownSynapseType for invalid synmodel_name
+  const size_t synapse_model_id = kernel().model_manager.get_synapse_model_id( synmodel_name );
+
+  // open file
+  // sion_data = ...;
+
+#pragma omp parallel
+  {
+    const size_t tid = kernel().vp_manager.get_thread_id();
+    const Dictionary dummy_param_dict;
+
+    size_t source_gid;
+    size_t target_gid;
+    double weight;
+    double delay;
+    for ( //[size_t source_gid, size_t target_gid, double weight, double delay] : sion_data
+      ; false; )
+    {
+      assert( kernel().node_manager.get_node_or_proxy( source_gid, tid ) );
+      Node* const target = kernel().node_manager.get_node_or_proxy( target_gid, tid );
+      assert( target );
+      if ( target->is_proxy() )
+      {
+        continue;
+      }
+
+      kernel().connection_manager.connect( source_gid,
+        target,
+        tid,
+        synapse_model_id,
+        dummy_param_dict, // param_dicts_[ target_thread ],
+        delay,
+        weight );
+    }
+  }
+
+  syn_spec.all_entries_accessed( "SIONConnect", "Unread dictionary entries in syn_specs: " );
+}
+
+void
 nest::ConnectionManager::connect_tripartite( NodeCollectionPTR sources,
   NodeCollectionPTR targets,
   NodeCollectionPTR third,

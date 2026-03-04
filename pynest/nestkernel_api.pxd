@@ -161,6 +161,7 @@ cdef extern from "nest.h" namespace "nest":
                             const Dictionary& third_connectivity,
                             const std_map[string, vector[Dictionary]]& synapse_params ) except +custom_exception_handler
     void connect_sonata( const Dictionary& graph_specs, const long hyperslab_size ) except +custom_exception_handler
+    void connect_sion( const string& filename, const Dictionary& syn_spec ) except +custom_exception_handler
     void disconnect(NodeCollectionPTR sources,
                  NodeCollectionPTR targets,
                  const Dictionary& connectivity,

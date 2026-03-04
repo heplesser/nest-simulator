@@ -462,6 +462,12 @@ connect_sonata( const Dictionary& graph_specs, const long hyperslab_size )
   kernel().connection_manager.connect_sonata( graph_specs, hyperslab_size );
 }
 
+void
+connect_sion( const std::string& filename, const Dictionary& syn_spec )
+{
+  kernel().connection_manager.connect_sion( filename, syn_spec );
+}
+
 std::deque< ConnectionID >
 get_connections( const Dictionary& dict )
 {
