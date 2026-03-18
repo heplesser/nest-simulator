@@ -34,12 +34,6 @@ try:
 except ImportError:
     HAVE_CSA = False
 
-try:
-    import numpy
-
-    HAVE_NUMPY = True
-except ImportError:
-    HAVE_NUMPY = False
 
 HAVE_LIBNEUROSIM = nest.build_info["have_libneurosim"]
 
