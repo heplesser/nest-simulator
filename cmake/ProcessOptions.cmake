@@ -667,3 +667,35 @@ function( NEST_PROCESS_FULL_LOGGING )
     set( ENABLE_FULL_LOGGING ON PARENT_SCOPE )
   endif ()
 endfunction ()
+
+function(NEST_PROCESS_LTO)
+    set(WITH_LTO OFF PARENT_SCOPE)
+    if (${with-lto} STREQUAL "ON")
+
+        # enable link-time optimizations
+        include(CheckIPOSupported)
+        check_ipo_supported()   # will terminate if unsupported
+        set(WITH_LTO ON PARENT_SCOPE)
+
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE PARENT_SCOPE)
+    endif ()
+endfunction()
+
+function( NEST_PROCESS_PGO )
+    # optional profile-guided optimization
+    if ( ${with-pgo} STREQUAL "OFF" )
+        set( PGO_MODE OFF PARENT_SCOPE )
+    else ()
+        if ( ${with-pgo} STREQUAL "GENERATE" )
+            message( STATUS "PGO: Instrumentation Build Enabled" )
+            set( PGO_MODE "GENERATE" PARENT_SCOPE )
+            add_compile_options( -fprofile-generate )
+            add_link_options( -fprofile-generate )
+        elseif ( ${with-pgo} STREQUAL "USE" )
+            message( STATUS "PGO: Optimized Build Enabled" )
+            set( PGO_MODE "USE" PARENT_SCOPE )
+            add_compile_options( -fprofile-use -fprofile-correction )
+            add_link_options( -fprofile-use -fprofile-correction )
+        endif ()
+    endif ()
+endfunction()
