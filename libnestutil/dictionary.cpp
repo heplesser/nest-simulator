@@ -31,7 +31,6 @@
 #include "dictionary.h"
 #include "kernel_manager.h"
 #include "logging_manager.h"
-#include "node_collection.h"
 #include "vp_manager.h"
 
 namespace nest
