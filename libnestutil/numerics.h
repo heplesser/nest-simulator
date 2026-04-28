@@ -32,13 +32,7 @@
 // Generated includes:
 #include "config.h"
 
-#if HAVE_EXPM1
-#include <math.h>
-#endif
-
-#if defined( HAVE_STD_ISNAN )
-#include <cmath>
-#elif defined( HAVE_ISNAN )
+#if !defined( HAVE_STD_ISNAN ) && defined( HAVE_ISNAN )
 #include <math.h>
 #endif
 
