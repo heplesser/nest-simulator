@@ -351,6 +351,18 @@ function( NEST_PROCESS_WITH_OPENMP )
     if ( NOT "${with-openmp}" STREQUAL "ON" )
       # if set, use this prefix
       set( OpenMP_ROOT "${with-openmp}" )
+    elseif ( APPLE )
+      # On macOS, libomp is not bundled; try to locate it via Homebrew
+      execute_process(
+        COMMAND brew --prefix libomp
+        OUTPUT_VARIABLE _brew_libomp_prefix
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+        RESULT_VARIABLE _brew_result
+      )
+      if ( _brew_result EQUAL 0 AND EXISTS "${_brew_libomp_prefix}" )
+        set( OpenMP_ROOT "${_brew_libomp_prefix}" )
+      endif ()
     endif ()
 
     find_package( OpenMP REQUIRED )
