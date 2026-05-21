@@ -72,7 +72,6 @@ in varied ways are now collected in the ``nest.build_info`` dictionary:
     'have_boost': True,
     'have_gsl': True,
     'have_hdf5': True,
-    'have_libneurosim': False,
     'have_mpi': True,
     'have_music': False,
     'have_sionlib': False,

@@ -90,9 +90,6 @@
 /* Havel libltdl, can load dynamic modules */
 #cmakedefine HAVE_LIBLTDL 1
 
-/* libneurosim support enabled? */
-#cmakedefine HAVE_LIBNEUROSIM 1
-
 /* Define to 1 if you have usable long long type. */
 #cmakedefine HAVE_LONG_LONG 1
 

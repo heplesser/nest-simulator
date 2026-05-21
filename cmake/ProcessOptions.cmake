@@ -453,30 +453,6 @@ function( NEST_PROCESS_WITH_MPI_SYNC_TIMER )
   endif ()
 endfunction()
 
-function( NEST_PROCESS_WITH_LIBNEUROSIM )
-  # Find libneurosim
-  set( HAVE_LIBNEUROSIM OFF PARENT_SCOPE )
-  if ( with-libneurosim )
-    if ( NOT ${with-libneurosim} STREQUAL "ON" )
-      # a path is set
-      set( LibNeurosim_ROOT ${with-libneurosim} )
-    endif ()
-
-    find_package( LibNeurosim )
-    if ( LIBNEUROSIM_FOUND )
-      set( HAVE_LIBNEUROSIM ON PARENT_SCOPE )
-
-      include_directories( ${LIBNEUROSIM_INCLUDE_DIRS} )
-
-      # export found variables to parent scope
-      set( LIBNEUROSIM_FOUND "${LIBNEUROSIM_FOUND}" PARENT_SCOPE )
-      set( LIBNEUROSIM_LIBRARIES "${LIBNEUROSIM_LIBRARIES}" PARENT_SCOPE )
-      set( LIBNEUROSIM_INCLUDE_DIRS "${LIBNEUROSIM_INCLUDE_DIRS}" PARENT_SCOPE )
-      set( LIBNEUROSIM_VERSION "${LIBNEUROSIM_VERSION}" PARENT_SCOPE )
-    endif ()
-  endif ()
-endfunction()
-
 function( NEST_PROCESS_WITH_MUSIC )
   # Find music
   set( HAVE_MUSIC OFF PARENT_SCOPE )
