@@ -723,8 +723,8 @@ public:
   ClusteredFixedTotalNumberBuilder( NodeCollectionPTR,
     NodeCollectionPTR,
     ThirdOutBuilder* third_out,
-    const DictionaryDatum&,
-    const std::vector< DictionaryDatum >& );
+    const Dictionary&,
+    const std::vector< Dictionary >& );
 
 protected:
   void connect_() override;
@@ -740,8 +740,8 @@ public:
   AltClusteredFixedTotalNumberBuilder( NodeCollectionPTR,
     NodeCollectionPTR,
     ThirdOutBuilder* third_out,
-    const DictionaryDatum&,
-    const std::vector< DictionaryDatum >& );
+    const Dictionary&,
+    const std::vector< Dictionary >& );
 
 protected:
   void connect_() override;
@@ -757,8 +757,8 @@ public:
   ClusteredApproxTotalNumberBuilder( NodeCollectionPTR,
     NodeCollectionPTR,
     ThirdOutBuilder* third_out,
-    const DictionaryDatum&,
-    const std::vector< DictionaryDatum >& );
+    const Dictionary&,
+    const std::vector< Dictionary >& );
 
 protected:
   void connect_() override;

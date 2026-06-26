@@ -1920,16 +1920,15 @@ nest::FixedTotalNumberBuilder::connect_()
 nest::ClusteredFixedTotalNumberBuilder::ClusteredFixedTotalNumberBuilder( NodeCollectionPTR sources,
   NodeCollectionPTR targets,
   ThirdOutBuilder* third_out,
-  const DictionaryDatum& conn_spec,
-  const std::vector< DictionaryDatum >& syn_specs )
+  const Dictionary& conn_spec,
+  const std::vector< Dictionary >& syn_specs )
   : BipartiteConnBuilder( sources, targets, third_out, conn_spec, syn_specs )
-  , N_( ( *conn_spec )[ names::N ] )
-  , num_clusters_( ( *conn_spec )[ "num_clusters" ] )
+  , N_( conn_spec.get< long >( names::N ) )
+  , num_clusters_( conn_spec.get< long >( "num_clusters" ) )
 {
   // check for potential errors
 
-  // verify that total number of connections is not larger than
-  // N_sources*N_targets
+  // verify that total number of connections is not larger than N_sources * N_targets
   if ( not allow_multapses_ )
   {
     if ( ( N_ > static_cast< long >( sources_->size() * targets_->size() ) ) )
@@ -2110,11 +2109,10 @@ nest::ClusteredFixedTotalNumberBuilder::connect_()
             }
           }
         }
-        catch ( std::exception& err )
+        catch ( ... )
         {
-          // We must create a new exception here, err's lifetime ends at
-          // the end of the catch block.
-          exceptions_raised_.at( tid ) = std::shared_ptr< WrappedThreadException >( new WrappedThreadException( err ) );
+          // Capture the current exception object and create an std::exception_ptr
+          exceptions_raised_.at( tid ) = std::current_exception();
         }
       }  // omp parallel
     }  // for target
@@ -2125,11 +2123,11 @@ nest::ClusteredFixedTotalNumberBuilder::connect_()
 nest::AltClusteredFixedTotalNumberBuilder::AltClusteredFixedTotalNumberBuilder( NodeCollectionPTR sources,
   NodeCollectionPTR targets,
   ThirdOutBuilder* third_out,
-  const DictionaryDatum& conn_spec,
-  const std::vector< DictionaryDatum >& syn_specs )
+  const Dictionary& conn_spec,
+  const std::vector< Dictionary >& syn_specs )
   : BipartiteConnBuilder( sources, targets, third_out, conn_spec, syn_specs )
-  , N_( ( *conn_spec )[ names::N ] )
-  , num_clusters_( ( *conn_spec )[ "num_clusters" ] )
+  , N_( conn_spec.get< long >( names::N ) )
+  , num_clusters_( conn_spec.get< long >( "num_clusters" ) )
 {
   // check for potential errors
 
@@ -2189,7 +2187,7 @@ nest::AltClusteredFixedTotalNumberBuilder::connect_()
       RngPtr grng = get_vp_synced_rng( tid );
       RngPtr rng = get_vp_specific_rng( tid );
 
-      std::vector< long > num_conns_on_vp( M, 0 ); // corresponds to n[] in GSL 1.8 binomial algo
+      std::vector< long > num_conns_on_vp( M, 0 );  // corresponds to n[] in GSL 1.8 binomial algo
       binomial_distribution bino_dist;
 
       for ( size_t tc = 0; tc < num_clusters_; ++tc )
@@ -2240,14 +2238,15 @@ nest::AltClusteredFixedTotalNumberBuilder::connect_()
           // K from gsl is equivalent to M = n_vps
           // N is already taken from stack
           // p[] is targets_on_vp
-          std::fill( num_conns_on_vp.begin(), num_conns_on_vp.end(), 0 ); // corresponds to n[], reset to 0 for each use
+          std::fill(
+            num_conns_on_vp.begin(), num_conns_on_vp.end(), 0 );  // corresponds to n[], reset to 0 for each use
 
           // calculate exact multinomial distribution
 
           // begin code adapted from gsl 1.8 //
-          double sum_dist = 0.0; // corresponds to sum_p
+          double sum_dist = 0.0;  // corresponds to sum_p
           // norm is equivalent to size_targets
-          unsigned int sum_partitions = 0; // corresponds to sum_n
+          unsigned int sum_partitions = 0;  // corresponds to sum_n
 
           for ( int k = 0; k < M; k++ )
           {
@@ -2301,27 +2300,26 @@ nest::AltClusteredFixedTotalNumberBuilder::connect_()
             }
           }
 
-        } // for target
-      }   // for source
+        }  // for target
+      }  // for source
     }
-    catch ( std::exception& err )
+    catch ( ... )
     {
-      // We must create a new exception here, err's lifetime ends at
-      // the end of the catch block.
-      exceptions_raised_.at( tid ) = std::shared_ptr< WrappedThreadException >( new WrappedThreadException( err ) );
+      // Capture the current exception object and create an std::exception_ptr
+      exceptions_raised_.at( tid ) = std::current_exception();
     }
-  } // omp parallel
+  }  // omp parallel
 }
 
 
 nest::ClusteredApproxTotalNumberBuilder::ClusteredApproxTotalNumberBuilder( NodeCollectionPTR sources,
   NodeCollectionPTR targets,
   ThirdOutBuilder* third_out,
-  const DictionaryDatum& conn_spec,
-  const std::vector< DictionaryDatum >& syn_specs )
+  const Dictionary& conn_spec,
+  const std::vector< Dictionary >& syn_specs )
   : BipartiteConnBuilder( sources, targets, third_out, conn_spec, syn_specs )
-  , N_( ( *conn_spec )[ names::N ] )
-  , num_clusters_( ( *conn_spec )[ "num_clusters" ] )
+  , N_( conn_spec.get< long >( names::N ) )
+  , num_clusters_( conn_spec.get< long >( "num_clusters" ) )
 {
   // check for potential errors
 
@@ -2432,16 +2430,15 @@ nest::ClusteredApproxTotalNumberBuilder::connect_()
             }
           }
 
-        } // for target
-      }   // for source
+        }  // for target
+      }  // for source
     }
-    catch ( std::exception& err )
+    catch ( ... )
     {
-      // We must create a new exception here, err's lifetime ends at
-      // the end of the catch block.
-      exceptions_raised_.at( tid ) = std::shared_ptr< WrappedThreadException >( new WrappedThreadException( err ) );
+      // Capture the current exception object and create an std::exception_ptr
+      exceptions_raised_.at( tid ) = std::current_exception();
     }
-  } // omp parallel
+  }  // omp parallel
 }
 
 
