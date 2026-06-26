@@ -163,6 +163,11 @@ public:
   void set_status( const DictionaryDatum& ) override;
 
   bool has_proxies() const override;
+
+  /**
+   * @note Mark as local_receiver() so multimeter is properly identified as device.
+   */
+  bool local_receiver() const override;
   Name get_element_type() const override;
 
   using Device::init_buffers;
@@ -233,6 +238,18 @@ inline bool
 StimulationDevice::has_proxies() const
 {
   return false;
+}
+
+inline bool
+StimulationDevice::local_receiver() const
+{
+  return true;
+}
+
+inline bool
+StimulationDevice::local_receiver() const
+{
+  return true;
 }
 
 } // namespace nest
