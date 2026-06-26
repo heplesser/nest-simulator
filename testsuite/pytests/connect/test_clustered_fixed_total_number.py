@@ -19,12 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with NEST.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Test models with calcium concentration.
-
-This set of tests verify the behavior of the calcium concentration in models
-that inherit from the strutural plasticity node class in the kernel.
-"""
+""" """
 
 import nest
 import numpy as np
@@ -56,7 +51,7 @@ def test_clustered_fixed_total_number(n_threads):
     assert nest.num_connections * nest.num_processes == num_conns
 
     # All odd numbered neurons get assigned to one cluster and the even numbered
-    # ones to the other. Thus, the sum of source and target ids for will be even
+    # ones to the other. Thus, the sum of source and target ids will be even
     # for intra-cluster connections and odd for cross-cluster connections.
     c = nest.GetConnections().get(["source", "target", "weight"], output="pandas")
 
