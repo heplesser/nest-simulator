@@ -243,10 +243,13 @@ public:
    * searched.
    * The function then iterates all entries in source and collects the
    * connection IDs to all neurons in target.
+   *
+   * @returns Vector of deques, each containing connections from one thread. May have fewer entries than threads if some
+   * threads have no connections.
    */
   ArrayDatum get_connections( const DictionaryDatum& params );
 
-  void get_connections( std::deque< ConnectionID >& connectome,
+  void get_connections( std::vector< std::deque< ConnectionID > >& connectome,
     NodeCollectionPTR source,
     NodeCollectionPTR target,
     synindex syn_id,
@@ -473,19 +476,19 @@ private:
 
   //! See get_connections()
   void get_connections_( const size_t tid,
-    std::deque< ConnectionID >& connectome,
+    std::deque< ConnectionID >& conns_in_thread,
     NodeCollectionPTR source,
     NodeCollectionPTR target,
     synindex syn_id,
     long synapse_label ) const;
   void get_connections_to_targets_( const size_t tid,
-    std::deque< ConnectionID >& connectome,
+    std::deque< ConnectionID >& conns_in_thread,
     NodeCollectionPTR source,
     NodeCollectionPTR target,
     synindex syn_id,
     long synapse_label ) const;
   void get_connections_from_sources_( const size_t tid,
-    std::deque< ConnectionID >& connectome,
+    std::deque< ConnectionID >& conns_in_thread,
     NodeCollectionPTR source,
     NodeCollectionPTR target,
     synindex syn_id,
