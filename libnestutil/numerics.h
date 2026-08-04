@@ -178,6 +178,6 @@ long mod_inverse( long a, long m );
  *
  * See comments in the function definition for implementation details.
  */
-size_t first_index( long period, long phase0, long step, long phase );
+std::size_t first_index( long period, long phase0, long step, long phase );
 
 #endif

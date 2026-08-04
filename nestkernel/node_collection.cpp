@@ -1404,20 +1404,6 @@ NodeCollectionComposite::all_connect_as_devices() const
     parts_.begin(), parts_.end(), []( const NodeCollectionPrimitive& prim ) { return prim.all_connect_as_devices(); } );
 }
 
-bool
-NodeCollectionComposite::all_connect_as_neurons() const
-{
-  return std::all_of(
-    parts_.begin(), parts_.end(), []( const NodeCollectionPrimitive& prim ) { return prim.all_connect_as_neurons(); } );
-}
-
-bool
-NodeCollectionComposite::all_connect_as_devices() const
-{
-  return std::all_of(
-    parts_.begin(), parts_.end(), []( const NodeCollectionPrimitive& prim ) { return prim.all_connect_as_devices(); } );
-}
-
 void
 NodeCollectionComposite::print_me( std::ostream& out ) const
 {

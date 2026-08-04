@@ -1082,7 +1082,7 @@ nest::ConnectionManager::get_num_connections( const synindex syn_id ) const
 ArrayDatum
 nest::ConnectionManager::get_connections( const DictionaryDatum& params )
 {
-  std::deque< ConnectionID > connectome;
+  std::vector< std::deque< ConnectionID > > connectome;
   const Token& source_t = params->lookup( names::source );
   const Token& target_t = params->lookup( names::target );
   const Token& syn_model_t = params->lookup( names::synapse_model );
@@ -1104,7 +1104,7 @@ nest::ConnectionManager::get_connections( const DictionaryDatum& params )
       throw KernelException( "source must either contain only neurons or only devices." );
     }
   }
-  if ( params.known( names::target ) )
+  if ( params->known( names::target ) )
   {
     target_a = getValue< NodeCollectionDatum >( target_t );
     if ( not target_a->valid() )
@@ -1155,12 +1155,13 @@ nest::ConnectionManager::get_connections( const DictionaryDatum& params )
   }
 
   ArrayDatum result;
-  result.reserve( connectome.size() );
 
-  while ( not connectome.empty() )
+  for ( const auto& conn_part : connectome )
   {
-    result.push_back( ConnectionDatum( connectome.front() ) );
-    connectome.pop_front();
+    for ( const auto& conn : conn_part )
+    {
+      result.push_back( ConnectionDatum( conn ) );
+    }
   }
 
   get_connections_has_been_called_ = true;

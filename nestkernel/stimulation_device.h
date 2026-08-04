@@ -246,12 +246,6 @@ StimulationDevice::local_receiver() const
   return true;
 }
 
-inline bool
-StimulationDevice::local_receiver() const
-{
-  return true;
-}
-
 } // namespace nest
 
 #endif /* #ifndef STIMULATION_DEVICE_H */

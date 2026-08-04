@@ -211,198 +211,208 @@ get_connections( const DictionaryDatum& dict )
 {
   dict->clear_access_flags();
 
-  std::vector< std::deque< ConnectionID > > get_connections( const Dictionary& dict )
+  ArrayDatum array = kernel().connection_manager.get_connections( dict );
+
+  ALL_ENTRIES_ACCESSED( *dict, "GetConnections", "Unread dictionary entries: " );
+
+  return array;
+}
+
+void
+disconnect( const ArrayDatum& conns )
+{
+  // probably not strictly necessary here, but does nothing if all is up to date
+  kernel().node_manager.update_thread_local_node_data();
+
+  for ( size_t conn_index = 0; conn_index < conns.size(); ++conn_index )
   {
-    dict.init_access_flags();
-    ArrayDatum array = kernel().connection_manager.get_connections( dict );
+    const auto conn_datum = getValue< ConnectionDatum >( conns.get( conn_index ) );
+    const auto target_node = kernel().node_manager.get_node_or_proxy( conn_datum.get_target_node_id() );
+    kernel().sp_manager.disconnect(
+      conn_datum.get_source_node_id(), target_node, conn_datum.get_target_thread(), conn_datum.get_synapse_model_id() );
+  }
+}
 
-    ALL_ENTRIES_ACCESSED( *dict, "GetConnections", "Unread dictionary entries: " );
+void
+simulate( const double& t )
+{
+  prepare();
+  run( t );
+  cleanup();
+}
 
-    return array;
+void
+run( const double& time )
+{
+  const Time t_sim = Time::ms( time );
+
+  if ( time < 0 )
+  {
+    throw BadParameter( "The simulation time cannot be negative." );
+  }
+  if ( not t_sim.is_finite() )
+  {
+    throw BadParameter( "The simulation time must be finite." );
+  }
+  if ( not t_sim.is_grid_time() )
+  {
+    throw BadParameter(
+      "The simulation time must be a multiple "
+      "of the simulation resolution." );
   }
 
-  void disconnect( const ArrayDatum& conns )
-  {
-    // probably not strictly necessary here, but does nothing if all is up to date
-    kernel().node_manager.update_thread_local_node_data();
+  kernel().simulation_manager.run( t_sim );
+}
 
-    for ( size_t conn_index = 0; conn_index < conns.size(); ++conn_index )
+void
+prepare()
+{
+  kernel().prepare();
+}
+
+void
+cleanup()
+{
+  kernel().cleanup();
+}
+
+void
+copy_model( const Name& oldmodname, const Name& newmodname, const DictionaryDatum& dict )
+{
+  kernel().model_manager.copy_model( oldmodname, newmodname, dict );
+}
+
+void
+set_model_defaults( const std::string component, const DictionaryDatum& dict )
+{
+  if ( kernel().model_manager.set_model_defaults( component, dict ) )
+  {
+    return;
+  }
+
+  if ( kernel().io_manager.is_valid_recording_backend( component ) )
+  {
+    kernel().io_manager.set_recording_backend_status( component, dict );
+    return;
+  }
+
+  throw UnknownComponent( component );
+}
+
+DictionaryDatum
+get_model_defaults( const std::string component )
+{
+  try
+  {
+    const size_t model_id = kernel().model_manager.get_node_model_id( component );
+    return kernel().model_manager.get_node_model( model_id )->get_status();
+  }
+  catch ( UnknownModelName& )
+  {
+    // ignore errors; throw at the end of the function if that's reached
+  }
+
+  try
+  {
+    const size_t synapse_model_id = kernel().model_manager.get_synapse_model_id( component );
+    return kernel().model_manager.get_connector_defaults( synapse_model_id );
+  }
+  catch ( UnknownSynapseType& )
+  {
+    // ignore errors; throw at the end of the function if that's reached
+  }
+
+  if ( kernel().io_manager.is_valid_recording_backend( component ) )
+  {
+    return kernel().io_manager.get_recording_backend_status( component );
+  }
+
+  throw UnknownComponent( component );
+  return DictionaryDatum(); // supress missing return value warning; never reached
+}
+
+ParameterDatum
+create_parameter( const DictionaryDatum& param_dict )
+{
+  param_dict->clear_access_flags();
+
+  ParameterDatum datum( NestModule::create_parameter( param_dict ) );
+
+  ALL_ENTRIES_ACCESSED( *param_dict, "nest::CreateParameter", "Unread dictionary entries: " );
+
+  return datum;
+}
+
+double
+get_value( const ParameterDatum& param )
+{
+  RngPtr rng = get_rank_synced_rng();
+  return param->value( rng, nullptr );
+}
+
+bool
+is_spatial( const ParameterDatum& param )
+{
+  return param->is_spatial();
+}
+
+std::vector< double >
+apply( const ParameterDatum& param, const NodeCollectionDatum& nc )
+{
+  std::vector< double > result;
+  result.reserve( nc->size() );
+  RngPtr rng = get_rank_synced_rng();
+  for ( auto it = nc->begin(); it < nc->end(); ++it )
+  {
+    auto node = kernel().node_manager.get_node_or_proxy( ( *it ).node_id );
+    result.push_back( param->value( rng, node ) );
+  }
+  return result;
+}
+
+std::vector< double >
+apply( const ParameterDatum& param, const DictionaryDatum& positions )
+{
+  auto source_tkn = positions->lookup( names::source );
+  auto source_nc = getValue< NodeCollectionPTR >( source_tkn );
+
+  auto targets_tkn = positions->lookup( names::targets );
+  TokenArray target_tkns = getValue< TokenArray >( targets_tkn );
+  return param->apply( source_nc, target_tkns );
+}
+
+Datum*
+node_collection_array_index( const Datum* datum, const long* array, unsigned long n )
+{
+  const NodeCollectionDatum node_collection = *dynamic_cast< const NodeCollectionDatum* >( datum );
+  assert( node_collection->size() >= n );
+  std::vector< size_t > node_ids;
+  node_ids.reserve( n );
+
+  for ( auto node_ptr = array; node_ptr != array + n; ++node_ptr )
+  {
+    node_ids.push_back( node_collection->operator[]( *node_ptr ) );
+  }
+  return new NodeCollectionDatum( NodeCollection::create( node_ids ) );
+}
+
+Datum*
+node_collection_array_index( const Datum* datum, const bool* array, unsigned long n )
+{
+  const NodeCollectionDatum node_collection = *dynamic_cast< const NodeCollectionDatum* >( datum );
+  assert( node_collection->size() == n );
+  std::vector< size_t > node_ids;
+  node_ids.reserve( n );
+
+  auto nc_it = node_collection->begin();
+  for ( auto node_ptr = array; node_ptr != array + n; ++node_ptr, ++nc_it )
+  {
+    if ( *node_ptr )
     {
-      const auto conn_datum = getValue< ConnectionDatum >( conns.get( conn_index ) );
-      const auto target_node = kernel().node_manager.get_node_or_proxy( conn_datum.get_target_node_id() );
-      kernel().sp_manager.disconnect( conn_datum.get_source_node_id(),
-        target_node,
-        conn_datum.get_target_thread(),
-        conn_datum.get_synapse_model_id() );
+      node_ids.push_back( ( *nc_it ).node_id );
     }
   }
-
-  void simulate( const double& t )
-  {
-    prepare();
-    run( t );
-    cleanup();
-  }
-
-  void run( const double& time )
-  {
-    const Time t_sim = Time::ms( time );
-
-    if ( time < 0 )
-    {
-      throw BadParameter( "The simulation time cannot be negative." );
-    }
-    if ( not t_sim.is_finite() )
-    {
-      throw BadParameter( "The simulation time must be finite." );
-    }
-    if ( not t_sim.is_grid_time() )
-    {
-      throw BadParameter(
-        "The simulation time must be a multiple "
-        "of the simulation resolution." );
-    }
-
-    kernel().simulation_manager.run( t_sim );
-  }
-
-  void prepare()
-  {
-    kernel().prepare();
-  }
-
-  void cleanup()
-  {
-    kernel().cleanup();
-  }
-
-  void copy_model( const Name& oldmodname, const Name& newmodname, const DictionaryDatum& dict )
-  {
-    kernel().model_manager.copy_model( oldmodname, newmodname, dict );
-  }
-
-  void set_model_defaults( const std::string component, const DictionaryDatum& dict )
-  {
-    if ( kernel().model_manager.set_model_defaults( component, dict ) )
-    {
-      return;
-    }
-
-    if ( kernel().io_manager.is_valid_recording_backend( component ) )
-    {
-      kernel().io_manager.set_recording_backend_status( component, dict );
-      return;
-    }
-
-    throw UnknownComponent( component );
-  }
-
-  DictionaryDatum get_model_defaults( const std::string component )
-  {
-    try
-    {
-      const size_t model_id = kernel().model_manager.get_node_model_id( component );
-      return kernel().model_manager.get_node_model( model_id )->get_status();
-    }
-    catch ( UnknownModelName& )
-    {
-      // ignore errors; throw at the end of the function if that's reached
-    }
-
-    try
-    {
-      const size_t synapse_model_id = kernel().model_manager.get_synapse_model_id( component );
-      return kernel().model_manager.get_connector_defaults( synapse_model_id );
-    }
-    catch ( UnknownSynapseType& )
-    {
-      // ignore errors; throw at the end of the function if that's reached
-    }
-
-    if ( kernel().io_manager.is_valid_recording_backend( component ) )
-    {
-      return kernel().io_manager.get_recording_backend_status( component );
-    }
-
-    throw UnknownComponent( component );
-    return DictionaryDatum(); // supress missing return value warning; never reached
-  }
-
-  ParameterDatum create_parameter( const DictionaryDatum& param_dict )
-  {
-    param_dict->clear_access_flags();
-
-    ParameterDatum datum( NestModule::create_parameter( param_dict ) );
-
-    ALL_ENTRIES_ACCESSED( *param_dict, "nest::CreateParameter", "Unread dictionary entries: " );
-
-    return datum;
-  }
-
-  double get_value( const ParameterDatum& param )
-  {
-    RngPtr rng = get_rank_synced_rng();
-    return param->value( rng, nullptr );
-  }
-
-  bool is_spatial( const ParameterDatum& param )
-  {
-    return param->is_spatial();
-  }
-
-  std::vector< double > apply( const ParameterDatum& param, const NodeCollectionDatum& nc )
-  {
-    std::vector< double > result;
-    result.reserve( nc->size() );
-    RngPtr rng = get_rank_synced_rng();
-    for ( auto it = nc->begin(); it < nc->end(); ++it )
-    {
-      auto node = kernel().node_manager.get_node_or_proxy( ( *it ).node_id );
-      result.push_back( param->value( rng, node ) );
-    }
-    return result;
-  }
-
-  std::vector< double > apply( const ParameterDatum& param, const DictionaryDatum& positions )
-  {
-    auto source_tkn = positions->lookup( names::source );
-    auto source_nc = getValue< NodeCollectionPTR >( source_tkn );
-
-    auto targets_tkn = positions->lookup( names::targets );
-    TokenArray target_tkns = getValue< TokenArray >( targets_tkn );
-    return param->apply( source_nc, target_tkns );
-  }
-
-  Datum* node_collection_array_index( const Datum* datum, const long* array, unsigned long n )
-  {
-    const NodeCollectionDatum node_collection = *dynamic_cast< const NodeCollectionDatum* >( datum );
-    assert( node_collection->size() >= n );
-    std::vector< size_t > node_ids;
-    node_ids.reserve( n );
-
-    for ( auto node_ptr = array; node_ptr != array + n; ++node_ptr )
-    {
-      node_ids.push_back( node_collection->operator[]( *node_ptr ) );
-    }
-    return new NodeCollectionDatum( NodeCollection::create( node_ids ) );
-  }
-
-  Datum* node_collection_array_index( const Datum* datum, const bool* array, unsigned long n )
-  {
-    const NodeCollectionDatum node_collection = *dynamic_cast< const NodeCollectionDatum* >( datum );
-    assert( node_collection->size() == n );
-    std::vector< size_t > node_ids;
-    node_ids.reserve( n );
-
-    auto nc_it = node_collection->begin();
-    for ( auto node_ptr = array; node_ptr != array + n; ++node_ptr, ++nc_it )
-    {
-      if ( *node_ptr )
-      {
-        node_ids.push_back( ( *nc_it ).node_id );
-      }
-    }
-    return new NodeCollectionDatum( NodeCollection::create( node_ids ) );
-  }
+  return new NodeCollectionDatum( NodeCollection::create( node_ids ) );
+}
 
 } // namespace nest

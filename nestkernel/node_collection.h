@@ -1148,13 +1148,6 @@ public:
   bool all_connect_as_devices() const override;
 };
 
-inline std::ostream&
-operator<<( std::ostream& out, const NodeCollectionPTR nc )
-{
-  return nc->print_me( out );
-}
-
-
 inline bool
 NodeCollection::operator!=( NodeCollectionPTR rhs ) const
 {
