@@ -28,7 +28,8 @@ import pytest
 
 @pytest.mark.skipif_missing_threads
 @pytest.mark.parametrize("n_threads", [1, 2, 3])
-def test_clustered_fixed_total_number(n_threads):
+@pytest.mark.parametrize("rule", ["clustered_fixed_total_number", "mod_clustered_fixed_total_number"])
+def test_clustered_fixed_total_number(n_threads, rule):
     """Minimal test for clustered connectivity."""
 
     nest.ResetKernel()
@@ -44,7 +45,7 @@ def test_clustered_fixed_total_number(n_threads):
     nest.Connect(
         a,
         b,
-        {"rule": "clustered_fixed_total_number", "N": num_conns, "num_clusters": 2},
+        {"rule": rule, "N": num_conns, "num_clusters": 2},
         nest.CollocatedSynapses({"weight": w_intra}, {"weight": w_cross}),
     )
 

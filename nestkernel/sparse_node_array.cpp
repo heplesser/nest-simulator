@@ -131,7 +131,7 @@ nest::SparseNodeArray::get_node_by_node_id( size_t node_id ) const
 
   if ( node_id < 1 or global_max_node_id_ < node_id )
   {
-    throw UnknownNode();
+    throw UnknownNode( node_id );
   }
 
   // handle node_ids below or above range

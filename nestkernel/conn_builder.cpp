@@ -2120,6 +2120,208 @@ nest::ClusteredFixedTotalNumberBuilder::connect_()
 }
 
 
+nest::ModClusteredFixedTotalNumberBuilder::ModClusteredFixedTotalNumberBuilder( NodeCollectionPTR sources,
+  NodeCollectionPTR targets,
+  ThirdOutBuilder* third_out,
+  const Dictionary& conn_spec,
+  const std::vector< Dictionary >& syn_specs )
+  : BipartiteConnBuilder( sources, targets, third_out, conn_spec, syn_specs )
+  , N_( conn_spec.get< long >( names::N ) )
+  , num_clusters_( conn_spec.get< long >( "num_clusters" ) )
+{
+  // check for potential errors
+
+  // verify that total number of connections is not larger than N_sources * N_targets
+  if ( not allow_multapses_ )
+  {
+    if ( ( N_ > static_cast< long >( sources_->size() * targets_->size() ) ) )
+    {
+      throw BadProperty( "Total number of connections cannot exceed product of source and target population sizes." );
+    }
+  }
+
+  if ( N_ < 0 )
+  {
+    throw BadProperty( "Total number of connections cannot be negative." );
+  }
+
+  if ( num_clusters_ < 1 )
+  {
+    throw BadProperty( "There must be at least one cluster." );
+  }
+
+  if ( synapse_model_id_.size() != 2 )
+  {
+    throw BadProperty( "For clustered connectivity, syn_specs must be CollocatedSynapse with two elements." );
+  }
+
+  // for now multapses cannot be forbidden
+  // TODO: Implement option for multapses_ = False, where already existing
+  // connections are stored in
+  // a bitmap
+  if ( not allow_multapses_ )
+  {
+    throw NotImplemented( "Connect doesn't support the suppression of multapses in the FixedTotalNumber connector." );
+  }
+}
+
+
+void
+nest::ModClusteredFixedTotalNumberBuilder::connect_()
+{
+  // Set up data (structures) that is either global to all cluster combinations or is re-used from round to round
+  const size_t n_vp = kernel().vp_manager.get_num_virtual_processes();
+  const size_t total_size_sources = sources_->size();
+  const size_t total_size_targets = targets_->size();
+  const double conn_prob = static_cast< double >( N_ ) / ( total_size_sources * total_size_targets );
+
+  RngPtr global_rng = get_rank_synced_rng();
+  binomial_distribution bino_dist;
+  std::vector< long > num_conns_on_vp( n_vp, 0 );  // corresponds to n[] in GSL 1.8 binomial algo
+  std::vector< size_t > number_of_targets_on_vp( n_vp, 0 );
+
+  // vectors for thread-local neurons are created only once an later only resized and overwritten
+  // created thread-parallel to ensure memory locality
+  std::vector< std::vector< size_t >* > thread_local_targets( kernel().vp_manager.get_num_threads(), nullptr );
+#pragma omp parallel
+  {
+    const size_t tid = kernel().vp_manager.get_thread_id();
+    thread_local_targets.at( tid ) = new std::vector< size_t >();
+  }
+
+  for ( size_t tc = 0; tc < num_clusters_; ++tc )
+  {
+    const auto tgt_nrns = targets_->slice( tc, total_size_targets, num_clusters_ );
+    const size_t size_targets = tgt_nrns->size();
+
+    // Count number of targets for all VPs, also non-local ones; required for multinomial distribution
+    std::fill( number_of_targets_on_vp.begin(), number_of_targets_on_vp.end(), 0 );  // reset to 0 for each use
+    for ( const auto& t : *tgt_nrns )
+    {
+      size_t vp = kernel().vp_manager.node_id_to_vp( t.node_id );
+      ++number_of_targets_on_vp[ vp ];
+    }
+
+// Collect thread-local targets in vector for random selection
+#pragma omp parallel
+    {
+      const size_t tid = kernel().vp_manager.get_thread_id();
+      thread_local_targets[ tid ]->clear();  // remove old data before re-filling for the next target cluster
+
+      for ( auto t_it = tgt_nrns->thread_local_begin(); t_it != tgt_nrns->end(); ++t_it )
+      {
+        thread_local_targets[ tid ]->push_back( ( *t_it ).node_id );
+      }
+    }
+
+    for ( size_t sc = 0; sc < num_clusters_; ++sc )
+    {
+      const auto src_nrns = sources_->slice( sc, total_size_sources, num_clusters_ );
+      const long size_sources = src_nrns->size();
+
+      const long num_conns = conn_prob * size_sources * size_targets;
+
+      // We use the multinomial distribution to determine the number of
+      // connections that will be made on one virtual process, i.e. we
+      // partition the set of edges into n_vps subsets. The number of
+      // edges on one virtual process is binomially distributed with
+      // the boundary condition that the sum of all edges over virtual
+      // processes is the total number of edges.
+      // To obtain the num_conns_on_vp we adapt the gsl
+      // implementation of the multinomial distribution.
+
+      // K from gsl is equivalent to M = n_vps
+      // N is already taken from stack
+      // p[] is targets_on_vp
+      std::fill( num_conns_on_vp.begin(), num_conns_on_vp.end(), 0 );  // corresponds to n[], reset to 0 for each use
+
+      // calculate exact multinomial distribution
+
+      // begin code adapted from gsl 1.8 //
+      double sum_dist = 0.0;  // corresponds to sum_p
+      // norm is equivalent to size_targets
+      unsigned int sum_partitions = 0;  // corresponds to sum_n
+
+      for ( int k = 0; k < n_vp; k++ )
+      {
+        // If we have distributed all connections on the previous processes we exit the loop. It is important to
+        // have this check here, as N - sum_partition is set as n value for GSL, and this must be larger than 0.
+        if ( num_conns == sum_partitions )
+        {
+          break;
+        }
+        if ( number_of_targets_on_vp[ k ] > 0 )
+        {
+          double num_local_targets = static_cast< double >( number_of_targets_on_vp[ k ] );
+          double p_local = num_local_targets / ( size_targets - sum_dist );
+
+          binomial_distribution::param_type param( num_conns - sum_partitions, p_local );
+          num_conns_on_vp[ k ] = bino_dist( global_rng, param );
+        }
+
+        sum_dist += static_cast< double >( number_of_targets_on_vp[ k ] );
+        sum_partitions += static_cast< unsigned int >( num_conns_on_vp[ k ] );
+      }
+
+      // end code adapted from gsl 1.8
+
+#pragma omp parallel
+      {
+        // get thread id
+        const size_t tid = kernel().vp_manager.get_thread_id();
+        const size_t vp_id = kernel().vp_manager.thread_to_vp( tid );
+
+        try
+        {
+          RngPtr rng = get_vp_specific_rng( tid );
+
+          assert( thread_local_targets[ tid ]->size() == number_of_targets_on_vp[ vp_id ] );
+
+          while ( num_conns_on_vp[ vp_id ] > 0 )
+          {
+
+            // draw random numbers for source node from all source neurons
+            const long s_index = rng->ulrand( size_sources );
+            // draw random numbers for target node from
+            // targets_on_vp on this virtual process
+            const long t_index = rng->ulrand( thread_local_targets[ tid ]->size() );
+            // map random number of source node to node ID corresponding to
+            // the source_adr vector
+            const long snode_id = ( *src_nrns )[ s_index ];
+            // map random number of target node to node ID using the
+            // targets_on_vp vector
+            const long tnode_id = ( *thread_local_targets[ tid ] )[ t_index ];
+
+            Node* const target = kernel().node_manager.get_node_or_proxy( tnode_id, tid );
+            const size_t target_thread = target->get_thread();
+
+            if ( allow_autapses_ or snode_id != tnode_id )
+            {
+              clustered_single_connect_( snode_id,
+                *target,
+                target_thread,
+                rng,
+                /* is_intra */ sc == tc );
+              num_conns_on_vp[ vp_id ]--;
+            }
+          }
+        }
+        catch ( ... )
+        {
+          // Capture the current exception object and create an std::exception_ptr
+          exceptions_raised_.at( tid ) = std::current_exception();
+        }
+      }  // omp parallel
+    }  // for target
+  }  // for source
+
+#pragma omp parallel
+  {
+    const size_t tid = kernel().vp_manager.get_thread_id();
+    delete thread_local_targets.at( tid );
+  }
+}
+
 nest::AltClusteredFixedTotalNumberBuilder::AltClusteredFixedTotalNumberBuilder( NodeCollectionPTR sources,
   NodeCollectionPTR targets,
   ThirdOutBuilder* third_out,

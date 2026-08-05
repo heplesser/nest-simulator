@@ -734,6 +734,23 @@ private:
   long num_clusters_;
 };
 
+class ModClusteredFixedTotalNumberBuilder : public BipartiteConnBuilder
+{
+public:
+  ModClusteredFixedTotalNumberBuilder( NodeCollectionPTR,
+    NodeCollectionPTR,
+    ThirdOutBuilder* third_out,
+    const Dictionary&,
+    const std::vector< Dictionary >& );
+
+protected:
+  void connect_() override;
+
+private:
+  long N_;
+  long num_clusters_;
+};
+
 class AltClusteredFixedTotalNumberBuilder : public BipartiteConnBuilder
 {
 public:
