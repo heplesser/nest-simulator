@@ -25,17 +25,16 @@ execute_process(
   COMMAND_ERROR_IS_FATAL ANY
 )
 
-if( NEST_PREBUILT_PYNEST_CXX STREQUAL "" )
+if( NOT NESTKERNEL_API_CXX )
   # Default: run Cython to generate nestkernel_api.cxx from nestkernel_api.pyx.
   include( UseCython )
   set_source_files_properties( nestkernel_api.pyx PROPERTIES CYTHON_IS_CXX TRUE )
   cython_add_module( nestkernel_api nestkernel_api.pyx )
 else()
-  # Use a pre-generated nestkernel_api.cxx (set by -DNESTKERNEL_API_CXX).
-  # If the file is absent (ON case), the warning appears at the end of the summary.
+  # Use a pre-generated nestkernel_api.cxx (set by -DNESTKERNEL_API_CXX=<path>).
   # GENERATED TRUE suppresses CMake's source-existence check at configure time.
-  set_source_files_properties( "${NEST_PREBUILT_PYNEST_CXX}" PROPERTIES GENERATED TRUE )
-  add_library( nestkernel_api MODULE "${NEST_PREBUILT_PYNEST_CXX}" )
+  set_source_files_properties( "${NESTKERNEL_API_CXX}" PROPERTIES GENERATED TRUE )
+  add_library( nestkernel_api MODULE "${NESTKERNEL_API_CXX}" )
   set_target_properties( nestkernel_api PROPERTIES PREFIX "" )
 endif()
 

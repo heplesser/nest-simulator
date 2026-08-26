@@ -134,9 +134,9 @@ get_target_triple( NEST_TARGET_TRIPLE NEST_TARGET_ARCH NEST_TARGET_VENDOR NEST_T
 #            nest_find_python() defaults CMAKE_INSTALL_PREFIX to the active virtual Python
 #            environment. This effects the inclusion of GNUInstallDirs defining
 #            CMAKE_INSTALL_<dir> and CMAKE_INSTALL_FULL_<dir>.
-#            nest_process_with_prebuilt_pynest_cxx() must precede nest_find_python() because
-#            NEST_FIND_PYTHON() uses NEST_PREBUILT_PYNEST_CXX to decide whether to require Cython.
-nest_process_with_prebuilt_pynest_cxx()
+#            nest_process_with_nestkernel_api_cxx() must precede nest_find_python() because
+#            NEST_FIND_PYTHON() checks NESTKERNEL_API_CXX to decide whether to require Cython.
+nest_process_with_nestkernel_api_cxx()
 nest_find_python()
 include( GNUInstallDirs )
 nest_setup_python()
