@@ -46,10 +46,10 @@ double Time::Range::STEPS_PER_MS = 1 / Time::Range::MS_PER_STEP;
 // define for unit -- const'ness is in the header
 // should only be necessary when not folded away
 // by the compiler as compile time consts
-const tic_t Time::LimitPosInf::tics;
-const long Time::LimitPosInf::steps;
-const tic_t Time::LimitNegInf::tics;
-const long Time::LimitNegInf::steps;
+constexpr tic_t Time::LimitPosInf::tics;
+constexpr long Time::LimitPosInf::steps;
+constexpr tic_t Time::LimitNegInf::tics;
+constexpr long Time::LimitNegInf::steps;
 
 tic_t
 Time::compute_max()
