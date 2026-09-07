@@ -40,7 +40,7 @@
 # All variables set by this function are local to the calling (processor)
 # function's scope and automatically disappear when that function returns,
 # so they never affect other library searches or the parent CMakeLists.txt scope.
-function( NEST_RESTRICT_FIND_IF_PINNED package_name )
+function( NEST_FIND_PACKAGE_RESTRICT_IF_PINNED package_name )
   # Promote UNINITIALIZED → PATH so the unknown-option check never fires.
   # Without FORCE, any user-supplied value is preserved; only the type changes.
   set( ${package_name}_ROOT "" CACHE PATH
@@ -50,6 +50,7 @@ function( NEST_RESTRICT_FIND_IF_PINNED package_name )
   set( _root "${${package_name}_ROOT}" )
   if ( "${_root}" STREQUAL "" AND DEFINED ENV{${package_name}_ROOT} )
     set( _root "$ENV{${package_name}_ROOT}" )
+    message( "_root in if: |${_root}|")
   endif ()
 
   if ( NOT "${_root}" STREQUAL "" OR CMAKE_PREFIX_PATH )
@@ -240,7 +241,7 @@ endfunction()
 
 function( NEST_PROCESS_WITH_LIBLTDL )
   set( HAVE_LIBLTDL OFF PARENT_SCOPE )
-  nest_restrict_find_if_pinned( LTDL )  # always: claims LTDL_ROOT
+  nest_find_package_restrict_if_pinned( LTDL )  # always: claims LTDL_ROOT
   # ltdl enables dynamic loading of user modules; incompatible with full static linking.
   if ( with-static-linking )
     message( STATUS "LTDL disabled: incompatible with -Dwith-static-linking=ON." )
@@ -265,7 +266,7 @@ function( NEST_PROCESS_WITH_GSL )
   # GSL_ROOT is the CMP0074 convention variable; CMake searches it in config mode
   # and injects it into find_path/find_library hints inside FindGSL.cmake.
   # FindGSL.cmake additionally checks GSL_ROOT_DIR explicitly; we set that too.
-  nest_restrict_find_if_pinned( GSL )
+  nest_find_package_restrict_if_pinned( GSL )
   set( GSL_ROOT_DIR "${GSL_ROOT}" )
   if ( with-gsl )
     find_package( GSL 1.11 REQUIRED QUIET )
@@ -358,7 +359,7 @@ function( NEST_SETUP_PYTHON )
 endfunction()
 
 function( NEST_PROCESS_WITH_OPENMP )
-  nest_restrict_find_if_pinned( OpenMP )
+  nest_find_package_restrict_if_pinned( OpenMP )
 
   if ( NOT with-openmp )
     # Provide a dummy OpenMP::OpenMP_CXX if OpenMP is disabled so unconditional
@@ -404,7 +405,7 @@ endfunction()
 
 function( NEST_PROCESS_WITH_MPI )
   set( HAVE_MPI OFF PARENT_SCOPE )
-  nest_restrict_find_if_pinned( MPI )
+  nest_find_package_restrict_if_pinned( MPI )
 
   if ( with-mpi )
     find_package( MPI REQUIRED QUIET COMPONENTS CXX )
@@ -458,7 +459,7 @@ endfunction()
 
 function( NEST_PROCESS_WITH_MUSIC )
   set( HAVE_MUSIC OFF PARENT_SCOPE )
-  nest_restrict_find_if_pinned( Music )
+  nest_find_package_restrict_if_pinned( Music )
   if ( NOT with-music )
     return()
   endif ()
@@ -479,7 +480,7 @@ endfunction()
 
 function( NEST_PROCESS_WITH_SIONLIB )
   set( HAVE_SIONLIB OFF CACHE INTERNAL "sionlib" )
-  nest_restrict_find_if_pinned( SIONlib )
+  nest_find_package_restrict_if_pinned( SIONlib )
   if ( NOT with-sionlib )
     return()
   endif ()
@@ -495,7 +496,7 @@ endfunction()
 
 function( NEST_PROCESS_WITH_BOOST )
   set( HAVE_BOOST OFF PARENT_SCOPE )
-  nest_restrict_find_if_pinned( Boost )
+  nest_find_package_restrict_if_pinned( Boost )
   if ( with-boost )
     set( Boost_USE_DEBUG_LIBS OFF )
     set( Boost_USE_RELEASE_LIBS ON )
@@ -515,7 +516,7 @@ endfunction()
 
 function( NEST_PROCESS_WITH_HDF5 )
   set( HAVE_HDF5 OFF PARENT_SCOPE )
-  nest_restrict_find_if_pinned( HDF5 )
+  nest_find_package_restrict_if_pinned( HDF5 )
   if ( NOT with-hdf5 )
     return()
   endif ()
