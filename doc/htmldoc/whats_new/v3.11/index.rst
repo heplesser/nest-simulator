@@ -55,7 +55,7 @@ When ``<Package>_ROOT`` is set, CMake restricts its search to that prefix and
 reports an error if the library is not found there, preventing silent fallback
 to a system-wide installation. The affected variables are ``GSL_ROOT``,
 ``Boost_ROOT``, ``MPI_ROOT``, ``OpenMP_ROOT``, ``LTDL_ROOT``, ``HDF5_ROOT``,
-``LibNeurosim_ROOT``, ``Music_ROOT``, and ``SIONlib_ROOT``.
+``Music_ROOT``, and ``SIONlib_ROOT``.
 
 **Renamed options.**
 The following options have been renamed for consistency. The old names produce

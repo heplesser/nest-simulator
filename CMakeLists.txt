@@ -56,7 +56,6 @@ option( with-openmp "Build with OpenMP multi-threading [default=ON]." ON )
 # external libraries
 # To pin a specific installation root, set the corresponding <Package>_ROOT variable,
 # e.g. cmake -DGSL_ROOT=/opt/gsl or -DBoost_ROOT=/opt/boost.
-option( with-libneurosim "Build with libneurosim [default=OFF]." OFF )
 option( with-music "Build with MUSIC [default=OFF]. Requires -Dwith-mpi=ON." OFF )
 option( with-sionlib "Build with SIONlib [default=OFF]. Requires -Dwith-mpi=ON." OFF )
 option( with-boost "Build with Boost [default=ON]." ON )
@@ -154,7 +153,6 @@ nest_process_with_detailed_timers()
 nest_process_with_cycle_timers()
 nest_process_with_threaded_timers()
 nest_process_with_mpi_sync_timer()
-nest_process_with_libneurosim()
 nest_process_with_music()
 nest_process_with_sionlib()
 nest_process_with_boost()
@@ -257,7 +255,6 @@ endforeach ()
 set( MODULE_LINK_LIBS
   "${LTDL_LIBRARIES}"
   "${GSL_LIBRARIES}"
-  "${LIBNEUROSIM_LIBRARIES}"
   "${MUSIC_LIBRARIES}"
   "${MPI_CXX_LIBRARIES}"
   "${OpenMP_CXX_LIBRARIES}"
@@ -282,7 +279,6 @@ set( ALL_INCLUDES_tmp
   "${CMAKE_INSTALL_FULL_INCLUDEDIR}/nest"
   "${LTDL_INCLUDE_DIRS}"
   "${GSL_INCLUDE_DIRS}"
-  "${LIBNEUROSIM_INCLUDE_DIRS}"
   "${MUSIC_INCLUDE_DIRS}"
   "${OpenMP_CXX_INCLUDE_DIRS}"
   "${MPI_CXX_INCLUDE_PATH}"

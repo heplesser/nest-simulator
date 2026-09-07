@@ -161,11 +161,6 @@ External libraries
 ~~~~~~~~~~~~~~~~~~
 
 +-------------------------------+------------------------------------------------------------------------------------------------+
-| ``-Dwith-libneurosim=[OFF|ON]`` | Build with `libneurosim <https://github.com/INCF/libneurosim>`_ [default=OFF].               |
-|                               | libneurosim provides the Connection Generator Interface, which allows                          |
-|                               | external libraries to generate network connections. See :ref:`connection_generator`.           |
-|                               | To pin a specific installation, set ``-DLibNeurosim_ROOT=/path/to/libneurosim``.               |
-+-------------------------------+------------------------------------------------------------------------------------------------+
 | ``-Dwith-music=[OFF|ON]``     | Build with `MUSIC <https://github.com/INCF/MUSIC>`_ [default=OFF].                             |
 |                               | MUSIC enables multi-simulator coupling, allowing NEST to exchange spikes, continuous data,     |
 |                               | and messages with other simulators at runtime. Requires ``-Dwith-mpi=ON``.                     |
@@ -327,20 +322,6 @@ see the `CMake documentation
 
 See the :ref:`parallel_computing` to learn how to execute threaded and
 distributed simulations with NEST.
-
-.. _compile_with_libneurosim:
-
-Support for libneurosim
------------------------
-
-In order to allow NEST to create connections using external libraries,
-it provides support for the Connection Generator Interface from
-*libneurosim*. To request the use of libneurosim, pass
-``-Dwith-libneurosim=ON`` to ``cmake``.  To use a non-standard
-installation location, also set ``-DLibNeurosim_ROOT=/path/to/libneurosim``.
-
-For details on how to use the Connection Generator Interface, see the
-:ref:`guide on connection generation <connection_generator>`.
 
 .. _compile_with_python:
 

@@ -63,9 +63,6 @@
 /* Havel libltdl, can load dynamic modules */
 #cmakedefine HAVE_LIBLTDL 1
 
-/* libneurosim support enabled? */
-#cmakedefine HAVE_LIBNEUROSIM 1
-
 /* MPI is available. */
 #cmakedefine HAVE_MPI 1
 

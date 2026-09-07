@@ -456,27 +456,6 @@ function( NEST_PROCESS_WITH_MPI_SYNC_TIMER )
   set( MPI_SYNC_TIMER ${with-mpi-sync-timer} PARENT_SCOPE )
 endfunction()
 
-################################################################################
-# Optional external libraries (category b, continued)
-################################################################################
-
-function( NEST_PROCESS_WITH_LIBNEUROSIM )
-  set( HAVE_LIBNEUROSIM OFF PARENT_SCOPE )
-  nest_restrict_find_if_pinned( LibNeurosim )
-  if ( NOT with-libneurosim )
-    return()
-  endif ()
-  find_package( LibNeurosim REQUIRED QUIET )
-  message( STATUS "Found LibNeurosim: ${LIBNEUROSIM_LIBRARIES} (found version ${LIBNEUROSIM_VERSION})" )
-  set( HAVE_LIBNEUROSIM ON PARENT_SCOPE )
-  set( LIBNEUROSIM_FOUND "${LIBNEUROSIM_FOUND}" PARENT_SCOPE )
-  set( LIBNEUROSIM_LIBRARIES "${LIBNEUROSIM_LIBRARIES}" PARENT_SCOPE )
-  set( LIBNEUROSIM_INCLUDE_DIRS "${LIBNEUROSIM_INCLUDE_DIRS}" PARENT_SCOPE )
-  set( LIBNEUROSIM_VERSION "${LIBNEUROSIM_VERSION}" PARENT_SCOPE )
-  include_directories( ${LIBNEUROSIM_INCLUDE_DIRS} )
-  # is linked in nestkernel/CMakeLists.txt
-endfunction()
-
 function( NEST_PROCESS_WITH_MUSIC )
   set( HAVE_MUSIC OFF PARENT_SCOPE )
   nest_restrict_find_if_pinned( Music )
