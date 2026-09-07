@@ -58,7 +58,6 @@ set( with-mpi OFF CACHE STRING "Build with MPI parallelization [default=OFF]." )
 set( with-openmp ON CACHE BOOL "Build with OpenMP multi-threading [default=ON]." )
 
 # external libraries
-set( with-libneurosim OFF CACHE STRING "Build with libneurosim [default=OFF]. Optionally give the directory where libneurosim is installed." )
 set( with-music OFF CACHE STRING "Build with MUSIC [default=OFF]. Optionally give the directory where MUSIC is installed." )
 set( with-sionlib OFF CACHE STRING "Build with SIONlib [default=OFF]. Optionally give the directory where sionlib is installed." )
 set( with-boost ON CACHE STRING "Build with Boost [default=ON]. To set a specific Boost installation, give the install path." )
@@ -154,7 +153,6 @@ nest_process_with_detailed_timers()
 nest_process_with_cycle_timers()
 nest_process_with_threaded_timers()
 nest_process_with_mpi_sync_timer()
-nest_process_with_libneurosim()
 nest_process_with_music()
 nest_process_with_sionlib()
 nest_process_with_mpi4py()
@@ -271,7 +269,6 @@ endforeach ()
 set( MODULE_LINK_LIBS
   "${LTDL_LIBRARIES}"
   "${GSL_LIBRARIES}"
-  "${LIBNEUROSIM_LIBRARIES}"
   "${MUSIC_LIBRARIES}"
   "${MPI_CXX_LIBRARIES}"
   "${OpenMP_CXX_LIBRARIES}"
@@ -296,7 +293,6 @@ set( ALL_INCLUDES_tmp
   "${CMAKE_INSTALL_FULL_INCLUDEDIR}/nest"
   "${LTDL_INCLUDE_DIRS}"
   "${GSL_INCLUDE_DIRS}"
-  "${LIBNEUROSIM_INCLUDE_DIRS}"
   "${MUSIC_INCLUDE_DIRS}"
   "${OpenMP_CXX_INCLUDE_DIRS}"
   "${MPI_CXX_INCLUDE_PATH}"
