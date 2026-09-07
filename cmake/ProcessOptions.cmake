@@ -23,31 +23,6 @@
 # Helper functions
 ################################################################################
 
-# Regular expressions for CMake's false-ish and true-ish boolean spellings.
-# Defined once here and inherited by all helper functions below.
-set( _NEST_FALSE_REGEX "^(0|OFF|NO|FALSE|N|IGNORE|NOTFOUND)?$" )
-set( _NEST_TRUE_REGEX  "^(1|ON|YES|TRUE|Y)$" )
-
-# Validate that option_value is a recognised CMake boolean spelling
-# (ON/YES/TRUE/Y/1 or OFF/NO/FALSE/N/IGNORE/NOTFOUND/empty); terminate with a
-# clear error otherwise. Sets result_var to ON or OFF in the caller's scope.
-# Validation uses a regex; normalisation delegates to CMake's own if() evaluator
-# so that any future CMake boolean spellings are handled correctly automatically.
-function( NEST_VALIDATE_BOOL_OPTION option_name option_value result_var )
-  string( TOUPPER "${option_value}" _upper )
-  if ( NOT ( _upper MATCHES "${_NEST_TRUE_REGEX}"
-          OR _upper MATCHES "${_NEST_FALSE_REGEX}" ) )
-    message( FATAL_ERROR
-      "Invalid value -D${option_name}=${option_value}, please use 'ON' or 'OFF'." )
-  endif ()
-  # CMake's own if() is the canonical boolean evaluator; use it for normalisation.
-  if ( "${option_value}" )
-    set( ${result_var} ON PARENT_SCOPE )
-  else ()
-    set( ${result_var} OFF PARENT_SCOPE )
-  endif ()
-endfunction()
-
 # Claim <package_name>_ROOT as a typed CACHE PATH variable and, when the user
 # has pinned a location via that variable (or its ENV counterpart, or via
 # CMAKE_PREFIX_PATH), restrict the subsequent find_package() to that path only
@@ -98,10 +73,13 @@ endfunction()
 #   "${default}"      when option_value is ON-ish,
 #   "${option_value}" otherwise (use the value directly).
 function( NEST_RESOLVE_FLAG_OPTION option_value default_value result_var )
+  # Regular expressions for CMake's false-ish and true-ish boolean spellings.
+  set( _false_re "^(0|OFF|NO|FALSE|N|IGNORE|NOTFOUND)?$" )
+  set( _true_re  "^(1|ON|YES|TRUE|Y)$" )
   string( TOUPPER "${option_value}" _upper )
-  if ( _upper MATCHES "${_NEST_FALSE_REGEX}" )
+  if ( _upper MATCHES "${_false_re}" )
     set( ${result_var} "" PARENT_SCOPE )
-  elseif ( _upper MATCHES "${_NEST_TRUE_REGEX}" )
+  elseif ( _upper MATCHES "${_true_re}" )
     set( ${result_var} "${default_value}" PARENT_SCOPE )
   else ()
     set( ${result_var} "${option_value}" PARENT_SCOPE )
@@ -460,29 +438,22 @@ endfunction()
 ################################################################################
 
 function( NEST_PROCESS_WITH_DETAILED_TIMERS )
-  nest_validate_bool_option( with-detailed-timers "${with-detailed-timers}" TIMER_DETAILED )
-  set( TIMER_DETAILED ${TIMER_DETAILED} PARENT_SCOPE )
+  set( TIMER_DETAILED ${with-detailed-timers} PARENT_SCOPE )
 endfunction()
 
 function( NEST_PROCESS_WITH_CYCLE_TIMERS )
-  nest_validate_bool_option( with-detailed-timers "${with-detailed-timers}" _detailed_timers )
-  nest_validate_bool_option( with-cycle-timers "${with-cycle-timers}" _cycle_timers )
-
-  if ( _cycle_timers AND NOT _detailed_timers )
+  if ( with-cycle-timers AND NOT with-detailed-timers )
     message( FATAL_ERROR "To enable cycle timers, you must also enable detailed timers." )
   endif ()
-
-  set( CYCLE_TIMERS ${_cycle_timers} PARENT_SCOPE )
+  set( CYCLE_TIMERS ${with-cycle-timers} PARENT_SCOPE )
 endfunction()
 
 function( NEST_PROCESS_WITH_THREADED_TIMERS )
-  nest_validate_bool_option( with-threaded-timers "${with-threaded-timers}" THREADED_TIMERS )
-  set( THREADED_TIMERS ${THREADED_TIMERS} PARENT_SCOPE )
+  set( THREADED_TIMERS ${with-threaded-timers} PARENT_SCOPE )
 endfunction()
 
 function( NEST_PROCESS_WITH_MPI_SYNC_TIMER )
-  nest_validate_bool_option( with-mpi-sync-timer "${with-mpi-sync-timer}" MPI_SYNC_TIMER )
-  set( MPI_SYNC_TIMER ${MPI_SYNC_TIMER} PARENT_SCOPE )
+  set( MPI_SYNC_TIMER ${with-mpi-sync-timer} PARENT_SCOPE )
 endfunction()
 
 ################################################################################
@@ -636,8 +607,7 @@ endfunction()
 ################################################################################
 
 function( NEST_PROCESS_USERDOC )
-  nest_validate_bool_option( with-userdoc "${with-userdoc}" _userdoc )
-  if ( _userdoc )
+  if ( with-userdoc )
     message( STATUS "Configuring user documentation" )
     # QUIET: suppress the module's own "Found" message, we print our own below
     find_package( Sphinx REQUIRED QUIET )
@@ -650,8 +620,7 @@ function( NEST_PROCESS_USERDOC )
 endfunction()
 
 function( NEST_PROCESS_DEVDOC )
-  nest_validate_bool_option( with-devdoc "${with-devdoc}" _devdoc )
-  if ( _devdoc )
+  if ( with-devdoc )
     message( STATUS "Configuring developer documentation" )
     # QUIET: suppress the module's own "Found" message, we print our own below
     find_package( Doxygen REQUIRED QUIET COMPONENTS dot )
@@ -662,9 +631,8 @@ function( NEST_PROCESS_DEVDOC )
 endfunction()
 
 function( NEST_PROCESS_FULL_LOGGING )
-  nest_validate_bool_option( with-full-logging "${with-full-logging}" ENABLE_FULL_LOGGING )
-  if ( ENABLE_FULL_LOGGING )
+  if ( with-full-logging )
     message( STATUS "Configuring full logging" )
   endif ()
-  set( ENABLE_FULL_LOGGING ${ENABLE_FULL_LOGGING} PARENT_SCOPE )
+  set( ENABLE_FULL_LOGGING ${with-full-logging} PARENT_SCOPE )
 endfunction()

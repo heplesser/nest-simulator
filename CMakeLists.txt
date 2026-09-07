@@ -69,10 +69,10 @@ option( with-gsl "Build with the GSL library [default=ON]." ON )
 # NEST properties
 set( with-modelset "full" CACHE STRING "The modelset to include. Sample configurations are in the modelsets directory. This option is mutually exclusive with -Dwith-models. [default=full]." )
 set( with-models OFF CACHE STRING "The models to include as a semicolon-separated list of model headers (without the .h extension). This option is mutually exclusive with -Dwith-modelset. [default=OFF]." )
-set( with-detailed-timers OFF CACHE STRING "Build with detailed internal time measurements [default=OFF]. Detailed timers can affect the performance." )
-set( with-cycle-timers OFF CACHE STRING "Build with internal cycle time measurements [default=OFF, can only be enabled when detailed timers is ON]. Can affect the performance." )
-set( with-mpi-sync-timer OFF CACHE STRING "Build with mpi synchronization barrier and timer [default=OFF]. Can affect the performance." )
-set( with-threaded-timers ON CACHE STRING "Build with one internal timer per thread [default=ON]. Multi-threaded timers can affect the performance." )
+option( with-detailed-timers "Build with detailed internal time measurements [default=OFF]. Detailed timers can affect the performance." OFF )
+option( with-cycle-timers "Build with internal cycle time measurements [default=OFF, can only be enabled when detailed timers is ON]. Can affect the performance." OFF )
+option( with-mpi-sync-timer "Build with mpi synchronization barrier and timer [default=OFF]. Can affect the performance." OFF )
+option( with-threaded-timers "Build with one internal timer per thread [default=ON]. Multi-threaded timers can affect the performance." ON )
 set( with-target-bits-split "default" CACHE STRING "Split of the 64-bit target neuron identifier type [default='default']. 'default' is recommended for most users. If running on more than 262144 MPI processes or more than 512 threads, change to 'hpc'." )
 
 # generic build configuration
@@ -86,10 +86,10 @@ set( with-includes OFF CACHE STRING "Add additional include paths [default=OFF].
 set( with-defines OFF CACHE STRING "Additional defines, e.g. '-DXYZ=1' [default=OFF]. Separate multiple defines by ';'." )
 
 # documentation build configuration
-set( with-userdoc OFF CACHE STRING "Build user documentation [default=OFF]")
-set( with-devdoc OFF CACHE STRING "Build developer documentation [default=OFF]")
+option( with-userdoc "Build user documentation [default=OFF]." OFF )
+option( with-devdoc "Build developer documentation [default=OFF]." OFF )
 
-set( with-full-logging OFF CACHE STRING "Write debug output to 'dump_<num_ranks>_<rank>.log' file [default=OFF]")
+option( with-full-logging "Write debug output to 'dump_<num_ranks>_<rank>.log' file [default=OFF]." OFF )
 
 ################################################################################
 ##################      Project Directory variables           ##################
