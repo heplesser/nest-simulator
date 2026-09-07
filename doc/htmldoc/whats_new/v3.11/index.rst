@@ -77,3 +77,9 @@ a hard error with a pointer to the new name.
      - ``-DNESTKERNEL_API_CXX=<path>``
 
 For the full list of available options see :ref:`cmake_options`.
+
+ConnectionGenerator and support for libneurosim removed
+-------------------------------------------------------
+``ConnectionGenerator`` and the support for ``libneurosim``, which depended on it has been broken
+since the transition to NEST 3 without causing any user complaints. Remaining code is therefore
+removed in NEST 3.11, including the `-Dwith-libneurosim` option for CMake.
