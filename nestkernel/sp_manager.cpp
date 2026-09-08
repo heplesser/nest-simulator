@@ -421,12 +421,12 @@ SPManager::create_synapses( std::vector< size_t >& pre_id,
   if ( pre_id_rnd.size() > post_id_rnd.size() )
   {
     // randomly select n elements
-    pre_id_rnd = get_rank_synced_rng()->sample( pre_id_rnd, post_id_rnd.size() );
+    get_rank_synced_rng()->partial_shuffle( pre_id_rnd, post_id_rnd.size() );
   }
   else
   {
     // randomly select n elements
-    post_id_rnd = get_rank_synced_rng()->sample( post_id_rnd, pre_id_rnd.size() );
+    get_rank_synced_rng()->partial_shuffle( post_id_rnd, pre_id_rnd.size() );
   }
 
   // create synapse
@@ -470,7 +470,7 @@ SPManager::delete_synapses_from_pre( const std::vector< size_t >& pre_deleted_id
     {
       *n_it = -global_targets.size();
     }
-    global_targets = get_rank_synced_rng()->sample( global_targets, -( *n_it ) );
+    get_rank_synced_rng()->partial_shuffle( global_targets, -( *n_it ) );
 
     for ( int i = 0; i < -( *n_it ); ++i )  // n is negative
     {
@@ -549,7 +549,7 @@ SPManager::delete_synapses_from_post( std::vector< size_t >& post_deleted_id,
     {
       *n_it = -global_sources.size();
     }
-    global_sources = get_rank_synced_rng()->sample( global_sources, -( *n_it ) );
+    get_rank_synced_rng()->partial_shuffle( global_sources, -( *n_it ) );
 
     for ( int i = 0; i < -( *n_it ); i++ )  // n is negative
     {

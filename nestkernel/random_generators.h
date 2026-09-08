@@ -136,12 +136,15 @@ public:
     size_t n ) = 0;
 
   /**
-   * @brief Return vector containing n elements randomly selected from data.
+   * @brief Select randomly shuffled elements from vector.
    *
-   * @return n elements drawn from data without replacement and in random order;
-   *         fewer than n if data.size() < n.
+   * Places `n` elements chosen from `data` without replacement at the beginning of `data` and then
+   * reduce size of `data` to `n`.
+   *
+   * @param data Vector to be shuffled and possibly shortened
+   * @oaram n Number of elements to shuffle. `n <= data.size()` required.
    */
-  virtual std::vector< size_t > sample( const std::vector< size_t >& data, const size_t n ) = 0;
+  virtual void partial_shuffle( std::vector< size_t >& data, const size_t n ) = 0;
 };
 
 /**
@@ -302,22 +305,20 @@ public:
     std::sample( first, last, dest, n, rng_ );
   }
 
-  inline std::vector< size_t >
-  sample( const std::vector< size_t >& data, const size_t n ) override
+  inline void
+  partial_shuffle( std::vector< size_t >& data, const size_t n ) override
   {
-    const size_t m = std::min( n, data.size() );
-    std::vector< size_t > tmp( data );
+    const size_t num_elems = std::min( n, data.size() );
 
-    // Partial Fisher-Yates: at each step select an element from the remaining range
-    // [ next, tmp.size() ) and swap it to the front. Draws m random numbers and
-    // leaves the selection in random order, as global_shuffle() did.
-    for ( size_t next = 0, remaining = tmp.size(); next < m; ++next, --remaining )
+    // Partial Fisher-Yates-Durstenfeld-Knuth: at each step select an element from the remaining range
+    // [ next, data.size() ) and swap it to the front. Draws num_elems random numbers and
+    // leaves the selection in random order.
+    for ( size_t next = 0, remaining = data.size(); next < num_elems; ++next, --remaining )
     {
       const size_t rnd = next + ulrand( remaining );
-      std::swap( tmp[ next ], tmp[ rnd ] );
+      std::swap( data[ next ], data[ rnd ] );
     }
-    tmp.resize( m );  // keep only the m selected elements.
-    return tmp;
+    data.resize( num_elems );  // keep only the m selected elements.
   }
 
 private:
