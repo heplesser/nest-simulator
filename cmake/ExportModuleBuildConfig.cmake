@@ -104,9 +104,28 @@ function( NEST_EXPORT_MODULE_BUILD_CONFIG )
     endif ()
   endforeach ()
 
+  # configure_file() only substitutes @VAR@ placeholders -- it never
+  # evaluates CMake generator expressions. Some upstream Find modules set
+  # target properties containing them (e.g. FindOpenMP.cmake wraps
+  # OpenMP::OpenMP_CXX's INTERFACE_INCLUDE_DIRECTORIES in
+  # $<BUILD_INTERFACE:...>), so the flattened *_includes/*_libs above can
+  # literally contain that genex text. Real CMake targets evaluate it fine
+  # once some other target's own generate step consumes it, but nest-config is a plain shell
+  # script with no such consumer, so it would leak e.g.
+  # "-I$<BUILD_INTERFACE:/path>" into --includes verbatim. Route
+  # the configured content through a second file(GENERATE) pass, which does
+  # evaluate generator expressions (with no target in scope, taking the
+  # BUILD_INTERFACE branch and dropping INSTALL_INTERFACE -- matching what
+  # a script describing this build tree wants), to resolve any that slipped
+  # in from the flattened target properties.
   configure_file(
     "${PROJECT_SOURCE_DIR}/bin/nest-config.in"
-    "${PROJECT_BINARY_DIR}/bin/nest-config" @ONLY
+    "${PROJECT_BINARY_DIR}/bin/nest-config.genexpr" @ONLY
+  )
+  file( READ "${PROJECT_BINARY_DIR}/bin/nest-config.genexpr" _nest_config_content )
+  file( GENERATE
+    OUTPUT "${PROJECT_BINARY_DIR}/bin/nest-config"
+    CONTENT "${_nest_config_content}"
   )
 
   # --- NEST::nest INTERFACE target + NESTSimulatorConfig.cmake ---
