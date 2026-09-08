@@ -124,9 +124,13 @@ public:
   /**
    * @brief Wrap std::sample for selection from NodeCollection
    *
-   * Inserts random sample without replacement of size n from range `[first, last)`into `dest`.
+   * Inserts random stable sample without replacement of size n from range `[first, last)`into `dest`.
+   *
+   * @note Running this with different random seeds will select different elements, but the order of elements
+   * will always be the same as in the node collection from which we sample. In particular, if `n == nc.size()`,
+   * then `dest` will contain the original node collection (as an explicit `vector`).
    */
-  virtual void sample( NodeCollection::const_iterator first,
+  virtual void stable_sample( NodeCollection::const_iterator first,
     NodeCollection::const_iterator last,
     std::back_insert_iterator< std::vector< NodeIDTriple > > dest,
     size_t n ) = 0;
@@ -290,7 +294,7 @@ public:
   }
 
   inline void
-  sample( NodeCollection::const_iterator first,
+  stable_sample( NodeCollection::const_iterator first,
     NodeCollection::const_iterator last,
     std::back_insert_iterator< std::vector< NodeIDTriple > > dest,
     size_t n ) override
