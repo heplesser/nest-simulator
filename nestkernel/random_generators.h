@@ -138,11 +138,12 @@ public:
   /**
    * @brief Select randomly shuffled elements from vector.
    *
-   * Places `n` elements chosen from `data` without replacement at the beginning of `data` and then
-   * reduce size of `data` to `n`.
+   * Places `n` elements chosen from `data` without replacement, in random order, at the beginning of
+   * `data` and then reduces the size of `data` to `n`. If `n` exceeds `data.size()`, all elements are
+   * kept and only shuffled.
    *
-   * @param data Vector to be shuffled and possibly shortened
-   * @oaram n Number of elements to shuffle. `n <= data.size()` required.
+   * @param data Vector to be shuffled and possibly shortened.
+   * @param n Number of elements to select.
    */
   virtual void partial_shuffle( std::vector< size_t >& data, const size_t n ) = 0;
 };
@@ -318,7 +319,7 @@ public:
       const size_t rnd = next + ulrand( remaining );
       std::swap( data[ next ], data[ rnd ] );
     }
-    data.resize( num_elems );  // keep only the m selected elements.
+    data.resize( num_elems );  // keep only the selected elements.
   }
 
 private:
