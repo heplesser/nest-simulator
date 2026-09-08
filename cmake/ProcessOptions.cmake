@@ -385,12 +385,6 @@ function( NEST_PROCESS_WITH_OPENMP )
     endif ()
   endif ()
 
-<<<<<<< HEAD
-    # OpenMP_FOUND: simple flag, no equivalent target property exists.
-    set( OpenMP_FOUND "${OpenMP_FOUND}" PARENT_SCOPE )
-    # consumers use OpenMP::OpenMP_CXX imported target
-  endif ()  # with-openmp
-=======
   find_package( OpenMP REQUIRED QUIET )
   message( STATUS "Found OpenMP: ${OpenMP_CXX_FLAGS} (found version ${OpenMP_VERSION})" )
   set( OpenMP_FOUND "${OpenMP_FOUND}" PARENT_SCOPE )
@@ -398,7 +392,6 @@ function( NEST_PROCESS_WITH_OPENMP )
   set( OpenMP_CXX_LIBRARIES "${OpenMP_CXX_LIBRARIES}" PARENT_SCOPE )
   set( OpenMP_CXX_INCLUDE_DIRS "${OpenMP_CXX_INCLUDE_DIRS}" PARENT_SCOPE )
   # consumers use OpenMP::OpenMP_CXX imported target
->>>>>>> main
 
   # Provide a dummy OpenMP::OpenMP_CXX if find_package somehow did not create
   # the target (e.g., unsupported compiler) so unconditional
@@ -432,28 +425,8 @@ function( NEST_PROCESS_WITH_MPI )
     endif ()
   endif ()   # with-mpi
 
-<<<<<<< HEAD
-    # HAVE_MPI: simple flag, no equivalent target property exists.
-    # MPI_CXX_FOUND/MPI_CXX_COMPILER/MPI_CXX_LINK_FLAGS/MPIEXEC*: display-only
-    # (ConfigureSummary) or genuinely unique info (compiler wrapper path,
-    # test launcher), not derivable from MPI::MPI_CXX's own properties.
-    set( HAVE_MPI ON PARENT_SCOPE )
-    set( MPI_CXX_FOUND "${MPI_CXX_FOUND}" PARENT_SCOPE )
-    set( MPI_CXX_COMPILER "${MPI_CXX_COMPILER}" PARENT_SCOPE )
-    set( MPI_CXX_LINK_FLAGS "${MPI_CXX_LINK_FLAGS}" PARENT_SCOPE )
-    set( MPIEXEC "${MPIEXEC}" PARENT_SCOPE )
-    set( MPIEXEC_NUMPROC_FLAG "${MPIEXEC_NUMPROC_FLAG}" PARENT_SCOPE )
-    set( MPIEXEC_PREFLAGS "${MPIEXEC_PREFLAGS}" PARENT_SCOPE )
-    set( MPIEXEC_POSTFLAGS "${MPIEXEC_POSTFLAGS}" PARENT_SCOPE )
-    # consumers use MPI::MPI_CXX imported target
-  endif ()
-
-  # Provide a dummy MPI::MPI_CXX if MPI is disabled. Needed to avoid
-  # problems where MPI::MPI_CXX is used unconditionally.
-=======
   # Provide a dummy MPI::MPI_CXX if MPI is disabled so unconditional
   # target_link_libraries() calls do not fail.
->>>>>>> main
   if ( NOT TARGET MPI::MPI_CXX )
     add_library( MPI::MPI_CXX INTERFACE IMPORTED )
   endif ()

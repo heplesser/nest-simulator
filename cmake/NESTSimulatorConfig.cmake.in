@@ -71,7 +71,7 @@ if ( NOT TARGET OpenMP::OpenMP_CXX )
   endif ()
 endif ()
 
-# LTDL/LibNeurosim/MUSIC/SIONlib have no modern imported targets, so they're
+# LTDL/MUSIC/SIONlib have no modern imported targets, so they're
 # already plain absolute paths baked into NEST::nest -- nothing to do here.
 
 include( "${CMAKE_CURRENT_LIST_DIR}/NESTSimulatorTargets.cmake" )

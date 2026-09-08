@@ -70,7 +70,6 @@ function( NEST_EXPORT_MODULE_BUILD_CONFIG )
   set( MODULE_LINK_LIBS
     "${LTDL_LIBRARIES}"
     "${_gsl_libs}"
-    "${LIBNEUROSIM_LIBRARIES}"
     "${MUSIC_LIBRARIES}"
     "${_mpi_libs}"
     "${_openmp_libs}"
@@ -89,7 +88,6 @@ function( NEST_EXPORT_MODULE_BUILD_CONFIG )
     "${CMAKE_INSTALL_FULL_INCLUDEDIR}/nest"
     "${LTDL_INCLUDE_DIRS}"
     "${_gsl_includes}"
-    "${LIBNEUROSIM_INCLUDE_DIRS}"
     "${MUSIC_INCLUDE_DIRS}"
     "${_openmp_includes}"
     "${_mpi_includes}"
@@ -145,7 +143,6 @@ function( NEST_EXPORT_MODULE_BUILD_CONFIG )
     MPI::MPI_CXX
     OpenMP::OpenMP_CXX
     ${LTDL_LIBRARIES}
-    ${LIBNEUROSIM_LIBRARIES}
     ${MUSIC_LIBRARIES}
     ${SIONLIB_LIBRARIES}
   )
