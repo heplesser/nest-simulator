@@ -132,7 +132,10 @@ public:
     size_t n ) = 0;
 
   /**
-   * @biref Return vector containing n elements randomly selected from data.
+   * @brief Return vector containing n elements randomly selected from data.
+   *
+   * @return n elements drawn from data without replacement and in random order;
+   *         fewer than n if data.size() < n.
    */
   virtual std::vector< size_t > sample( const std::vector< size_t >& data, const size_t n ) = 0;
 };
@@ -298,9 +301,18 @@ public:
   inline std::vector< size_t >
   sample( const std::vector< size_t >& data, const size_t n ) override
   {
-    std::vector< size_t > tmp;
-    tmp.reserve( n );
-    std::sample( data.begin(), data.end(), std::back_inserter( tmp ), n, rng_ );
+    const size_t m = std::min( n, data.size() );
+    std::vector< size_t > tmp( data );
+
+    // Partial Fisher-Yates: at each step select an element from the remaining range
+    // [ next, tmp.size() ) and swap it to the front. Draws m random numbers and
+    // leaves the selection in random order, as global_shuffle() did.
+    for ( size_t next = 0, remaining = tmp.size(); next < m; ++next, --remaining )
+    {
+      const size_t rnd = next + ulrand( remaining );
+      std::swap( tmp[ next ], tmp[ rnd ] );
+    }
+    tmp.resize( m );  // keep only the m selected elements.
     return tmp;
   }
 
