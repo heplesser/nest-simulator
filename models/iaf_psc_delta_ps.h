@@ -241,7 +241,6 @@ private:
    */
   struct Parameters_
   {
-
     /** Membrane time constant in ms. */
     double tau_m_;
 
@@ -270,6 +269,9 @@ private:
         Relative to resting potential.
     */
     double U_reset_;
+
+    /** Spikes arriving during refractory period are counted. */
+    bool with_refr_input_;
 
     Parameters_();  //!< Sets default parameter values
 
@@ -302,9 +304,12 @@ private:
     double last_spike_offset_;  //!< offset of last spike, for reporting in
                                 //!< status dict
 
-    bool is_refractory_;    //!< flag for refractoriness
-    bool with_refr_input_;  //!< spikes arriving during refractory period are
-                            //!< counted
+    bool is_refractory_;  //!< flag for refractoriness
+
+    /** Accumulate spikes arriving during refractory period, discounted for
+        decay until end of refractory period.
+    */
+    double refr_spikes_buffer_;
 
     State_();  //!< Default initialization
 
@@ -358,11 +363,6 @@ private:
     double h_ms_;  //!< duration of time step [ms]
 
     long refractory_steps_;  //!< refractory time in steps
-
-    /** Accumulate spikes arriving during refractory period, discounted for
-        decay until end of refractory period.
-    */
-    double refr_spikes_buffer_;
   };
 
   // Access functions for UniversalDataLogger -------------------------------

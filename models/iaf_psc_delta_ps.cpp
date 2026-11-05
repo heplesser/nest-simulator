@@ -78,6 +78,7 @@ iaf_psc_delta_ps::Parameters_::Parameters_()
   , U_th_( -55.0 - E_L_ )                            // mV, rel to E_L_
   , U_min_( -std::numeric_limits< double >::max() )  // mV
   , U_reset_( -70.0 - E_L_ )                         // mV, rel to E_L_
+  , with_refr_input_( false )
 {
 }
 
@@ -87,7 +88,6 @@ iaf_psc_delta_ps::State_::State_()
   , last_spike_step_( -1 )
   , last_spike_offset_( 0.0 )
   , is_refractory_( false )
-  , with_refr_input_( false )
 {
 }
 
@@ -106,6 +106,7 @@ iaf_psc_delta_ps::Parameters_::get( Dictionary& d ) const
   d[ names::C_m ] = c_m_;
   d[ names::tau_m ] = tau_m_;
   d[ names::t_ref ] = t_ref_;
+  d[ names::refractory_input ] = with_refr_input_;
 }
 
 double
@@ -170,6 +171,8 @@ iaf_psc_delta_ps::Parameters_::set( const Dictionary& d, Node* node )
     throw BadProperty( "All time constants must be strictly positive." );
   }
 
+  update_value_param( d, names::refractory_input, with_refr_input_, node );
+
   return delta_EL;
 }
 
@@ -178,7 +181,6 @@ iaf_psc_delta_ps::State_::get( Dictionary& d, const Parameters_& p ) const
 {
   d[ names::V_m ] = U_ + p.E_L_;  // Membrane potential
   d[ names::is_refractory ] = is_refractory_;
-  d[ names::refractory_input ] = with_refr_input_;
 }
 
 void
@@ -365,9 +367,9 @@ iaf_psc_delta_ps::update( Time const& origin, const long from, const long to )
           // normal spikes need to be accumulated
           if ( not end_of_refract )
           {
-            if ( S_.with_refr_input_ )
+            if ( P_.with_refr_input_ )
             {
-              V_.refr_spikes_buffer_ += ev_weight
+              S_.refr_spikes_buffer_ += ev_weight
                 * std::exp(
                   -( ( S_.last_spike_step_ - T - 1 ) * V_.h_ms_ - ( S_.last_spike_offset_ - ev_offset ) + P_.t_ref_ )
                   / P_.tau_m_ );
@@ -378,10 +380,10 @@ iaf_psc_delta_ps::update( Time const& origin, const long from, const long to )
             // return from refractoriness---apply buffered spikes
             S_.is_refractory_ = false;
 
-            if ( S_.with_refr_input_ )
+            if ( P_.with_refr_input_ )
             {
-              S_.U_ += V_.refr_spikes_buffer_;
-              V_.refr_spikes_buffer_ = 0.0;
+              S_.U_ += S_.refr_spikes_buffer_;
+              S_.refr_spikes_buffer_ = 0.0;
             }
 
             // check if buffered spikes cause new spike
