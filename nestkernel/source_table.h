@@ -129,6 +129,15 @@ private:
   PerThreadBoolIndicator saved_entry_point_;
 
   /**
+   * Whether sources_ of a thread are in the order established by ConnectionManager::sort_connections().
+   *
+   * Connections created after the last update of the connection infrastructure are appended unsorted until the
+   * next update, at the start of a time slice; ConnectionManager::find_connection() falls back to a linear search
+   * then.
+   */
+  PerThreadBoolIndicator is_sorted_;
+
+  /**
    * Minimal number of sources that need to be deleted per synapse
    * type and thread before a reallocation of the respective vector
    * is performed. Balances number of reallocations and memory usage.
@@ -136,7 +145,6 @@ private:
    * @see SourceTable::clean()
    */
   static const size_t min_deleted_elements_ = 1000000;
-
 
   /**
    * Returns whether this Source object should be considered when
@@ -297,8 +305,12 @@ public:
     std::map< size_t, size_t >& buffer_pos_of_source_node_id_syn_id_ );
 
   /**
-   * Finds the first entry in sources_ at the given thread id and
-   * synapse type that is equal to snode_id.
+   * Finds the first non-disabled entry in sources_ at the given thread id and synapse type that has sender equal to
+   * snode_id.
+   *
+   * @returns local connection id (lcid) or `invalid_index`
+   *
+   * @note For compressed spikes, it uses binary search, otherwise linear search.
    */
   size_t find_first_source( const size_t tid, const synindex syn_id, const size_t snode_id ) const;
 
@@ -362,6 +374,7 @@ SourceTable::add_source( const size_t tid, const synindex syn_id, const size_t n
 {
   const Source src( node_id, is_primary );
   sources_[ tid ][ syn_id ].push_back( src );
+  is_sorted_.set_false( tid );
 }
 
 inline void
@@ -470,30 +483,6 @@ SourceTable::no_targets_to_process( const size_t tid )
   current_positions_[ tid ].lcid = -1;
 }
 
-inline size_t
-SourceTable::find_first_source( const size_t tid, const synindex syn_id, const size_t snode_id ) const
-{
-  // binary search in sorted sources
-  const BlockVector< Source >::const_iterator begin = sources_[ tid ][ syn_id ].begin();
-  const BlockVector< Source >::const_iterator end = sources_[ tid ][ syn_id ].end();
-  BlockVector< Source >::const_iterator it = std::lower_bound( begin, end, Source( snode_id, true ) );
-
-  // source found by binary search could be disabled, iterate through
-  // sources until a valid one is found
-  while ( it != end )
-  {
-    if ( it->get_node_id() == snode_id and not it->is_disabled() )
-    {
-      const size_t lcid = it - begin;
-      return lcid;
-    }
-    ++it;
-  }
-
-  // no enabled entry with this snode ID found
-  return invalid_index;
-}
-
 inline void
 SourceTable::disable_connection( const size_t tid, const synindex syn_id, const size_t lcid )
 {
@@ -521,8 +510,8 @@ SourceTable::num_unique_sources( const size_t tid, const synindex syn_id ) const
   size_t n = 0;
   size_t last_source = 0;
   for ( BlockVector< Source >::const_iterator cit = sources_[ tid ][ syn_id ].begin();
-        cit != sources_[ tid ][ syn_id ].end();
-        ++cit )
+    cit != sources_[ tid ][ syn_id ].end();
+    ++cit )
   {
     if ( last_source != ( *cit ).get_node_id() )
     {
@@ -552,6 +541,6 @@ SourceTable::clear_compressed_spike_data_map()
   }
 }
 
-} // namespace nest
+}  // namespace nest
 
 #endif /* #ifndef SOURCE_TABLE_H */
